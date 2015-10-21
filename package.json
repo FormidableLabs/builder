@@ -1,4 +1,8 @@
 {
   "name": "builder",
-  "version": "0.0.0"
+  "version": "0.0.1",
+  "description": "An NPM-based task runner",
+  "bin": {
+    "builder": "bin/builder.js"
+  }
 }

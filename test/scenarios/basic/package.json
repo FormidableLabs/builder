@@ -1,0 +1,14 @@
+{
+  "name": "builder-test-scenarios-basic",
+  "version": "0.0.1",
+  "description": "Test Scenario - Basic",
+  "main": "index.js",
+  "dependencies": {},
+  "devDependencies": {},
+  "scripts": {
+    "foo": "echo 'the foo task'",
+    "bar": "echo 'the bar task'",
+    "both": "builder run foo && builder run bar"
+  },
+  "license": "MIT"
+}
