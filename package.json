@@ -4,5 +4,8 @@
   "description": "An NPM-based task runner",
   "bin": {
     "builder": "bin/builder.js"
+  },
+  "dependencies": {
+    "chalk": "^1.1.1"
   }
 }
