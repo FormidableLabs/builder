@@ -9,7 +9,9 @@
     "postinstall": "builder run postinstall",
     "preversion": "builder run preversion",
     "version": "builder run version",
-    "test": "builder run test"
+    "test": "builder run test",
+
+    "lint-client-test": "echo OVERRIDE lint-client-test"
   },
   "license": "MIT"
 }
