@@ -16,6 +16,7 @@ var exec = require("child_process").exec;
 var proc = exec(cmd, {
   env: env.env
 }, function (err) {
+  // TODO: LOG ERRORS.
   if (err) { process.exit(err.code); }
 });
 
