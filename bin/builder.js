@@ -13,11 +13,17 @@ var cmd = task.getCommand();
 // Run the task
 // TODO: Decompose to `lib/runner.js`
 var exec = require("child_process").exec;
+
+// TODO: Integrate a real logger with colors.
+console.log(task.toString());
+console.log("[builder:exec] " + cmd);
+
 var proc = exec(cmd, {
   env: env.env
 }, function (err) {
-  // TODO: LOG ERRORS.
-  if (err) { process.exit(err.code); }
+  if (err) {
+    process.exit(err.code || 1);
+  }
 });
 
 proc.stdout.pipe(process.stdout, { end: false });
