@@ -75,7 +75,7 @@ typically interpret the piped environment as "doesn't support color" and
 disable color. Consequently, you typically need to set a "**force color**"
 option on your executables in `scripts` commands if they exist.
 
-#### `require.resolve()`
+#### Project Root
 
 Builder uses some magic to enhance `NODE_PATH` to look in the root of your
 project (normal) and in the installed modules of builder archetypes. This
@@ -87,6 +87,20 @@ This comes up in situations including:
 
 * Webpack loaders
 * Karma included files
+
+The other thing that comes up in our Archetype configuration file is the
+general _requirement_ that builder is running from the project root, not
+relative to an archetype. However, some libraries / tools will interpret
+`"./"` as relative to the _configuration file_ which may be in an archetype.
+
+So, for these instances and instances where you typically use `__dirname`,
+and archetype may need to use `process.cwd()` and be constrained to **only**
+ever running from the project root. Some scenarios where the `process.cwd()`
+path base is necessary include:
+
+* Webpack entry points, aliases
+* Karma included files (that cannot be `require.resolve`'ed)
+
 
 
 **TODO: Document more.**
