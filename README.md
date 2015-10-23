@@ -32,6 +32,8 @@ most granular `scripts` command in the archetype you need to override and
 define _just that_ in your project's `package.json` `script` section. Copy
 any configuration files that you need to tweak and re-define the command.
 
+### Special Archetype Tasks
+
 Archetypes use conventional `scripts` task names, except for the following
 special cases:
 
@@ -43,6 +45,20 @@ special cases:
 These tasks are specifically actionable during the `npm` lifecycle, and
 consequently, the archetype mostly ignores those for installation by default,
 offering them up for actual use in _your_ project.
+
+As an **additional restriction**, non-`npm:FOO`-prefixed tasks with the same
+name (e.g., `FOO`) _may_ call then `npm:`-prefixed task, but _not_ the other
+way around. So
+
+```js
+// Good / OK
+"npm:test": "builder run test-frontend",
+"test": "builder run npm:test",
+
+// Bad
+"npm:test": "builder run test",
+"test": "builder run test-frontend",
+````
 
 ## Package Script Commands
 
