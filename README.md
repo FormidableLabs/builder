@@ -50,6 +50,15 @@ The underyling concept here is that `builder` `script` commands simple _are_
 NPM-friendly `package.json` `script` commands. Pretty much anything that you
 can execute with `npm run FOO` can be executed with `builder run FOO`.
 
+### Tips & Tricks
+
+#### Terminal Color
+
+Builder uses `exec` under the hood with piped `stdout` and `stderr`. Programs
+typically interpret the piped environment as "doesn't support color" and
+disable color. Consequently, you typically need to set a "**force color**"
+option on your executables in `scripts` commands if they exist.
+
 
 **TODO: Document more.**
 
