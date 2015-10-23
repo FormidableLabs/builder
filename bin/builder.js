@@ -4,6 +4,8 @@
 var Environment = require("../lib/environment");
 var env = new Environment();
 env.updatePath();
+// TODO: Abstract to archetype selection.
+env.updateNodePath("node_modules/builder-react-component/node_modules");
 
 // Infer task to run
 var Task = require("../lib/task");
