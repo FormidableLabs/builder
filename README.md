@@ -75,6 +75,19 @@ typically interpret the piped environment as "doesn't support color" and
 disable color. Consequently, you typically need to set a "**force color**"
 option on your executables in `scripts` commands if they exist.
 
+#### `require.resolve()`
+
+Builder uses some magic to enhance `NODE_PATH` to look in the root of your
+project (normal) and in the installed modules of builder archetypes. This
+latter path enhancement sometimes throws tools / libraries for a loop. We
+recommend using `require.resolve("LIBRARY_OR_REQUIRE_PATH")` to get the
+appropriate installed file path to a dependency.
+
+This comes up in situations including:
+
+* Webpack loaders
+* Karma included files
+
 
 **TODO: Document more.**
 
