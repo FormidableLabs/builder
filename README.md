@@ -99,14 +99,13 @@ ever running from the project root. Some scenarios where the `process.cwd()`
 path base is necessary include:
 
 * Webpack entry points, aliases
-* Karma included files (that cannot be `require.resolve`'ed)
+* Karma included files (that cannot be `require.resolve`-ed)
 
+#### Other Process Execution
 
-
-**TODO: Document more.**
-
-**TODO: Give actual override _example_**
-
-**TODO: How to install / configure an archetype**
+The execution of tasks generally must _originate_ from Builder, because of all
+of the environment enhancements it adds. So, for things that themselves exec
+or spawn processes, like `concurrently`, this can be a problem. Typically, you
+will need to have the actual command line processes invoked _by_ Builder.
 
 [builder-react-component]: https://github.com/FormidableLabs/builder-react-component
