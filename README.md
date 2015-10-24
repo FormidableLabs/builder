@@ -1,3 +1,5 @@
+[![Travis Status][trav_img]][trav_site]
+
 Builder
 =======
 
@@ -146,3 +148,5 @@ or spawn processes, like `concurrently`, this can be a problem. Typically, you
 will need to have the actual command line processes invoked _by_ Builder.
 
 [builder-react-component]: https://github.com/FormidableLabs/builder-react-component
+[trav_img]: https://api.travis-ci.org/FormidableLabs/builder.svg
+[trav_site]: https://travis-ci.org/FormidableLabs/builder
