@@ -13,6 +13,43 @@ At a high level `builder` is a tool for consuming `package.json` `scripts`
 commands, providing sensible / flexible defaults, and support various scenarios
 ("archetypes") for your common use cases across multiple projects.
 
+## Tasks
+
+Builder can run 1+ tasks based out of `package.json` `scripts`. For a basic
+scenario like:
+
+```js
+{
+  "scripts": {
+    "foo": "echo FOO",
+    "bar": "echo BAR"
+  }
+}
+```
+
+Builder can run these tasks individually:
+
+```sh
+$ builder run foo
+$ builder run bar
+```
+
+Sequentially via `||` or `&&` shell helpers:
+
+```sh
+$ builder run foo && builder run bar
+```
+
+Concurrently via the Builder built-in `concurrent` command:
+
+```sh
+$ builder concurrent foo bar
+```
+
+With `concurrent`, all tasks continue running until they all complete _or_
+any task exits with a non-zero exit code, in which case all still alive tasks
+are killed and the Builder process exits with the error code.
+
 ## Archetypes
 
 Archetypes deal with common scenarios for your projects. Like:
