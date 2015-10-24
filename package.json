@@ -6,6 +6,7 @@
     "builder": "bin/builder.js"
   },
   "dependencies": {
-    "chalk": "^1.1.1"
+    "chalk": "^1.1.1",
+    "lodash": "^3.10.1"
   }
 }

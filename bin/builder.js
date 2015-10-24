@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+var log = require("../lib/log");
+
 // Set up environment
 var Environment = require("../lib/environment");
 var env = new Environment();
@@ -10,6 +12,13 @@ env.updateNodePath("node_modules/builder-react-component/node_modules");
 // Infer task to run
 var Task = require("../lib/task");
 var task = new Task();
+
+// Detect help
+if (task.action === "help") {
+  log.info("help", require("../lib/scripts").display());
+  process.exit(0);
+}
+
 var cmd = task.getCommand();
 
 // Run the task
@@ -28,6 +37,5 @@ proc.stdout.pipe(process.stdout, { end: false });
 proc.stderr.pipe(process.stderr, { end: false });
 
 // TODO: Move around logger.
-var log = require("../lib/log");
 log.info("task", task.toString());
 log.info("exec", cmd);
