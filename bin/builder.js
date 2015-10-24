@@ -15,7 +15,11 @@ var task = new Task();
 
 // Detect help
 if (task.action === "help") {
-  log.info("help", require("../lib/scripts").display());
+  var tasks = require("../lib/scripts").display();
+  log.info("help",
+    "\n\nUsage: \n\n  builder [action] [task]" +
+    "\n\nActions: \n\n  " + task.ACTIONS.join(", ") +
+    "\n\nTasks: \n" + tasks);
   process.exit(0);
 }
 
