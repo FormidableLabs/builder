@@ -6,6 +6,7 @@
     "builder": "bin/builder.js"
   },
   "dependencies": {
+    "async": "^1.4.2",
     "chalk": "^1.1.1",
     "lodash": "^3.10.1"
   }
