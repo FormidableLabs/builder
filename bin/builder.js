@@ -1,6 +1,5 @@
 #!/usr/bin/env node
-
-var log = require("../lib/log");
+"use strict";
 
 // Set up environment
 var Environment = require("../lib/environment");
@@ -15,5 +14,6 @@ var task = new Task();
 
 // Run the task
 task.execute(env, function (err) {
+  /*eslint-disable no-process-exit*/
   process.exit(err ? err.code || 1 : 0);
 });
