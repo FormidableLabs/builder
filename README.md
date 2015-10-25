@@ -7,13 +7,26 @@ Builder is a task runner.
 
 Builder is an enhancement to `npm run TASK`.
 
-Builder is a meta-tool for all your commond build, quality, test tasks.
+Builder is a meta-tool for all your common build, quality, test tasks.
 
 ## Overview
 
 At a high level `builder` is a tool for consuming `package.json` `scripts`
 commands, providing sensible / flexible defaults, and support various scenarios
 ("archetypes") for your common use cases across multiple projects.
+
+Builder is not opinionated, although archetypes _are_ and typically dictate
+file structure, standard configurations, and dev workflows. Builder supports
+this in an agnostic way, providing essentially the following:
+
+* `NODE_PATH`, `PATH` enhancements to run, build, import from archetypes so
+  dependencies and configurations don't have to be installed directly in a
+  root project.
+* A task runner capable of single tasks (`run`) or multiple concurrent tasks
+  (`concurrent`).
+* An intelligent merging of `package.json` `scripts` tasks.
+
+... and that's about it!
 
 ## Tasks
 
@@ -114,6 +127,15 @@ typically interpret the piped environment as "doesn't support color" and
 disable color. Consequently, you typically need to set a "**force color**"
 option on your executables in `scripts` commands if they exist.
 
+### Why Exec?
+
+So, why `exec` and not `spawn` or something similar that has a lot more process
+control and flexibility? The answer lies in the fact that most of what Builder
+consumes is shell strings to execute, like `script --foo --bar "Hi there"`.
+_Parsing_ these arguments into something easily consumable by `spawn` and always
+correct is quite challenging. `exec` works easily with straight strings, and
+since that is the target of `scripts` commands, that is what we use for Builder.
+
 #### Project Root
 
 Builder uses some magic to enhance `NODE_PATH` to look in the root of your
@@ -133,7 +155,7 @@ relative to an archetype. However, some libraries / tools will interpret
 `"./"` as relative to the _configuration file_ which may be in an archetype.
 
 So, for these instances and instances where you typically use `__dirname`,
-and archetype may need to use `process.cwd()` and be constrained to **only**
+an archetype may need to use `process.cwd()` and be constrained to **only**
 ever running from the project root. Some scenarios where the `process.cwd()`
 path base is necessary include:
 
