@@ -84,6 +84,54 @@ most granular `scripts` command in the archetype you need to override and
 define _just that_ in your project's `package.json` `script` section. Copy
 any configuration files that you need to tweak and re-define the command.
 
+### Usage
+
+Archetypes are `npm`-installed parallel to `builder` and then added to a
+`.builderrc` file in the project root. For example, to install the
+[builder-react-component][] archetype you would:
+
+```sh
+$ npm install --save builder-react-component
+```
+
+and then edit `.builderrc` like:
+
+```yaml
+---
+archetypes:
+  - builder-react-component
+```
+
+### Task Resolution
+
+The easiest bet is to just have _one_ archetype per project. But, multiple are
+supported. In terms of `scripts` tasks, we end up with the following example:
+
+```
+ROOT/package.json
+ROOT/node_modules/ARCHETYPE_ONE/package.json
+ROOT/node_modules/ARCHETYPE_TWO/package.json
+```
+
+Say we have a `.builderrc` like:
+
+```yaml
+---
+archetypes:
+  - ARCHETYPE_ONE
+  - ARCHETYPE_TWO
+```
+
+The resolution order for a `script` task (say, `foo`) present in all three
+`package.json`'s would be the following:
+
+* Look through `ROOT/package.json` then the configured archetypes in _reverse_
+  order: `ARCHETYPE_TWO/package.json`, then `ARCHETYPE_ONE/package.json` for
+  a matching task `foo`
+* If found `foo`, check if it is a "passthrough" task, which means it delegates
+  to a later instance -- basically `"foo": "builder run foo"`. If so, then look
+  to next instance of task found in order above.
+
 ### Special Archetype Tasks
 
 Archetypes use conventional `scripts` task names, except for the following
@@ -168,6 +216,13 @@ The execution of tasks generally must _originate_ from Builder, because of all
 of the environment enhancements it adds. So, for things that themselves exec
 or spawn processes, like `concurrently`, this can be a problem. Typically, you
 will need to have the actual command line processes invoked _by_ Builder.
+
+#### Pre-v2 Versions
+
+The `builder` project effectively starts at `v2.x.x`. Prior to that Builder was
+a small DOM utility that fell into disuse, so we repurposed it for a new
+wonderful destiny! But, because we follow semver, that means everything starts
+at `v2`.
 
 [builder-react-component]: https://github.com/FormidableLabs/builder-react-component
 [trav_img]: https://api.travis-ci.org/FormidableLabs/builder.svg
