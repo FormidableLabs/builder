@@ -1,12 +1,15 @@
 #!/usr/bin/env node
 "use strict";
 
+// Configuration
+var Config = require("../lib/config");
+var config = new Config();
+
 // Set up environment
 var Environment = require("../lib/environment");
-var env = new Environment();
-env.updatePath();
-// TODO: Abstract to archetype selection.
-env.updateNodePath("node_modules/builder-react-component/node_modules");
+var env = new Environment({
+  config: config
+});
 
 // Infer task to run
 var Task = require("../lib/task");
