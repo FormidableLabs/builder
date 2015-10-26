@@ -13,7 +13,10 @@ var env = new Environment({
 
 // Infer task to run
 var Task = require("../lib/task");
-var task = new Task();
+var task = new Task({
+  config: config,
+  env: env
+});
 
 // Run the task
 task.execute(env, function (err) {
