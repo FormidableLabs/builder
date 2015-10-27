@@ -7,7 +7,7 @@ Builder is a task runner.
 
 Builder is an enhancement to `npm run TASK`.
 
-Builder is a meta-tool for all your common build, quality, test tasks.
+Builder is a meta-tool for all your common build, quality, and test tasks.
 
 ## Overview
 
@@ -27,6 +27,60 @@ this in an agnostic way, providing essentially the following:
 * An intelligent merging of `package.json` `scripts` tasks.
 
 ... and that's about it!
+
+### Usage
+
+To start using builder, install and save `builder` and any archetypes you
+intend to use. For example, here we install `builder` and the
+[builder-react-component][] archetype:
+
+```sh
+$ npm install --save builder builder-react-component
+```
+
+and then edit `.builderrc` like:
+
+```yaml
+---
+archetypes:
+  - builder-react-component
+```
+
+to add archetypes. At this point, `builder` can build any production tasks,
+as only production `dependencies` of archetypes are installed. However, if
+you are in a **development** or CI environment, an additional manual step
+is needed to install the `devDependencies` of all the archetypes:
+
+```sh
+$ builder install
+```
+
+#### Builder Commands
+
+Display help.
+
+```sh
+$ builder help
+```
+
+Install archetype `devDependencies`.
+
+```sh
+$ builder install
+```
+
+Run a single `package.json` `scripts` task.
+
+```sh
+$ builder run foo-task
+```
+
+Run multiple `package.json` `scripts` tasks.
+
+```sh
+$ builder concurrent foo-task bar-task baz-task
+```
+
 
 ## Tasks
 
@@ -84,24 +138,6 @@ most granular `scripts` command in the archetype you need to override and
 define _just that_ in your project's `package.json` `script` section. Copy
 any configuration files that you need to tweak and re-define the command.
 
-### Usage
-
-Archetypes are `npm`-installed parallel to `builder` and then added to a
-`.builderrc` file in the project root. For example, to install the
-[builder-react-component][] archetype you would:
-
-```sh
-$ npm install --save builder-react-component
-```
-
-and then edit `.builderrc` like:
-
-```yaml
----
-archetypes:
-  - builder-react-component
-```
-
 ### Task Resolution
 
 The easiest bet is to just have _one_ archetype per project. But, multiple are
@@ -137,9 +173,9 @@ The resolution order for a `script` task (say, `foo`) present in all three
 Archetypes use conventional `scripts` task names, except for the following
 special cases:
 
-* `"npm:postinstall"
-* `"npm:preversion"
-* `"npm:version"
+* `"npm:postinstall"`
+* `"npm:preversion"`
+* `"npm:version"`
 * `"npm:test"`
 
 These tasks are specifically actionable during the `npm` lifecycle, and
@@ -158,7 +194,7 @@ way around. So
 // Bad
 "npm:test": "builder run test",
 "test": "builder run test-frontend",
-````
+```
 
 ## Package Script Commands
 
