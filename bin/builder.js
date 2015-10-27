@@ -19,7 +19,7 @@ var task = new Task({
 });
 
 // Run the task
-task.execute(env, function (err) {
+task.execute(function (err) {
   /*eslint-disable no-process-exit*/
   process.exit(err ? err.code || 1 : 0);
 });
