@@ -84,6 +84,10 @@ $ builder concurrent foo-task bar-task baz-task
 
 ## Tasks
 
+The underyling concept here is that `builder` `script` commands simply _are_
+NPM-friendly `package.json` `script` commands. Pretty much anything that you
+can execute with `npm run FOO` can be executed with `builder run FOO`.
+
 Builder can run 1+ tasks based out of `package.json` `scripts`. For a basic
 scenario like:
 
@@ -196,15 +200,9 @@ way around. So
 "test": "builder run test-frontend",
 ```
 
-## Package Script Commands
+## Tips, Tricks, & Notes
 
-The underyling concept here is that `builder` `script` commands simple _are_
-NPM-friendly `package.json` `script` commands. Pretty much anything that you
-can execute with `npm run FOO` can be executed with `builder run FOO`.
-
-### Tips, Tricks, & Notes
-
-#### Project Root
+### Project Root
 
 Builder uses some magic to enhance `NODE_PATH` to look in the root of your
 project (normal) and in the installed modules of builder archetypes. This
@@ -230,21 +228,21 @@ path base is necessary include:
 * Webpack entry points, aliases
 * Karma included files (that cannot be `require.resolve`-ed)
 
-#### Other Process Execution
+### Other Process Execution
 
 The execution of tasks generally must _originate_ from Builder, because of all
 of the environment enhancements it adds. So, for things that themselves exec
 or spawn processes, like `concurrently`, this can be a problem. Typically, you
 will need to have the actual command line processes invoked _by_ Builder.
 
-#### Terminal Color
+### Terminal Color
 
 Builder uses `exec` under the hood with piped `stdout` and `stderr`. Programs
 typically interpret the piped environment as "doesn't support color" and
 disable color. Consequently, you typically need to set a "**force color**"
 option on your executables in `scripts` commands if they exist.
 
-#### Why Exec?
+### Why Exec?
 
 So, why `exec` and not `spawn` or something similar that has a lot more process
 control and flexibility? The answer lies in the fact that most of what Builder
@@ -253,7 +251,7 @@ _Parsing_ these arguments into something easily consumable by `spawn` and always
 correct is quite challenging. `exec` works easily with straight strings, and
 since that is the target of `scripts` commands, that is what we use for Builder.
 
-#### Pre-v2 Versions
+### Pre-v2 Versions
 
 The `builder` project effectively starts at `v2.x.x`. Prior to that Builder was
 a small DOM utility that fell into disuse, so we repurposed it for a new
