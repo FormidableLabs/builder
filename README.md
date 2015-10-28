@@ -31,14 +31,42 @@ this in an agnostic way, providing essentially the following:
 ### Usage
 
 To start using builder, install and save `builder` and any archetypes you
-intend to use. For example, here we install `builder` and the
-[builder-react-component][] archetype:
+intend to use. We'll use the [builder-react-component][] archetype as an
+example.
+
+#### Global Install
+
+For ease of use, one option is to globally install `builder` and locally install
+archetypes:
+
+```sh
+$ npm install -g builder
+$ npm install --save builder-react-component
+```
+
+#### Local Install
+
+To avoid tying yourself to a single, global version of `builder`, the option
+that we recommend is local installing both `builder` and archetypes:
 
 ```sh
 $ npm install --save builder builder-react-component
 ```
 
-and then edit `.builderrc` like:
+However, to call `builder` from the command line you will either need to
+augment your `PATH` variable with a shell configuration (Mac/Linux) like:
+
+```sh
+export PATH="${PATH}:./node_modules/.bin"
+```
+
+or call the longer `./node_modules/.bin/builder` instead of `builder` from the
+command line.
+
+
+#### Configure, Install
+
+After `builder` is available, you can edit `.builderrc` like:
 
 ```yaml
 ---
@@ -46,14 +74,18 @@ archetypes:
   - builder-react-component
 ```
 
-to add archetypes. At this point, `builder` can build any production tasks,
-as only production `dependencies` of archetypes are installed. However, if
-you are in a **development** or CI environment, an additional manual step
-is needed to install the `devDependencies` of all the archetypes:
+to bind archetypes.
+
+At this point, `builder` can build any production tasks, as only production
+`dependencies` of archetypes are installed. However, if you are in a
+**development** or CI environment, an additional manual step is needed to
+install the `devDependencies` of all the archetypes:
 
 ```sh
 $ builder install
 ```
+
+... and from here you are set for `builder`-controlled meta goodness!
 
 #### Builder Commands
 
@@ -251,12 +283,18 @@ _Parsing_ these arguments into something easily consumable by `spawn` and always
 correct is quite challenging. `exec` works easily with straight strings, and
 since that is the target of `scripts` commands, that is what we use for Builder.
 
-### Pre-v2 Versions
+### Versions v1, v2, v3
 
 The `builder` project effectively starts at `v2.x.x`. Prior to that Builder was
 a small DOM utility that fell into disuse, so we repurposed it for a new
 wonderful destiny! But, because we follow semver, that means everything starts
-at `v2`.
+at `v2` and as a helpful tip / warning:
+
+> Treat `v2.x` as a `v0.x` release
+
+We'll try hard to keep it tight, but at our current velocity there is likely
+are to be some bumps and API changes that won't adhere strictly to semver until
+things settle down in `v3.x`-on.
 
 [builder-react-component]: https://github.com/FormidableLabs/builder-react-component
 [trav_img]: https://api.travis-ci.org/FormidableLabs/builder.svg
