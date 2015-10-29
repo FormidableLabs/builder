@@ -44,10 +44,20 @@ $ npm install -g builder
 $ npm install --save builder-react-component
 ```
 
+Like a global install of _any_ Node.js meta / task runner tool (e.g., `eslint`,
+`mocha`, `gulp`, `grunt`) doing a global install is painful because:
+
+* You are tied to _just one_ version of the tool for all projects.
+* You must also globally install the tool in CI, on servers, etc.
+
+... so instead, we **strongly recommend** a local install described in the
+next section!
+
+
 #### Local Install
 
 To avoid tying yourself to a single, global version of `builder`, the option
-that we recommend is local installing both `builder` and archetypes:
+that we endorse is locally installing both `builder` and archetypes:
 
 ```sh
 $ npm install --save builder builder-react-component
@@ -292,8 +302,8 @@ at `v2` and as a helpful tip / warning:
 
 > Treat `v2.x` as a `v0.x` release
 
-We'll try hard to keep it tight, but at our current velocity there is likely
-are to be some bumps and API changes that won't adhere strictly to semver until
+We'll try hard to keep it tight, but at our current velocity there are likely
+to be some bumps and API changes that won't adhere strictly to semver until
 things settle down in `v3.x`-on.
 
 [builder-react-component]: https://github.com/FormidableLabs/builder-react-component
