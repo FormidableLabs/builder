@@ -17,9 +17,10 @@ the details and machinations of the tool, but first here are a few of the
 rough goals and motivations behind the project.
 
 * **Single Point of Control**: A way to define a specific set of tasks /
-  configs / etc. for one "type" of project. For us, that is the ever-expanding
-  set of our https://github.com/FormidableLabs/?utf8=%E2%9C%93&query=victory
-  repos (still have to roll this out, but it's our primary use case driver).
+  configs / etc. for one "type" of project. For example, we have an
+  ever-expanding set of related repos for our
+  [Victory](https://github.com/FormidableLabs/?utf8=%E2%9C%93&query=victory)
+  project which all share a nearly-identical dev / prod / build workflow.
 * **Flexibility**: There are a number of meta tools for controlling JavaScript
   workflows / development lifecycles. However, most are of the "buy the farm"
   nature. This works great when everything is within the workflow but falls
@@ -324,23 +325,22 @@ example you were using the `builder-react-component` archetype with a project
 `package.json` like:
 
 ```js
-  "scripts": {
-    "postinstall": "builder run npm:postinstall",
-    "preversion": "builder run npm:preversion",
-    "version": "builder run npm:version",
-    "test": "builder run npm:test",
-    /* other deps */
-  },
-  "dependencies": {
-    "builder": "v2.0.0",
-    "builder-react-component": "v0.0.5",
-    /* other deps */
-  },
-  "devDependencies": {
-    "builder-react-component-dev": "v0.0.5",
-    /* other deps */
-  }
-
+"scripts": {
+  "postinstall": "builder run npm:postinstall",
+  "preversion": "builder run npm:preversion",
+  "version": "builder run npm:version",
+  "test": "builder run npm:test",
+  /* other deps */
+},
+"dependencies": {
+  "builder": "v2.0.0",
+  "builder-react-component": "v0.0.5",
+  /* other deps */
+},
+"devDependencies": {
+  "builder-react-component-dev": "v0.0.5",
+  /* other deps */
+}
 ```
 
 and decided to _no longer_ use Builder, here is a rough set of steps to unpack
