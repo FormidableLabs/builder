@@ -356,7 +356,7 @@ the archetype into your project and remove all Builder dependencies:
   `PROJECT/package.json:devDependencies`
   (e.g., from `builder-react-component-dev`)
 * Copy all configuration files used in your `ARCHETYPE` into the root project.
-  For example, for ``builder-react-component` you would need to copy the
+  For example, for `builder-react-component` you would need to copy the
   `builder-react-component/config` directory to `PROJECT/config` (or a renamed
   directory).
 * Review all of the combined `scripts` tasks and:
