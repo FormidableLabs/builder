@@ -3,11 +3,36 @@
 Builder
 =======
 
-Builder is a task runner.
+Builder takes your `npm` tasks and makes them composable, controllable from
+a single point, and flexible.
 
-Builder is an enhancement to `npm run TASK`.
+`npm` is fantastic for controlling dependencies, tasks (via `scripts`) and
+general project workflows. But a project-specific `package.json` simply doesn't
+scale when you're managing many (say 5-50) very similar repositories.
 
-Builder is a meta-tool for all your common build, quality, and test tasks.
+_Enter Builder._ Builder is "almost" `npm`, but provides for off-the-shelf
+"archetypes" to provide central sets of `package.json` `scripts`,
+`dependencies` and `devDependencies`. The rest of this page will dive into
+the details and machinations of the tool, but first here are a few of the
+rough goals and motivations behind the project.
+
+* **Single Point of Control**: A way to define a specific set of tasks /
+  configs / etc. for one "type" of project. For example, we have an
+  ever-expanding set of related repos for our
+  [Victory](https://github.com/FormidableLabs/?utf8=%E2%9C%93&query=victory)
+  project which all share a nearly-identical dev / prod / build workflow.
+* **Flexibility**: There are a number of meta tools for controlling JavaScript
+  workflows / development lifecycles. However, most are of the "buy the farm"
+  nature. This works great when everything is within the workflow but falls
+  apart once you want to be "just slightly" different. Builder solves this by
+  allowing fine grain task overriding by name, where the larger composed tasks
+  still stay the same and allow a specific repo's deviation from "completely off
+  the shelf" to be painless.
+* **You Can Give Up**: One of the main goals of builder is to remain very
+  close to a basic `npm` workflow. So much so, that we include a section in this
+  guide on how to abandon the use of Builder in a project and revert everything
+  from archetypes back to vanilla `npm` `package.json` `scripts`, `dependencies`
+  and `devDependencies`.
 
 ## Overview
 
@@ -126,7 +151,7 @@ $ builder concurrent foo-task bar-task baz-task
 
 ## Tasks
 
-The underyling concept here is that `builder` `script` commands simply _are_
+The underlying concept here is that `builder` `script` commands simply _are_
 NPM-friendly `package.json` `script` commands. Pretty much anything that you
 can execute with `npm run FOO` can be executed with `builder run FOO`.
 
@@ -292,6 +317,58 @@ consumes is shell strings to execute, like `script --foo --bar "Hi there"`.
 _Parsing_ these arguments into something easily consumable by `spawn` and always
 correct is quite challenging. `exec` works easily with straight strings, and
 since that is the target of `scripts` commands, that is what we use for Builder.
+
+### I Give Up. How Do I Abandon Builder?
+
+Builder is designed to be as close to vanilla npm as possible. So, if for
+example you were using the `builder-react-component` archetype with a project
+`package.json` like:
+
+```js
+"scripts": {
+  "postinstall": "builder run npm:postinstall",
+  "preversion": "builder run npm:preversion",
+  "version": "builder run npm:version",
+  "test": "builder run npm:test",
+  /* other deps */
+},
+"dependencies": {
+  "builder": "v2.0.0",
+  "builder-react-component": "v0.0.5",
+  /* other deps */
+},
+"devDependencies": {
+  "builder-react-component-dev": "v0.0.5",
+  /* other deps */
+}
+```
+
+and decided to _no longer_ use Builder, here is a rough set of steps to unpack
+the archetype into your project and remove all Builder dependencies:
+
+* Copy all `ARCHETYPE/package.json:dependencies` to your
+  `PROJECT/package.json:dependencies` (e.g., from `builder-react-component`).
+  You _do not_ need to copy over `ARCHETYPE/package.json:devDependencies`.
+* Copy all `ARCHETYPE/package.json:scripts` to your
+  `PROJECT/package.json:scripts` that do not begin with the `builder:` prefix.
+  You may have to manually resolve `scripts` tasks of the same name.
+* Copy all `ARCHETYPE-dev/package.json:dependencies` to your
+  `PROJECT/package.json:devDependencies`
+  (e.g., from `builder-react-component-dev`)
+* Copy all configuration files used in your `ARCHETYPE` into the root project.
+  For example, for `builder-react-component` you would need to copy the
+  `builder-react-component/config` directory to `PROJECT/config` (or a renamed
+  directory).
+* Review all of the combined `scripts` tasks and:
+    * resolve duplicate tasks names
+    * revise configuration file paths for the moved files
+    * replace instances of `builder run <TASK>` with `npm run <TASK>`
+    * for `builder concurrent <TASK1> <TASK2>` tasks, first install the
+      `concurrently` package and then rewrite to:
+      `concurrent 'npm run <TASK1>' 'npm run <TASK2>'`
+
+... and (with assuredly a few minor hiccups) that's about it! You are
+Builder-free and back to a normal `npm`-controlled project.
 
 ### Versions v1, v2, v3
 
