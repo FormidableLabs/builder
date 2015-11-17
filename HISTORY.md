@@ -1,11 +1,11 @@
 History
 =======
 
-## Current
+## 2.1.0
 
 * Support new `ARCHETYPE` + `ARCHETYPE-dev` architecture for better NPM 2 + 3
   `devDependencies` support.
-* Deprecate `builder install` workflow. #16
+* **DEPRECATION**: Deprecate `builder install` workflow. #16
 
 ## 2.0.1
 
