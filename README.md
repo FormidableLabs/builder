@@ -59,6 +59,12 @@ To start using builder, install and save `builder` and any archetypes you
 intend to use. We'll use the [builder-react-component][] archetype as an
 example.
 
+**Note**: Most archetypes have an `ARCHTEYPE` package and parallel
+`ARCHETYPE-dev` NPM package. The `ARCHETYPE` package contains _almost_
+everything needed for the archtype (prod dependencies, scripts, etc.) except
+for the `devDependencies` which the latter `ARCHETYPE-dev` package is solely
+responsible for bringing in.
+
 #### Global Install
 
 For ease of use, one option is to globally install `builder` and locally install
@@ -67,6 +73,7 @@ archetypes:
 ```sh
 $ npm install -g builder
 $ npm install --save builder-react-component
+$ npm install --save-dev builder-react-component-dev
 ```
 
 Like a global install of _any_ Node.js meta / task runner tool (e.g., `eslint`,
@@ -85,7 +92,9 @@ To avoid tying yourself to a single, global version of `builder`, the option
 that we endorse is locally installing both `builder` and archetypes:
 
 ```sh
-$ npm install --save builder builder-react-component
+$ npm install --save builder
+$ npm install --save builder-react-component
+$ npm install --save-dev builder-react-component-dev
 ```
 
 However, to call `builder` from the command line you will either need to
@@ -99,7 +108,7 @@ or call the longer `./node_modules/.bin/builder` instead of `builder` from the
 command line.
 
 
-#### Configure, Install
+#### Configuration
 
 After `builder` is available, you can edit `.builderrc` like:
 
@@ -111,15 +120,6 @@ archetypes:
 
 to bind archetypes.
 
-At this point, `builder` can build any production tasks, as only production
-`dependencies` of archetypes are installed. However, if you are in a
-**development** or CI environment, an additional manual step is needed to
-install the `devDependencies` of all the archetypes:
-
-```sh
-$ builder install
-```
-
 ... and from here you are set for `builder`-controlled meta goodness!
 
 #### Builder Commands
@@ -128,12 +128,6 @@ Display help.
 
 ```sh
 $ builder help
-```
-
-Install archetype `devDependencies`.
-
-```sh
-$ builder install
 ```
 
 Run a single `package.json` `scripts` task.
