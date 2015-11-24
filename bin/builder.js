@@ -1,25 +1,22 @@
 #!/usr/bin/env node
 "use strict";
 
-// Configuration
-var Config = require("../lib/config");
-var config = new Config();
+var resolve = require("resolve");
+var log = require("../lib/log");
+var localBuilder;
 
-// Set up environment
-var Environment = require("../lib/environment");
-var env = new Environment({
-  config: config
-});
+// Try to resolve builder in the current project's root, use global if fails
+try {
+  localBuilder = resolve.sync(
+    "builder", { basedir: process.cwd(), moduleDirectory: "node_modules" }
+  );
+} catch (e) {
+  log.info("proc:info", "Using global builder");
+  require("../index"); // eslint-disable-line global-require
+}
 
-// Infer task to run
-var Task = require("../lib/task");
-var task = new Task({
-  config: config,
-  env: env
-});
+if (localBuilder) {
+  log.info("proc:info", "Using local builder");
+  require(localBuilder); // eslint-disable-line global-require
 
-// Run the task
-task.execute(function (err) {
-  /*eslint-disable no-process-exit*/
-  process.exit(err ? err.code || 1 : 0);
-});
+}

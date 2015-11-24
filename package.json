@@ -1,6 +1,7 @@
 {
   "name": "builder",
   "version": "2.1.0",
+  "main": "index.js",
   "description": "An NPM-based task runner",
   "repository": {
     "type": "git",
@@ -24,7 +25,8 @@
     "async": "^1.4.2",
     "chalk": "^1.1.1",
     "js-yaml": "^3.4.3",
-    "lodash": "^3.10.1"
+    "lodash": "^3.10.1",
+    "resolve": "^1.1.6"
   },
   "devDependencies": {
     "eslint": "^1.7.3",
