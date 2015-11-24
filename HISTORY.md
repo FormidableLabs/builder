@@ -1,6 +1,10 @@
 History
 =======
 
+## 2.1.1
+
+* Fix bug with archetype discovery when npm-installed and npm v3. #25
+
 ## 2.1.0
 
 * Support new `ARCHETYPE` + `ARCHETYPE-dev` architecture for better NPM 2 + 3
