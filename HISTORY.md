@@ -1,6 +1,10 @@
 History
 =======
 
+## 2.1.2
+
+* Allow archetype discovery from siblings for any npm version. #30
+
 ## 2.1.1
 
 * Fix bug with archetype discovery when npm-installed and npm v3. #25
