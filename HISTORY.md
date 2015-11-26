@@ -1,6 +1,10 @@
 History
 =======
 
+## 2.1.3
+
+* Just use `require()` for archetype package.json loading. #32
+
 ## 2.1.2
 
 * Allow archetype discovery from siblings for any npm version. #30
