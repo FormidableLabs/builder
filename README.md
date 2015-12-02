@@ -124,10 +124,11 @@ to bind archetypes.
 
 #### Builder Commands
 
-Display help.
+Display general or command-specific help.
 
 ```sh
 $ builder help
+$ builder help run
 ```
 
 Run a single `package.json` `scripts` task.
