@@ -346,7 +346,9 @@ the archetype into your project and remove all Builder dependencies:
   You _do not_ need to copy over `ARCHETYPE/package.json:devDependencies`.
 * Copy all `ARCHETYPE/package.json:scripts` to your
   `PROJECT/package.json:scripts` that do not begin with the `builder:` prefix.
-  You may have to manually resolve `scripts` tasks of the same name.
+  Remove the `npm:` prefix from any `scripts` tasks and note that you may have
+  to manually resolve tasks of the same name within the archetype and also with
+  your project.
 * Copy all `ARCHETYPE-dev/package.json:dependencies` to your
   `PROJECT/package.json:devDependencies`
   (e.g., from `builder-react-component-dev`)
