@@ -1,0 +1,14 @@
+---
+extends:
+  - "defaults/configurations/walmart/es5-node"
+
+env:
+  mocha: true
+
+globals:
+  expect: false
+  sandbox: false
+
+rules:
+  no-unused-expressions: 0  # Disable for Chai expression assertions.
+  max-nested-callbacks: 0   # Disable for nested describes.

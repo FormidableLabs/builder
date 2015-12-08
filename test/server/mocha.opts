@@ -1,0 +1,2 @@
+--require test/server/setup.js
+--recursive

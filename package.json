@@ -14,8 +14,12 @@
   "homepage": "https://github.com/FormidableLabs/builder",
   "scripts": {
     "builder:lint-server": "eslint --color -c .eslintrc-server lib bin",
-    "builder:lint": "npm run builder:lint-server",
-    "builder:check": "npm run builder:lint"
+    "builder:lint-server-test": "eslint --color -c .eslintrc-server-test test",
+    "builder:lint": "npm run builder:lint-server && npm run builder:lint-server-test",
+    "builder:test": "mocha --opts test/server/mocha.opts test/server/spec",
+    "builder:test-cov": "istanbul cover --config .istanbul.server.yml  _mocha -- --opts test/server/mocha.opts test/server/spec",
+    "builder:check": "npm run builder:lint && npm run builder:test",
+    "builder:check-ci": "npm run builder:lint && npm run builder:test-cov"
   },
   "bin": {
     "builder": "bin/builder.js"
@@ -28,8 +32,14 @@
     "nopt": "^3.0.6"
   },
   "devDependencies": {
+    "chai": "^3.4.1",
+    "coveralls": "^2.11.4",
     "eslint": "^1.7.3",
     "eslint-config-defaults": "^7.0.1",
-    "eslint-plugin-filenames": "^0.1.2"
+    "eslint-plugin-filenames": "^0.1.2",
+    "istanbul": "^0.4.1",
+    "mocha": "^2.3.4",
+    "sinon": "^1.17.2",
+    "sinon-chai": "^2.8.0"
   }
 }

@@ -27,4 +27,10 @@ before_install:
 
 script:
   - npm --version
-  - npm run builder:check
+  - npm run builder:check-ci
+
+  # Manually send coverage reports to coveralls.
+  # - Aggregate client results
+  # - Single server and func test results
+  - ls  coverage/server/lcov.info | cat
+  - cat coverage/server/lcov.info | node_modules/.bin/coveralls || echo "Coveralls upload failed"
