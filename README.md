@@ -61,7 +61,7 @@ intend to use. We'll use the [builder-react-component][] archetype as an
 example.
 
 **Note**: Most archetypes have an `ARCHTEYPE` package and parallel
-`ARCHETYPE-dev` NPM package. The `ARCHETYPE` package contains _almost_
+`ARCHETYPE-dev` npm package. The `ARCHETYPE` package contains _almost_
 everything needed for the archtype (prod dependencies, scripts, etc.) except
 for the `devDependencies` which the latter `ARCHETYPE-dev` package is solely
 responsible for bringing in.
@@ -129,17 +129,17 @@ Display general or command-specific help (which shows available specific flags).
 
 ```sh
 $ builder help
-$ builder help ACTION
+$ builder help <action>
 ```
 
-Run `builder help ACTION` for all available options. For a quick overview:
+Run `builder help <action>` for all available options. For a quick overview:
 
 ##### builder run
 
-Run a single task from `script`. Analogous to `npm run TASK`
+Run a single task from `script`. Analogous to `npm run <task>`
 
 ```sh
-$ builder run TASK
+$ builder run <task>
 ```
 
 Flags:
@@ -150,12 +150,12 @@ Flags:
 ##### builder concurrent
 
 Run multiple tasks from `script` concurrently. Roughly analogous to
-`npm run TASK1 | npm run TASK2 | npm run TASK3`, but kills all processes on
+`npm run <task1> | npm run <task2> | npm run <task3>`, but kills all processes on
 first non-zero exit (which makes it suitable for test tasks).
 
 
 ```sh
-$ builder concurrent TASK1 TASK2 TASK3
+$ builder concurrent <task1> <task2> <task3>
 ```
 
 Flags:
@@ -173,8 +173,8 @@ would only execute _once_ if successful.
 ## Tasks
 
 The underlying concept here is that `builder` `script` commands simply _are_
-NPM-friendly `package.json` `script` commands. Pretty much anything that you
-can execute with `npm run FOO` can be executed with `builder run FOO`.
+npm-friendly `package.json` `script` commands. Pretty much anything that you
+can execute with `npm run <task>` can be executed with `builder run <task>`.
 
 Builder can run 1+ tasks based out of `package.json` `scripts`. For a basic
 scenario like:
@@ -386,9 +386,9 @@ the archetype into your project and remove all Builder dependencies:
     * resolve duplicate tasks names
     * revise configuration file paths for the moved files
     * replace instances of `builder run <TASK>` with `npm run <TASK>`
-    * for `builder concurrent <TASK1> <TASK2>` tasks, first install the
+    * for `builder concurrent <task1> <task2>` tasks, first install the
       `concurrently` package and then rewrite to:
-      `concurrent 'npm run <TASK1>' 'npm run <TASK2>'`
+      `concurrent 'npm run <task1>' 'npm run <task2>'`
 
 ... and (with assuredly a few minor hiccups) that's about it! You are
 Builder-free and back to a normal `npm`-controlled project.
