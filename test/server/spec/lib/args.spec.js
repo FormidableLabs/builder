@@ -93,7 +93,7 @@ describe("lib/args", function () {
       });
     });
 
-    it("handles valid --tries, --queue --buffer", function () {
+    it("handles valid --tries, --queue, --buffer", function () {
       argv = argv.concat(["--tries=2", "--queue=2", "--buffer"]);
       expect(_flags(args.concurrent(argv))).to.deep.equal({
         queue: 2,
@@ -185,4 +185,41 @@ describe("lib/args", function () {
       });
     });
   });
+
+  describe("envs", function () {
+    // envs handles all `concurrent` flags, so just testing some additional
+    // permutations
+
+    it("handles defaults for envs flags", function () {
+      expect(_flags(args.envs(argv))).to.deep.equal({
+        queue: null,
+        envsPath: null,
+        buffer: false,
+        tries: 1
+      });
+    });
+
+    it("handles valid --tries, --queue, --buffer, --envs-path", function () {
+      // Set to a nonexistent path (note args _doesn't_ check valid path).
+      var dummyPath = path.join(__dirname, "DUMMY_ENVS.json");
+      argv = argv.concat(["--tries=2", "--queue=2", "--buffer", "--envs-path=" + dummyPath]);
+      expect(_flags(args.envs(argv))).to.deep.equal({
+        queue: 2,
+        envsPath: dummyPath,
+        buffer: true,
+        tries: 2
+      });
+    });
+
+    it("handles multiple flags", function () {
+      var flags = ["--queue=-1", "--tries=BAD", "--no-buffer"];
+      expect(_flags(args.envs(argv.concat(flags)))).to.deep.equal({
+        queue: null,
+        envsPath: null,
+        buffer: false,
+        tries: 1
+      });
+    });
+  });
+
 });

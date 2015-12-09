@@ -153,7 +153,6 @@ Run multiple tasks from `script` concurrently. Roughly analogous to
 `npm run <task1> | npm run <task2> | npm run <task3>`, but kills all processes on
 first non-zero exit (which makes it suitable for test tasks).
 
-
 ```sh
 $ builder concurrent <task1> <task2> <task3>
 ```
@@ -169,6 +168,38 @@ Note that `tries` will retry _individual_ tasks that are part of the concurrent
 group, not the group itself. So, if `builder concurrent --tries=3 foo bar baz`
 is run and bar fails twice, then only `bar` would be retried. `foo` and `baz`
 would only execute _once_ if successful.
+
+##### builder envs
+
+Run a single task from `script` concurrently for item in an array of different
+environment variables. Roughly analogous to:
+
+```sh
+$ FOO=VAL1 npm run <task> | FOO=VAL2 npm run <task> | FOO=VAL3 npm run <task>
+```
+
+... but kills all processes on first non-zero exit (which makes it suitable for
+test tasks). Usage:
+
+```sh
+$ builder envs <task> <json-array>
+$ builder envs <task> --envs-path=<path-to-json-file>
+```
+
+Examples:
+
+```sh
+$ builder envs <task> '[{ "FOO": "VAL1" }, { "FOO": "VAL2" }, { "ENV1": "VAL3" }]'
+$ builder envs <task> '[{ "FOO": "VAL1", "BAR": "VAL2" }, { "FOO": "VAL3" }]'
+```
+
+Flags:
+
+* `--builderrc`: Path to builder config file (default: `.builderrc`)
+* `--tries`: Number of times to attempt a task (default: `1`)
+* `--queue`: Number of concurrent processes to run (default: unlimited - `0|null`)
+* `--[no-]buffer`: Buffer output until process end (default: `false`)
+* `--envs-path`: Path to JSON env variable array file (default: `null`)
 
 ## Tasks
 
@@ -385,7 +416,7 @@ the archetype into your project and remove all Builder dependencies:
 * Review all of the combined `scripts` tasks and:
     * resolve duplicate tasks names
     * revise configuration file paths for the moved files
-    * replace instances of `builder run <TASK>` with `npm run <TASK>`
+    * replace instances of `builder run <task>` with `npm run <task>`
     * for `builder concurrent <task1> <task2>` tasks, first install the
       `concurrently` package and then rewrite to:
       `concurrent 'npm run <task1>' 'npm run <task2>'`
