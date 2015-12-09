@@ -1,7 +1,7 @@
 History
 =======
 
-## Current
+## 2.1.4
 
 * Fix `PATH` / `NODE_PATH` resolution order to favor project root, then
   archetypes, then existing environment.
