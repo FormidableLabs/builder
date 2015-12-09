@@ -112,6 +112,8 @@ However, to call `builder` from the command line you will either need to
 augment your `PATH` variable with a shell configuration (Mac/Linux) like:
 
 ```sh
+export PATH="./node_modules/.bin:${PATH}"
+# ... OR ...
 export PATH="${PATH}:./node_modules/.bin"
 ```
 
