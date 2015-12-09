@@ -1,6 +1,15 @@
 History
 =======
 
+## 2.2.0
+
+* Global `builder` script detects if local install available and switches to it.
+  [#10](https://github.com/FormidableLabs/builder/issues/10)
+* Add `builder envs` action for concurrent runs based on environment variables.
+  [#29](https://github.com/FormidableLabs/builder/issues/29)
+* Add `builder envs|concurrent --buffer` flag to buffer and display stderr and
+  stdout at the _end_ of a task run for easier reading of concurrent output.
+
 ## 2.1.4
 
 * Fix `PATH` / `NODE_PATH` resolution order to favor project root, then
