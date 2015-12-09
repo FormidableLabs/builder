@@ -86,6 +86,16 @@ Like a global install of _any_ Node.js meta / task runner tool (e.g., `eslint`,
 ... so instead, we **strongly recommend** a local install described in the
 next section!
 
+To help you keep up with project-specific builder requirements, a globally-
+installed `builder` will detect if a locally-installed version of `builder` is
+available and switch to that instead:
+
+```
+$ /GLOBAL/PATH/TO/builder
+[builder:local-detect] Switched to local builder at: ./node_modules/builder/bin/builder-core.js
+
+... now using local builder! ...
+```
 
 #### Local Install
 
