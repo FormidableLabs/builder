@@ -1,6 +1,10 @@
 History
 =======
 
+## 2.2.1
+
+* Minor documentation and usage updates.
+
 ## 2.2.0
 
 * Global `builder` script detects if local install available and switches to it.
