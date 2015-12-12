@@ -54,14 +54,16 @@ describe("lib/args", function () {
 
     it("handles defaults for run flags", function () {
       expect(_flags(args.run(argv))).to.deep.equal({
-        tries: 1
+        tries: 1,
+        setup: null
       });
     });
 
     it("handles valid --tries", function () {
       argv = argv.concat(["--tries=2"]);
       expect(_flags(args.run(argv))).to.deep.equal({
-        tries: 2
+        tries: 2,
+        setup: null
       });
     });
 
@@ -69,15 +71,34 @@ describe("lib/args", function () {
       // Invalid tries default to `1`.
 
       expect(_flags(args.run(argv.concat(["--tries=-1"])))).to.deep.equal({
-        tries: 1
+        tries: 1,
+        setup: null
       });
 
       expect(_flags(args.run(argv.concat(["--tries=BAD"])))).to.deep.equal({
-        tries: 1
+        tries: 1,
+        setup: null
       });
 
       expect(_flags(args.run(argv.concat(["--tries="])))).to.deep.equal({
-        tries: 1
+        tries: 1,
+        setup: null
+      });
+    });
+
+    it("handles valid --setup", function () {
+      argv = argv.concat(["--setup=foo"]);
+      expect(_flags(args.run(argv))).to.deep.equal({
+        tries: 1,
+        setup: "foo"
+      });
+    });
+
+    it("handles invalid --setup", function () {
+      argv = argv.concat(["--setup="]);
+      expect(_flags(args.run(argv))).to.deep.equal({
+        tries: 1,
+        setup: null
       });
     });
 
@@ -89,7 +110,8 @@ describe("lib/args", function () {
       expect(_flags(args.concurrent(argv))).to.deep.equal({
         queue: null,
         buffer: false,
-        tries: 1
+        tries: 1,
+        setup: null
       });
     });
 
@@ -98,7 +120,8 @@ describe("lib/args", function () {
       expect(_flags(args.concurrent(argv))).to.deep.equal({
         queue: 2,
         buffer: true,
-        tries: 2
+        tries: 2,
+        setup: null
       });
     });
 
@@ -106,31 +129,36 @@ describe("lib/args", function () {
       expect(_flags(args.concurrent(argv.concat(["--buffer"])))).to.deep.equal({
         queue: null,
         buffer: true,
-        tries: 1
+        tries: 1,
+        setup: null
       });
 
       expect(_flags(args.concurrent(argv.concat(["--no-buffer"])))).to.deep.equal({
         queue: null,
         buffer: false,
-        tries: 1
+        tries: 1,
+        setup: null
       });
 
       expect(_flags(args.concurrent(argv.concat(["--buffer=false"])))).to.deep.equal({
         queue: null,
         buffer: false,
-        tries: 1
+        tries: 1,
+        setup: null
       });
 
       expect(_flags(args.concurrent(argv.concat(["--buffer=true"])))).to.deep.equal({
         queue: null,
         buffer: true,
-        tries: 1
+        tries: 1,
+        setup: null
       });
 
       expect(_flags(args.concurrent(argv.concat(["--buffer=1"])))).to.deep.equal({
         queue: null,
         buffer: true,
-        tries: 1
+        tries: 1,
+        setup: null
       });
     });
 
@@ -139,19 +167,22 @@ describe("lib/args", function () {
       expect(_flags(args.concurrent(argv.concat(["--tries=-1"])))).to.deep.equal({
         queue: null,
         buffer: false,
-        tries: 1
+        tries: 1,
+        setup: null
       });
 
       expect(_flags(args.concurrent(argv.concat(["--tries=BAD", "--queue=2"])))).to.deep.equal({
         queue: 2,
         buffer: false,
-        tries: 1
+        tries: 1,
+        setup: null
       });
 
       expect(_flags(args.concurrent(argv.concat(["--tries="])))).to.deep.equal({
         queue: null,
         buffer: false,
-        tries: 1
+        tries: 1,
+        setup: null
       });
     });
 
@@ -160,19 +191,22 @@ describe("lib/args", function () {
       expect(_flags(args.concurrent(argv.concat(["--queue=-1"])))).to.deep.equal({
         queue: null,
         buffer: false,
-        tries: 1
+        tries: 1,
+        setup: null
       });
 
       expect(_flags(args.concurrent(argv.concat(["--queue=BAD", "--tries=2"])))).to.deep.equal({
         queue: null,
         buffer: false,
-        tries: 2
+        tries: 2,
+        setup: null
       });
 
       expect(_flags(args.concurrent(argv.concat(["--queue="])))).to.deep.equal({
         queue: null,
         buffer: false,
-        tries: 1
+        tries: 1,
+        setup: null
       });
     });
 
@@ -181,7 +215,8 @@ describe("lib/args", function () {
       expect(_flags(args.concurrent(argv.concat(flags)))).to.deep.equal({
         queue: null,
         buffer: false,
-        tries: 1
+        tries: 1,
+        setup: null
       });
     });
   });
@@ -195,7 +230,8 @@ describe("lib/args", function () {
         queue: null,
         envsPath: null,
         buffer: false,
-        tries: 1
+        tries: 1,
+        setup: null
       });
     });
 
@@ -207,7 +243,8 @@ describe("lib/args", function () {
         queue: 2,
         envsPath: dummyPath,
         buffer: true,
-        tries: 2
+        tries: 2,
+        setup: null
       });
     });
 
@@ -217,7 +254,8 @@ describe("lib/args", function () {
         queue: null,
         envsPath: null,
         buffer: false,
-        tries: 1
+        tries: 1,
+        setup: null
       });
     });
   });
