@@ -1,6 +1,10 @@
 History
 =======
 
+## 2.2.2
+
+* Fix help to work with `builder help <action|archetype(s)>`.
+
 ## 2.2.1
 
 * Minor documentation and usage updates.
