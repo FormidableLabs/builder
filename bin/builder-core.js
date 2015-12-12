@@ -20,5 +20,18 @@ module.exports = function (callback) {
   });
 
   // Run the task
-  task.execute(callback);
+  var chalk = require("chalk");
+  var log = require("../lib/log");
+
+  log.info("builder-core:start:" + process.pid, "Started: " + chalk.gray(task));
+  task.execute(function (err) {
+    if (err) {
+      log.error("builder-core:end:" + process.pid,
+        "Ended with error: " + chalk.gray(task) + " - " + chalk.red(err.message.split("\n")[0]));
+    } else {
+      log.info("builder-core:end:" + process.pid, "Ended normally: " + chalk.gray(task));
+    }
+
+    callback(err);
+  });
 };

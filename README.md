@@ -158,6 +158,7 @@ Flags:
 
 * `--builderrc`: Path to builder config file (default: `.builderrc`)
 * `--tries`: Number of times to attempt a task (default: `1`)
+* `--setup`: Single task to run for the entirety of <action>.
 
 ##### builder concurrent
 
@@ -173,6 +174,7 @@ Flags:
 
 * `--builderrc`: Path to builder config file (default: `.builderrc`)
 * `--tries`: Number of times to attempt a task (default: `1`)
+* `--setup`: Single task to run for the entirety of <action>.
 * `--queue`: Number of concurrent processes to run (default: unlimited - `0|null`)
 * `--[no-]buffer`: Buffer output until process end (default: `false`)
 
@@ -209,6 +211,7 @@ Flags:
 
 * `--builderrc`: Path to builder config file (default: `.builderrc`)
 * `--tries`: Number of times to attempt a task (default: `1`)
+* `--setup`: Single task to run for the entirety of <action>.
 * `--queue`: Number of concurrent processes to run (default: unlimited - `0|null`)
 * `--[no-]buffer`: Buffer output until process end (default: `false`)
 * `--envs-path`: Path to JSON env variable array file (default: `null`)
