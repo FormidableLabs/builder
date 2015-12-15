@@ -1,6 +1,13 @@
 History
 =======
 
+## 2.3.0
+
+* Switch to `tree-kill` to more emphatically kill off children process spawned
+  within a single builder run.
+* Add `builder <action> --setup` flag to run a task before and during an action.
+  [#51](https://github.com/FormidableLabs/builder/issues/51)
+
 ## 2.2.2
 
 * Fix help to work with `builder help <action|archetype(s)>`.
