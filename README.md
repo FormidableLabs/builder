@@ -38,7 +38,7 @@ rough goals and motivations behind the project.
 ## Overview
 
 At a high level `builder` is a tool for consuming `package.json` `scripts`
-commands, providing sensible / flexible defaults, and support various scenarios
+commands, providing sensible / flexible defaults, and supporting various scenarios
 ("archetypes") for your common use cases across multiple projects.
 
 Builder is not opinionated, although archetypes _are_ and typically dictate
@@ -60,9 +60,9 @@ To start using builder, install and save `builder` and any archetypes you
 intend to use. We'll use the [builder-react-component][] archetype as an
 example.
 
-**Note**: Most archetypes have an `ARCHTEYPE` package and parallel
+**Note**: Most archetypes have an `ARCHETYPE` package and parallel
 `ARCHETYPE-dev` npm package. The `ARCHETYPE` package contains _almost_
-everything needed for the archtype (prod dependencies, scripts, etc.) except
+everything needed for the archetype (prod dependencies, scripts, etc.) except
 for the `devDependencies` which the latter `ARCHETYPE-dev` package is solely
 responsible for bringing in.
 
@@ -86,8 +86,8 @@ Like a global install of _any_ Node.js meta / task runner tool (e.g., `eslint`,
 ... so instead, we **strongly recommend** a local install described in the
 next section!
 
-To help you keep up with project-specific builder requirements, a globally-
-installed `builder` will detect if a locally-installed version of `builder` is
+To help you keep up with project-specific builder requirements, a globally-installed
+`builder` will detect if a locally-installed version of `builder` is
 available and switch to that instead:
 
 ```
@@ -158,7 +158,7 @@ Flags:
 
 * `--builderrc`: Path to builder config file (default: `.builderrc`)
 * `--tries`: Number of times to attempt a task (default: `1`)
-* `--setup`: Single task to run for the entirety of <action>.
+* `--setup`: Single task to run for the entirety of `<action>`.
 
 ##### builder concurrent
 
@@ -174,7 +174,7 @@ Flags:
 
 * `--builderrc`: Path to builder config file (default: `.builderrc`)
 * `--tries`: Number of times to attempt a task (default: `1`)
-* `--setup`: Single task to run for the entirety of <action>.
+* `--setup`: Single task to run for the entirety of `<action>`.
 * `--queue`: Number of concurrent processes to run (default: unlimited - `0|null`)
 * `--[no-]buffer`: Buffer output until process end (default: `false`)
 
@@ -185,7 +185,7 @@ would only execute _once_ if successful.
 
 ##### builder envs
 
-Run a single task from `script` concurrently for item in an array of different
+Run a single task from `script` concurrently for each item in an array of different
 environment variables. Roughly analogous to:
 
 ```sh
@@ -211,7 +211,7 @@ Flags:
 
 * `--builderrc`: Path to builder config file (default: `.builderrc`)
 * `--tries`: Number of times to attempt a task (default: `1`)
-* `--setup`: Single task to run for the entirety of <action>.
+* `--setup`: Single task to run for the entirety of `<action>`.
 * `--queue`: Number of concurrent processes to run (default: unlimited - `0|null`)
 * `--[no-]buffer`: Buffer output until process end (default: `false`)
 * `--envs-path`: Path to JSON env variable array file (default: `null`)
@@ -429,7 +429,7 @@ the archetype into your project and remove all Builder dependencies:
   `builder-react-component/config` directory to `PROJECT/config` (or a renamed
   directory).
 * Review all of the combined `scripts` tasks and:
-    * resolve duplicate tasks names
+    * resolve duplicate task names
     * revise configuration file paths for the moved files
     * replace instances of `builder run <task>` with `npm run <task>`
     * for `builder concurrent <task1> <task2>` tasks, first install the
