@@ -1,6 +1,12 @@
 History
 =======
 
+## 2.3.1
+
+* Fix `builder run envs` on Node `v4.x` with respect to
+  `_.isPlainObject(process.env)` bug. ( [@exogen][] )
+  [#63](https://github.com/FormidableLabs/builder/issues/63)
+
 ## 2.3.0
 
 * Switch to `tree-kill` to more emphatically kill off children process spawned
@@ -57,4 +63,5 @@ History
 
 * Initial release.
 
+[@exogen]: https://github.com/exogen
 [@ryan-roemer]: https://github.com/ryan-roemer
