@@ -164,7 +164,8 @@ Flags:
 
 Run multiple tasks from `script` concurrently. Roughly analogous to
 `npm run <task1> | npm run <task2> | npm run <task3>`, but kills all processes on
-first non-zero exit (which makes it suitable for test tasks).
+first non-zero exit (which makes it suitable for test tasks), unless `--no-bail`
+is provided.
 
 ```sh
 $ builder concurrent <task1> <task2> <task3>
@@ -177,6 +178,7 @@ Flags:
 * `--setup`: Single task to run for the entirety of `<action>`.
 * `--queue`: Number of concurrent processes to run (default: unlimited - `0|null`)
 * `--[no-]buffer`: Buffer output until process end (default: `false`)
+* `--[no-]bail`: End all processes after the first failure (default: `true`)
 
 Note that `tries` will retry _individual_ tasks that are part of the concurrent
 group, not the group itself. So, if `builder concurrent --tries=3 foo bar baz`
@@ -193,7 +195,7 @@ $ FOO=VAL1 npm run <task> | FOO=VAL2 npm run <task> | FOO=VAL3 npm run <task>
 ```
 
 ... but kills all processes on first non-zero exit (which makes it suitable for
-test tasks). Usage:
+test tasks), unless `--no-bail` is provided. Usage:
 
 ```sh
 $ builder envs <task> <json-array>
@@ -214,6 +216,7 @@ Flags:
 * `--setup`: Single task to run for the entirety of `<action>`.
 * `--queue`: Number of concurrent processes to run (default: unlimited - `0|null`)
 * `--[no-]buffer`: Buffer output until process end (default: `false`)
+* `--[no-]bail`: End all processes after the first failure (default: `true`)
 * `--envs-path`: Path to JSON env variable array file (default: `null`)
 
 ## Tasks
