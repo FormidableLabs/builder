@@ -1,6 +1,6 @@
 {
   "name": "builder",
-  "version": "2.3.2",
+  "version": "2.3.3",
   "description": "An NPM-based task runner",
   "repository": {
     "type": "git",

@@ -1,6 +1,13 @@
 History
 =======
 
+## 2.3.3
+
+* Harmonize log messages with standardized command + environment strings.
+* Add `builder <action> --[no-]bail` flag to control failing vs. non-failing
+  concurrent tasks. ( [@exogen][] )
+  [#64](https://github.com/FormidableLabs/builder/issues/64)
+
 ## 2.3.2
 
 * Fix `stdout maxBuffer exceeded` error by bumping `exec` buffer to 32mb.
