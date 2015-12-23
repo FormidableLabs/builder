@@ -27,9 +27,9 @@ module.exports = function (callback) {
   task.execute(function (err) {
     if (err) {
       log.error("builder-core:end:" + process.pid,
-        "Ended with error: " + chalk.gray(task) + " - " + chalk.red(err.message.split("\n")[0]));
+        "Task: " + chalk.gray(task) + ", Error: " + chalk.red(err.message.split("\n")[0]));
     } else {
-      log.info("builder-core:end:" + process.pid, "Ended normally: " + chalk.gray(task));
+      log.info("builder-core:end:" + process.pid, "Task: " + chalk.gray(task) + " ended normally");
     }
 
     callback(err);
