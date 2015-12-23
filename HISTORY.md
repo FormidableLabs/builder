@@ -1,6 +1,11 @@
 History
 =======
 
+## 2.3.2
+
+* Fix `stdout maxBuffer exceeded` error by bumping `exec` buffer to 32mb.
+  [#62](https://github.com/FormidableLabs/builder/issues/62)
+
 ## 2.3.1
 
 * Fix `builder run envs` on Node `v4.x` with respect to
