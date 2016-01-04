@@ -17,7 +17,7 @@
     "builder:lint-server-test": "eslint --color -c .eslintrc-server-test test",
     "builder:lint": "npm run builder:lint-server && npm run builder:lint-server-test",
     "builder:test": "mocha --opts test/server/mocha.opts test/server/spec",
-    "builder:test-cov": "istanbul cover --config .istanbul.server.yml  _mocha -- --opts test/server/mocha.opts test/server/spec",
+    "builder:test-cov": "istanbul cover --config .istanbul.server.yml _mocha -- --opts test/server/mocha.opts test/server/spec",
     "builder:check": "npm run builder:lint && npm run builder:test",
     "builder:check-ci": "npm run builder:lint && npm run builder:test-cov"
   },
@@ -25,6 +25,7 @@
     "builder": "bin/builder.js"
   },
   "dependencies": {
+    "argv-split": "^1.0.0",
     "async": "^1.4.2",
     "chalk": "^1.1.1",
     "js-yaml": "^3.4.3",
