@@ -120,7 +120,6 @@ export PATH="${PATH}:./node_modules/.bin"
 or call the longer `./node_modules/.bin/builder` instead of `builder` from the
 command line.
 
-
 #### Configuration
 
 After `builder` is available, you can edit `.builderrc` like:
@@ -218,6 +217,42 @@ Flags:
 * `--[no-]buffer`: Buffer output until process end (default: `false`)
 * `--[no-]bail`: End all processes after the first failure (default: `true`)
 * `--envs-path`: Path to JSON env variable array file (default: `null`)
+
+###### Custom Flags
+
+Just like [`npm run <task> [-- <args>...]`](https://docs.npmjs.com/cli/run-script),
+flags after a ` -- ` token in a builder task or from the command line are passed
+on to the underlying tasks. This is slightly more complicated for builder in
+that composed tasks pass on the flags _all the way down_. So, for tasks like:
+
+```js
+"scripts": {
+  "down": "echo down",
+  "way": "builder run down -- --way",
+  "the": "builder run way -- --the",
+  "all": "builder run the -- --all"
+}
+```
+
+We can run some basics (alone and with a user-added flag):
+
+```sh
+$ builder run down
+down
+
+$ builder run down -- --my-custom-flag
+down -- --my-custom-flag
+```
+
+If we run the composed commands, the `--` flags are accumulated:
+
+```sh
+$ builder run all
+down -- --way --the --all
+
+$ builder run all -- --my-custom-flag
+down -- --way --the --all --my-custom-flag
+```
 
 ## Tasks
 
