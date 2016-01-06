@@ -29,6 +29,9 @@ script:
   - npm --version
   - npm run builder:check-ci
 
+  # Also use builder itself to run the check-ci command
+  - node bin/builder.js run builder:check-ci
+
   # Manually send coverage reports to coveralls.
   # - Aggregate client results
   # - Single server and func test results
