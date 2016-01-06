@@ -1,6 +1,11 @@
 History
 =======
 
+## 2.4.0
+
+* Add `builder <action> <task> [-- <args>...]` support.
+  [builder-react-component#27](https://github.com/FormidableLabs/builder-react-component/issues/27)
+
 ## 2.3.3
 
 * Harmonize log messages with standardized command + environment strings.

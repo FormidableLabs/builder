@@ -1,12 +1,12 @@
 {
   "name": "builder",
-  "version": "2.3.3",
+  "version": "2.4.0",
   "description": "An NPM-based task runner",
   "repository": {
     "type": "git",
     "url": "https://github.com/FormidableLabs/builder.git"
   },
-  "author": "Ryan Roemer <ryan.roemer@formidablelabs.com>",
+  "author": "Ryan Roemer <ryan.roemer@formidable.com>",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/FormidableLabs/builder/issues"
