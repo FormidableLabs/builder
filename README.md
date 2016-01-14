@@ -429,7 +429,7 @@ way around. So
 
 ### Creating an Archetype
 
-Moving common tasks into an archetype is fairly straightfoward and requires
+Moving common tasks into an archetype is fairly straightforward and requires
 just a few tweaks to the paths defined in configuration and scripts in order
 to work correctly.
 
@@ -458,9 +458,9 @@ $ npm link new-archetype-name
 
 Because `builder` archetypes are included in your project as simple npm modules
 and because only `dependencies` will be installed from dependent npm modules,
-it's necessary to publish a separate npm module for dev depdencies where all are
-specified in `dependencies` _instead_ of `devDependencies` as you would expect
-when specifying them on a non-buidler-archetype project.
+it's necessary to publish a separate npm module for dev dependencies where all
+are specified in `dependencies` _instead_ of `devDependencies` as you would
+expect when specifying them on a non-builder-archetype project.
 
 `builder` is designed so that when defining which archetypes to use in a
 consuming project's `.builderrc`, `builder` will look for two modules, one named
