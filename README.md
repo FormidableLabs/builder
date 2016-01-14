@@ -427,6 +427,172 @@ way around. So
 "test": "builder run test-frontend",
 ```
 
+### Creating an Archetype
+
+Moving common tasks into an archetype is fairly straightfoward and requires
+just a few tweaks to the paths defined in configuration and scripts in order
+to work correctly.
+
+#### Initializing your project
+
+An archetype is simply a standard npm module w/ a valid `package.json`. To set
+up a new archetype from scratch, make a directory for your new archetype,
+initialize NPM and link it for ease of development.
+
+```sh
+$ cd path/to/new/archetype
+$ npm init
+$ npm link
+```
+
+From your consuming project, you can now link to the archetype directly for ease
+of development after including it in your `dependencies` and creating a
+`.builderrc` as outlined above in [configuration](#configuration).
+
+```sh
+$ cd path/to/consuming/project
+$ npm link new-archetype-name
+```
+
+#### Managing the `dev` archetype
+
+Because `builder` archetypes are included in your project as simple npm modules
+and because only `dependencies` will be installed from dependent npm modules,
+it's necessary to publish a separate npm module for dev depdencies where all are
+specified in `dependencies` _instead_ of `devDependencies` as you would expect
+when specifying them on a non-buidler-archetype project.
+
+`builder` is designed so that when defining which archetypes to use in a
+consuming project's `.builderrc`, `builder` will look for two modules, one named
+appropriately in `dependencies` (ex: `my-archetype`) and one in
+`devDependencies` but with `-dev` appended to the name (ex: `my-archetype-dev`).
+
+To help with managing these while building a builder archetype, install
+[`builder-support`](https://github.com/FormidableLabs/builder-support)
+to create and manage a `dev/` directory within your archetype project with it's
+own `package.json` which can be published as a separate npm module.
+`builder-support` will not only create a `dev/package.json` with an appropriate
+package name, but will also keep all the other information from your archetype's
+primary `package.json` up to date as well as keep `README.md` and `.gitignore`
+in parity for hosting the project as a separate npm module.
+
+Get started by installing and running `builder-support gen-dev`:
+
+```sh
+$ npm install builder-support --save-dev
+$ ./node_modules/.bin/builder-support gen-dev
+```
+
+_TIP: Create a task called `"builder:gen-dev": "builder-support gen-dev"` in
+your archetype to avoid having to type out the full path each time you update
+your project's details._
+
+For ease of development, `npm link` the dev dependency separately:
+
+```sh
+$ cd dev
+$ npm link
+```
+
+Then from your consuming project, you can link to the dev package.
+
+```sh
+$ cd path/to/consuming/project
+$ npm link new-archetype-name-dev
+```
+
+Read the [`builder-support` docs](https://github.com/FormidableLabs/builder-support)
+to learn more about how dev archetypes are easily managed with
+`builder-support gen-dev`.
+
+#### Workflow for moving dependencies and scripts to your new archetype
+
+Once everything is configured and `npm link`'d, it should be easy to move
+scripts to your archetype and quickly test them out from a consuming project.
+
+##### Moving `dependencies` and `devDependencies` from an existing `package.json`
+
+* copy `dependencies` to `project.json` `dependencies`.
+* copy `devDependencies` to `dev/project.json` `dependencies`.
+
+##### Moving scripts and config files
+
+All scripts defined in archetypes will be run from the root of the project
+consuming the archetype so all paths in scripts pointing to files also in the
+archetype need to be changed to be referenced at their location within the
+archetype.
+
+An example script and config you may be moving to an archetype would look like:
+
+```js
+"test-server-unit": "mocha --opts test/server/mocha.opts test/server/spec"
+```
+
+When moving this script to an archetype, we'd also move the config from
+`test/server/mocha.opts` within the original project to within the
+archetype such as `config/mocha/server/mocha.opts`.
+
+For this example script, we'd need to update the path to `mocha.opts` as so:
+
+```js
+"test-server-unit": "mocha --opts node_modules/new-archetype-name/config/mocha/server/mocha.opts test/server/spec"
+```
+
+Any paths that reference files expected in the consuming app (in this example
+`test/server/spec`) do not need to change.
+
+##### Updating path and module references within your script configs
+
+Any JavaScript files run from within an archetype (such as config files) require
+a few changes related to paths now that the files are being run from within
+an npm module. This includes all `require()` calls referencing npm modules and
+all paths to files that aren't relative.
+
+For example, `karma.conf.js`:
+
+```js
+module.exports = function (config) {
+  require("./karma.conf.dev")(config);
+
+  config.set({
+    preprocessors: {
+      "test/client/main.js": ["webpack"]
+    },
+    files: [
+      "sinon/pkg/sinon",
+      "test/client/main.js"
+    ],
+  });
+};
+```
+
+All non-relative paths to files and npm modules need to be full paths, even ones
+not in the archetype directory. For files expected to be in the consuming
+project, this can be achieved by prepending `process.cwd()` to all paths. For
+npm modules, full paths can be achieved by using `require.resolve()`.
+
+An updated config might look like:
+
+```js
+var path = require("path");
+var ROOT = process.cwd();
+var MAIN_PATH = path.join(ROOT, "test/client/main.js");
+
+module.exports = function (config) {
+  require("./karma.conf.dev")(config);
+
+  config.set({
+    preprocessors: {
+      [MAIN_PATH]: ["webpack"]
+    },
+    files: [
+      require.resolve("sinon/pkg/sinon"),
+      MAIN_PATH
+    ],
+  });
+};
+```
+
 ## Tips, Tricks, & Notes
 
 ### Project Root
