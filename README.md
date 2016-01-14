@@ -108,17 +108,67 @@ $ npm install --save builder-react-component
 $ npm install --save-dev builder-react-component-dev
 ```
 
-However, to call `builder` from the command line you will either need to
-augment your `PATH` variable with a shell configuration (Mac/Linux) like:
+However, to call `builder` from the command line you will either need to either
+augment `PATH` or call the long form of the command:
+
+##### PATH Augmentation
+
+Our recommended approach is to augment your `PATH` variable with a shell
+configuration as follows:
+
+**Mac / Linux**
 
 ```sh
-export PATH="./node_modules/.bin:${PATH}"
-# ... OR ...
+# Safer version, but if you _have_ global installs, those come first.
 export PATH="${PATH}:./node_modules/.bin"
+
+# (OR) Less safe, but guarantees local node modules come first.
+export PATH="./node_modules/.bin:${PATH}"
+
+# Check results with:
+echo $PATH
 ```
 
-or call the longer `./node_modules/.bin/builder` instead of `builder` from the
-command line.
+To make these changes **permanent**, add the `export` command to your `.bashrc`
+or analogous shell configuration file.
+
+**Windows**
+
+```sh
+# Safer version, but if you _have_ global installs, those come first.
+set PATH=%PATH%;node_modules\.bin
+
+# (OR) Less safe, but guarantees local node modules come first.
+set PATH=node_modules\.bin;%PATH%
+
+# Check results with:
+echo %PATH%
+```
+
+To make these changes **permanent**, please see this multi-OS article on
+changing the `PATH` variable: https://www.java.com/en/download/help/path.xml
+(the article is targeted for a Java executable, but it's analogous to our
+situation). You'll want to paste in `;node_modules\.bin` at the end _or_
+`node_modules\.bin;` at the beginning of the PATH field in the gui. If there
+is no existing `PATH` then add a user entry with `node_modules\.bin` as a value.
+(It is unlikely to be empty because an `npm` installation on Windows sets the
+user `PATH` analogously.)
+
+##### Full Path Invocation
+
+Or you can run the complete path to the builder script with:
+
+**Mac / Linux**
+
+```sh
+node_modules/.bin/builder <action> <task>
+```
+
+**Windows**
+
+```sh
+node_modules\.bin\builder <action> <task>
+```
 
 #### Configuration
 
