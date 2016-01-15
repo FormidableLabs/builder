@@ -518,9 +518,8 @@ scripts to your archetype and quickly test them out from a consuming project.
 ##### Moving scripts and config files
 
 All scripts defined in archetypes will be run from the root of the project
-consuming the archetype so all paths in scripts pointing to files also in the
-archetype need to be changed to be referenced at their location within the
-archetype.
+consuming the archetype. This means you have to change all paths in your scripts
+to reference their new location within the archetype.
 
 An example script and config you may be moving to an archetype would look like:
 
@@ -592,6 +591,34 @@ module.exports = function (config) {
     ],
   });
 };
+```
+
+#### Example `builder` archetype project structure
+
+```
+.
+├── CONTRIBUTING.md
+├── HISTORY.md
+├── LICENSE.txt
+├── README.md
+├── config
+│   ├── eslint
+│   ├── karma
+│   ├── mocha
+│   │   ├── func
+│   │   │   ├── mocha.dev.opts
+│   │   │   └── mocha.opts
+│   │   └── server
+│   │       └── mocha.opts
+│   └── webpack
+│       ├── webpack.config.coverage.js
+│       ├── webpack.config.dev.js
+│       ├── webpack.config.hot.js
+│       ├── webpack.config.js
+│       └── webpack.config.test.js
+├── dev
+│   └── package.json
+└── package.json
 ```
 
 ## Tips, Tricks, & Notes
