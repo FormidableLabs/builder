@@ -435,7 +435,7 @@ to work correctly.
 
 #### Initializing your project
 
-An archetype is simply a standard npm module w/ a valid `package.json`. To set
+An archetype is simply a standard npm module with a valid `package.json`. To set
 up a new archetype from scratch, make a directory for your new archetype,
 initialize NPM and link it for ease of development.
 
@@ -456,11 +456,11 @@ $ npm link new-archetype-name
 
 #### Managing the `dev` archetype
 
-Because `builder` archetypes are included in your project as simple npm modules
-and because only `dependencies` will be installed from dependent npm modules,
-it's necessary to publish a separate npm module for dev dependencies where all
-are specified in `dependencies` _instead_ of `devDependencies` as you would
-expect when specifying them on a non-builder-archetype project.
+Because `builder` archetypes are included as simple npm modules, two separate
+npm modules are required for archetypes: one for normal dependencies and one for
+dev dependencies. Whereas in a non-builder-archetype project you'd specify dev
+dependencies in `devDependencies`, with `builder` all dev dependencies must be
+regular `dependencies` on a separate dev npm module.
 
 `builder` is designed so that when defining which archetypes to use in a
 consuming project's `.builderrc`, `builder` will look for two modules, one named
@@ -512,8 +512,8 @@ scripts to your archetype and quickly test them out from a consuming project.
 
 ##### Moving `dependencies` and `devDependencies` from an existing `package.json`
 
-* copy `dependencies` to `project.json` `dependencies`.
-* copy `devDependencies` to `dev/project.json` `dependencies`.
+* copy `dependencies` to `package.json` `dependencies`.
+* copy `devDependencies` to `dev/package.json` `dependencies`.
 
 ##### Moving scripts and config files
 
@@ -569,7 +569,8 @@ module.exports = function (config) {
 All non-relative paths to files and npm modules need to be full paths, even ones
 not in the archetype directory. For files expected to be in the consuming
 project, this can be achieved by prepending `process.cwd()` to all paths. For
-npm modules, full paths can be achieved by using `require.resolve()`.
+npm modules, full paths can be achieved by using
+[`require.resolve()`](https://nodejs.org/api/globals.html#globals_require_resolve).
 
 An updated config might look like:
 
