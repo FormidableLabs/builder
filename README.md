@@ -8,27 +8,27 @@ Builder takes your `npm` tasks and makes them composable, controllable from
 a single point, and flexible.
 
 `npm` is fantastic for controlling dependencies, tasks (via `scripts`) and
-general project workflows. But a project-specific `package.json` simply doesn't
-scale when you're managing many (say 5-50) very similar repositories.
+general project workflows. But a project-specific `package.json` simply doesn’t
+scale when you’re managing many (say 5-50) very similar repositories.
 
-_Enter Builder._ Builder is "almost" `npm`, but provides for off-the-shelf
-"archetypes" to provide central sets of `package.json` `scripts`,
+_Enter Builder._ Builder is “almost” `npm`, but provides for off-the-shelf
+“archetypes” to provide central sets of `package.json` `scripts`,
 `dependencies` and `devDependencies`. The rest of this page will dive into
 the details and machinations of the tool, but first here are a few of the
 rough goals and motivations behind the project.
 
 * **Single Point of Control**: A way to define a specific set of tasks /
-  configs / etc. for one "type" of project. For example, we have an
+  configs / etc. for one “type” of project. For example, we have an
   ever-expanding set of related repos for our
   [Victory](https://github.com/FormidableLabs/?utf8=%E2%9C%93&query=victory)
   project which all share a nearly-identical dev / prod / build workflow.
 * **Flexibility**: There are a number of meta tools for controlling JavaScript
-  workflows / development lifecycles. However, most are of the "buy the farm"
+  workflows / development lifecycles. However, most are of the “buy the farm”
   nature. This works great when everything is within the workflow but falls
-  apart once you want to be "just slightly" different. Builder solves this by
+  apart once you want to be “just slightly” different. Builder solves this by
   allowing fine grain task overriding by name, where the larger composed tasks
-  still stay the same and allow a specific repo's deviation from "completely off
-  the shelf" to be painless.
+  still stay the same and allow a specific repo’s deviation from “completely off
+  the shelf” to be painless.
 * **You Can Give Up**: One of the main goals of builder is to remain very
   close to a basic `npm` workflow. So much so, that we include a section in this
   guide on how to abandon the use of Builder in a project and revert everything
@@ -39,25 +39,25 @@ rough goals and motivations behind the project.
 
 At a high level `builder` is a tool for consuming `package.json` `scripts`
 commands, providing sensible / flexible defaults, and supporting various scenarios
-("archetypes") for your common use cases across multiple projects.
+(“archetypes”) for your common use cases across multiple projects.
 
 Builder is not opinionated, although archetypes _are_ and typically dictate
 file structure, standard configurations, and dev workflows. Builder supports
 this in an agnostic way, providing essentially the following:
 
 * `NODE_PATH`, `PATH` enhancements to run, build, import from archetypes so
-  dependencies and configurations don't have to be installed directly in a
+  dependencies and configurations don’t have to be installed directly in a
   root project.
 * A task runner capable of single tasks (`run`) or multiple concurrent tasks
   (`concurrent`).
 * An intelligent merging of `package.json` `scripts` tasks.
 
-... and that's about it!
+... and that’s about it!
 
 ### Usage
 
 To start using builder, install and save `builder` and any archetypes you
-intend to use. We'll use the [builder-react-component][] archetype as an
+intend to use. We’ll use the [builder-react-component][] archetype as an
 example.
 
 **Note**: Most archetypes have an `ARCHETYPE` package and parallel
@@ -147,8 +147,8 @@ echo %PATH%
 
 To make these changes **permanent**, please see this multi-OS article on
 changing the `PATH` variable: https://www.java.com/en/download/help/path.xml
-(the article is targeted for a Java executable, but it's analogous to our
-situation). You'll want to paste in `;node_modules\.bin` at the end _or_
+(the article is targeted for a Java executable, but it’s analogous to our
+situation). You’ll want to paste in `;node_modules\.bin` at the end _or_
 `node_modules\.bin;` at the beginning of the PATH field in the gui. If there
 is no existing `PATH` then add a user entry with `node_modules\.bin` as a value.
 (It is unlikely to be empty because an `npm` installation on Windows sets the
@@ -364,9 +364,9 @@ Archetypes typically provide:
 * Dependencies and dev dependencies to build, test, etc.
 * Configuration files for all `script` tasks.
 
-In most cases, you won't need to override anything. But, if you do, pick the
+In most cases, you won’t need to override anything. But, if you do, pick the
 most granular `scripts` command in the archetype you need to override and
-define _just that_ in your project's `package.json` `script` section. Copy
+define _just that_ in your project’s `package.json` `script` section. Copy
 any configuration files that you need to tweak and re-define the command.
 
 ### Task Resolution
@@ -390,12 +390,12 @@ archetypes:
 ```
 
 The resolution order for a `script` task (say, `foo`) present in all three
-`package.json`'s would be the following:
+`package.json`’s would be the following:
 
 * Look through `ROOT/package.json` then the configured archetypes in _reverse_
   order: `ARCHETYPE_TWO/package.json`, then `ARCHETYPE_ONE/package.json` for
   a matching task `foo`
-* If found `foo`, check if it is a "passthrough" task, which means it delegates
+* If found `foo`, check if it is a “passthrough” task, which means it delegates
   to a later instance -- basically `"foo": "builder run foo"`. If so, then look
   to next instance of task found in order above.
 
@@ -458,21 +458,21 @@ $ npm link new-archetype-name
 
 Because `builder` archetypes are included as simple npm modules, two separate
 npm modules are required for archetypes: one for normal dependencies and one for
-dev dependencies. Whereas in a non-builder-archetype project you'd specify dev
+dev dependencies. Whereas in a non-builder-archetype project you’d specify dev
 dependencies in `devDependencies`, with `builder` all dev dependencies must be
 regular `dependencies` on a separate dev npm module.
 
 `builder` is designed so that when defining which archetypes to use in a
-consuming project's `.builderrc`, `builder` will look for two modules, one named
+consuming project’s `.builderrc`, `builder` will look for two modules, one named
 appropriately in `dependencies` (ex: `my-archetype`) and one in
 `devDependencies` but with `-dev` appended to the name (ex: `my-archetype-dev`).
 
 To help with managing these while building a builder archetype, install
 [`builder-support`](https://github.com/FormidableLabs/builder-support)
-to create and manage a `dev/` directory within your archetype project with it's
+to create and manage a `dev/` directory within your archetype project with it’s
 own `package.json` which can be published as a separate npm module.
 `builder-support` will not only create a `dev/package.json` with an appropriate
-package name, but will also keep all the other information from your archetype's
+package name, but will also keep all the other information from your archetype’s
 primary `package.json` up to date as well as keep `README.md` and `.gitignore`
 in parity for hosting the project as a separate npm module.
 
@@ -485,7 +485,7 @@ $ ./node_modules/.bin/builder-support gen-dev
 
 _TIP: Create a task called `"builder:gen-dev": "builder-support gen-dev"` in
 your archetype to avoid having to type out the full path each time you update
-your project's details._
+your project’s details._
 
 For ease of development, `npm link` the dev dependency separately:
 
@@ -507,7 +507,7 @@ to learn more about how dev archetypes are easily managed with
 
 #### Workflow for moving dependencies and scripts to your new archetype
 
-Once everything is configured and `npm link`'d, it should be easy to move
+Once everything is configured and `npm link`’d, it should be easy to move
 scripts to your archetype and quickly test them out from a consuming project.
 
 ##### Moving `dependencies` and `devDependencies` from an existing `package.json`
@@ -527,11 +527,11 @@ An example script and config you may be moving to an archetype would look like:
 "test-server-unit": "mocha --opts test/server/mocha.opts test/server/spec"
 ```
 
-When moving this script to an archetype, we'd also move the config from
+When moving this script to an archetype, we’d also move the config from
 `test/server/mocha.opts` within the original project to within the
 archetype such as `config/mocha/server/mocha.opts`.
 
-For this example script, we'd need to update the path to `mocha.opts` as so:
+For this example script, we’d need to update the path to `mocha.opts` as so:
 
 ```js
 "test-server-unit": "mocha --opts node_modules/new-archetype-name/config/mocha/server/mocha.opts test/server/spec"
@@ -545,7 +545,7 @@ Any paths that reference files expected in the consuming app (in this example
 Any JavaScript files run from within an archetype (such as config files) require
 a few changes related to paths now that the files are being run from within
 an npm module. This includes all `require()` calls referencing npm modules and
-all paths to files that aren't relative.
+all paths to files that aren’t relative.
 
 For example, `karma.conf.js`:
 
@@ -659,8 +659,8 @@ will need to have the actual command line processes invoked _by_ Builder.
 ### Terminal Color
 
 Builder uses `exec` under the hood with piped `stdout` and `stderr`. Programs
-typically interpret the piped environment as "doesn't support color" and
-disable color. Consequently, you typically need to set a "**force color**"
+typically interpret the piped environment as “doesn’t support color” and
+disable color. Consequently, you typically need to set a “**force color**”
 option on your executables in `scripts` commands if they exist.
 
 ### Why Exec?
@@ -723,7 +723,7 @@ the archetype into your project and remove all Builder dependencies:
       `concurrently` package and then rewrite to:
       `concurrent 'npm run <task1>' 'npm run <task2>'`
 
-... and (with assuredly a few minor hiccups) that's about it! You are
+... and (with assuredly a few minor hiccups) that’s about it! You are
 Builder-free and back to a normal `npm`-controlled project.
 
 ### Versions v1, v2, v3
@@ -735,8 +735,8 @@ at `v2` and as a helpful tip / warning:
 
 > Treat `v2.x` as a `v0.x` release
 
-We'll try hard to keep it tight, but at our current velocity there are likely
-to be some bumps and API changes that won't adhere strictly to semver until
+We’ll try hard to keep it tight, but at our current velocity there are likely
+to be some bumps and API changes that won’t adhere strictly to semver until
 things settle down in `v3.x`-on.
 
 [builder-react-component]: https://github.com/FormidableLabs/builder-react-component
