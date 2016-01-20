@@ -364,11 +364,6 @@ Archetypes typically provide:
 * Dependencies and dev dependencies to build, test, etc.
 * Configuration files for all `script` tasks.
 
-In most cases, you won't need to override anything. But, if you do, pick the
-most granular `scripts` command in the archetype you need to override and
-define _just that_ in your project's `package.json` `script` section. Copy
-any configuration files that you need to tweak and re-define the command.
-
 ### Task Resolution
 
 The easiest bet is to just have _one_ archetype per project. But, multiple are
@@ -398,6 +393,13 @@ The resolution order for a `script` task (say, `foo`) present in all three
 * If found `foo`, check if it is a "passthrough" task, which means it delegates
   to a later instance -- basically `"foo": "builder run foo"`. If so, then look
   to next instance of task found in order above.
+
+### Overriding Tasks
+
+In most cases, you won't need to override anything. But, if you do, pick the
+most granular `scripts` command in the archetype you need to override and
+define _just that_ in your project's `package.json` `script` section. Copy
+any configuration files that you need to tweak and re-define the command.
 
 ### Special Archetype Tasks
 
