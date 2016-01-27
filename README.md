@@ -189,11 +189,19 @@ to bind archetypes.
 Display general or command-specific help (which shows available specific flags).
 
 ```sh
-$ builder help
+$ builder [-h|--help|help]
 $ builder help <action>
+$ builder help <archetype>
 ```
 
-Run `builder help <action>` for all available options. For a quick overview:
+Run `builder help <action>` for all available options. Version information is
+available with:
+
+```sh
+$ builder [-v|--version]
+```
+
+Let's dive a little deeper into the main builder actions:
 
 ##### builder run
 
