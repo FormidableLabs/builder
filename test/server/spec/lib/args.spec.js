@@ -21,16 +21,19 @@ describe("lib/args", function () {
   describe("help", function () {
     // TODO: `args.help()` tests.
     // https://github.com/FormidableLabs/builder/issues/41
-    it("displays help for 'help'");
+    it("displays help when no arguments");
     it("displays help for 'run'");
     it("displays help for 'concurrent'");
+    it("displays help for 'envs'");
   });
 
   describe("general", function () {
 
     it("handles defaults for general flags", function () {
       expect(_flags(args.general(argv))).to.deep.equal({
-        builderrc: ".builderrc"
+        builderrc: ".builderrc",
+        help: false,
+        version: false
       });
     });
 
@@ -40,7 +43,9 @@ describe("lib/args", function () {
       argv = argv.concat(["--builderrc=" + dummyPath]);
 
       expect(_flags(args.general(argv))).to.deep.equal({
-        builderrc: dummyPath
+        builderrc: dummyPath,
+        help: false,
+        version: false
       });
     });
 
