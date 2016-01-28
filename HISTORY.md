@@ -1,6 +1,13 @@
 History
 =======
 
+## 2.5.0
+
+* Add `builder -v|--version`.
+* Add `builder -h|--help` shortcuts.
+* Make `builder` (with no args) display help.
+  [#61](https://github.com/FormidableLabs/builder/issues/61)
+
 ## 2.4.0
 
 * Add `builder <action> <task> [-- <args>...]` support.
