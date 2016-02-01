@@ -8,7 +8,24 @@
  * **Note**: Because there is a global sandbox server unit tests should always
  * be run in a separate process from other types of tests.
  */
+var mockFs = require("mock-fs");
+var fs = require("fs");
 var sinon = require("sinon");
+
+var base = module.exports = {
+  // Generic test helpers.
+  sandbox: null,
+  mockFs: null,
+
+  // File stuff
+  // NOTE: Sync methods are OK here because mocked and in-memory.
+  fileRead: function (filePath) {
+    return fs.readFileSync(filePath).toString();
+  },
+  fileExists: function (filePath) {
+    return fs.existsSync(filePath);
+  }
+};
 
 before(function () {
   // Set test environment
@@ -16,11 +33,14 @@ before(function () {
 });
 
 beforeEach(function () {
-  global.sandbox = sinon.sandbox.create({
+  base.mockFs = mockFs;
+  base.mockFs();
+  base.sandbox = sinon.sandbox.create({
     useFakeTimers: true
   });
 });
 
 afterEach(function () {
-  global.sandbox.restore();
+  base.mockFs.restore();
+  base.sandbox.restore();
 });

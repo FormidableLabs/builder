@@ -18,15 +18,6 @@ describe("lib/args", function () {
     argv = ["node", "builder"];
   });
 
-  describe("help", function () {
-    // TODO: `args.help()` tests.
-    // https://github.com/FormidableLabs/builder/issues/41
-    it("displays help when no arguments");
-    it("displays help for 'run'");
-    it("displays help for 'concurrent'");
-    it("displays help for 'envs'");
-  });
-
   describe("general", function () {
 
     it("handles defaults for general flags", function () {

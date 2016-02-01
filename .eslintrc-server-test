@@ -7,7 +7,6 @@ env:
 
 globals:
   expect: false
-  sandbox: false
 
 rules:
   no-unused-expressions: 0  # Disable for Chai expression assertions.
