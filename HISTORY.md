@@ -1,6 +1,11 @@
 History
 =======
 
+## 2.6.0
+
+* Fix bug wherein `builder --version` displayed help instead of version.
+* Add significantly enhanced test coverage.
+
 ## 2.5.0
 
 * Add `builder -v|--version`.
