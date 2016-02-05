@@ -41,6 +41,7 @@
     "eslint-plugin-filenames": "^0.1.2",
     "istanbul": "^0.4.1",
     "mocha": "^2.3.4",
+    "mock-fs": "^3.7.0",
     "sinon": "^1.17.2",
     "sinon-chai": "^2.8.0"
   }
