@@ -7,15 +7,15 @@ Builder
 Builder takes your `npm` tasks and makes them composable, controllable from
 a single point, and flexible.
 
-`npm` is fantastic for controlling dependencies, tasks (via `scripts`) and
-general project workflows. But a project-specific `package.json` simply doesn't
-scale when you're managing many (say 5-50) very similar repositories.
+`npm` is fantastic for controlling tasks (via `scripts`) and general project
+workflows. But a project-specific `package.json` simply doesn't scale when
+you're managing many (say 5-50) very similar repositories.
 
 _Enter Builder._ Builder is "almost" `npm`, but provides for off-the-shelf
-"archetypes" to provide central sets of `package.json` `scripts`,
-`dependencies` and `devDependencies`. The rest of this page will dive into
-the details and machinations of the tool, but first here are a few of the
-rough goals and motivations behind the project.
+"archetypes" to provide central sets of `package.json` `scripts` tasks, and
+`dependencies` and `devDependencies` for those tasks. The rest of this page will
+dive into the details and machinations of the tool, but first here are a few of
+the rough goals and motivations behind the project.
 
 * **Single Point of Control**: A way to define a specific set of tasks /
   configs / etc. for one "type" of project. For example, we have an
@@ -34,6 +34,12 @@ rough goals and motivations behind the project.
   guide on how to abandon the use of Builder in a project and revert everything
   from archetypes back to vanilla `npm` `package.json` `scripts`, `dependencies`
   and `devDependencies`.
+* **A Few "Nice to Haves" Over `npm run <task>`**: Setting aside archetypes and
+  multi-project management, `builder` provides cross-OS compatible helpers for
+  common task running scenarios like concurrent execution (`concurrent`) and
+  spawning the _same_ tasks in parallel with different environment variables
+  (`env`). It also provides useful controls for task retries, buffered output,
+  setup tasks, etc.
 
 ## Overview
 
@@ -46,7 +52,7 @@ file structure, standard configurations, and dev workflows. Builder supports
 this in an agnostic way, providing essentially the following:
 
 * `NODE_PATH`, `PATH` enhancements to run, build, import from archetypes so
-  dependencies and configurations don't have to be installed directly in a
+  task dependencies and configurations don't have to be installed directly in a
   root project.
 * A task runner capable of single tasks (`run`) or multiple concurrent tasks
   (`concurrent`).
@@ -220,7 +226,7 @@ Flags:
 ##### builder concurrent
 
 Run multiple tasks from `script` concurrently. Roughly analogous to
-`npm run <task1> | npm run <task2> | npm run <task3>`, but kills all processes on
+`npm run <task1> & npm run <task2> & npm run <task3>`, but kills all processes on
 first non-zero exit (which makes it suitable for test tasks), unless `--no-bail`
 is provided.
 
@@ -248,7 +254,7 @@ Run a single task from `script` concurrently for each item in an array of differ
 environment variables. Roughly analogous to:
 
 ```sh
-$ FOO=VAL1 npm run <task> | FOO=VAL2 npm run <task> | FOO=VAL3 npm run <task>
+$ FOO=VAL1 npm run <task> & FOO=VAL2 npm run <task> & FOO=VAL3 npm run <task>
 ```
 
 ... but kills all processes on first non-zero exit (which makes it suitable for
@@ -369,7 +375,7 @@ Archetypes deal with common scenarios for your projects. Like:
 Archetypes typically provide:
 
 * A `package.json` with `builder`-friendly `script` tasks.
-* Dependencies and dev dependencies to build, test, etc.
+* Dependencies and dev dependencies for all of the archetype `script` tasks.
 * Configuration files for all `script` tasks.
 
 In most cases, you won't need to override anything. But, if you do, pick the
@@ -421,18 +427,32 @@ These tasks are specifically actionable during the `npm` lifecycle, and
 consequently, the archetype mostly ignores those for installation by default,
 offering them up for actual use in _your_ project.
 
-As an **additional restriction**, non-`npm:FOO`-prefixed tasks with the same
-name (e.g., `FOO`) _may_ call then `npm:`-prefixed task, but _not_ the other
-way around. So
+We strongly recommend entirely
+[avoiding npm lifecycle task names](#avoid-npm-lifecycle-commands)
+in your archetype `package.json` files. So, instead of having:
 
 ```js
-// Good / OK
-"npm:test": "builder run test-frontend",
-"test": "builder run npm:test",
-
+// <archetype>/package.json
 // Bad
-"npm:test": "builder run test",
-"test": "builder run test-frontend",
+"test": "builder concurrent --buffer test-frontend test-backend"
+```
+
+We recommend something like:
+
+```js
+// <archetype>/package.json
+// Good / OK
+"npm:test": "builder run test-all",
+"test-all": "builder concurrent --buffer test-frontend test-backend"
+
+// Also OK
+"npm:test": "builder concurrent --buffer test-frontend test-backend"
+```
+
+and then in your `<root>/package.json` using the _real_ lifecycle task name.
+
+```js
+"test": "builder run npm:test"
 ```
 
 ### Creating an Archetype
@@ -445,7 +465,7 @@ to work correctly.
 
 An archetype is simply a standard npm module with a valid `package.json`. To set
 up a new archetype from scratch, make a directory for your new archetype,
-initialize NPM and link it for ease of development.
+initialize `npm` and link it for ease of development.
 
 ```sh
 $ cd path/to/new/archetype
@@ -462,7 +482,7 @@ $ cd path/to/consuming/project
 $ npm link new-archetype-name
 ```
 
-#### Managing the `dev` archetype
+#### Managing the `dev` Archetype
 
 Because `builder` archetypes are included as simple npm modules, two separate
 npm modules are required for archetypes: one for normal dependencies and one for
@@ -513,17 +533,64 @@ Read the [`builder-support` docs](https://github.com/FormidableLabs/builder-supp
 to learn more about how dev archetypes are easily managed with
 `builder-support gen-dev`.
 
-#### Workflow for moving dependencies and scripts to your new archetype
+#### NOTE: Application vs Archetype Dependencies
+
+While we would love to have `builder` manage _all_ the dependencies of an
+application, the practical realities of how npm works is that archetypes can
+only manage dependencies for `scripts` commands **run by a `builder` command**.
+`builder` mutates `PATH` and `NODE_PATH` to include archetype dependencies, but
+without this `builder` magic, ordinary code won't otherwise be able to use
+archetype dependencies.
+
+Most notably, this means that if your _application_ code includes a dependency
+like `lodash`:
+
+```js
+// <root>/src/index.js
+var _ = require("lodash");
+
+module.exports = _.camelCase("Hi There");
+```
+
+and the root project is consumed in _anything besides a `builder` command_,
+then it **must** have a dependency like:
+
+```js
+// <root>/package.json
+"dependencies": {
+  "lodash": "^4.2.1"
+}
+```
+
+And, _even if_ your `<archetype>/package.json` also includes the exact same
+dependency.
+
+This rule applies to even simple scenarios such as the root project being
+published to npm, after which other users will rely on the code outside of
+`builder` processes.
+
+#### Moving `dependencies` and `scripts` to a New Archetype
 
 Once everything is configured and `npm link`'d, it should be easy to move
 scripts to your archetype and quickly test them out from a consuming project.
 
-##### Moving `dependencies` and `devDependencies` from an existing `package.json`
+##### Moving `dependencies` and `devDependencies` from an Existing `package.json`
 
 * copy `dependencies` to `package.json` `dependencies`.
 * copy `devDependencies` to `dev/package.json` `dependencies`.
 
-##### Moving scripts and config files
+_Note_ that you should only copy `dependencies` from `<root>/package.json` to
+`<archetype>/package.json` that are needed within the archetype itself for:
+
+* Execution of a script. (E.g., the `istanbul` script).
+* Required by a configuration file in the archetype. (E.g., `webpack` if a
+  webpack configuration calls `require("webpack")`).
+
+You can then remove any dependencies _only_ used by the `scripts` tasks that
+you have moved to the archetype. However, take care to
+[not remove real application dependencies](#note-application-vs-archetype-dependencies).
+
+##### Moving `scripts` and Config Files
 
 All scripts defined in archetypes will be run from the root of the project
 consuming the archetype. This means you have to change all paths in your scripts
@@ -548,7 +615,7 @@ For this example script, we'd need to update the path to `mocha.opts` as so:
 Any paths that reference files expected in the consuming app (in this example
 `test/server/spec`) do not need to change.
 
-##### Updating path and module references within your script configs
+##### Updating Path and Module References in Config Files
 
 Any JavaScript files run from within an archetype (such as config files) require
 a few changes related to paths now that the files are being run from within
@@ -601,7 +668,7 @@ module.exports = function (config) {
 };
 ```
 
-#### Example `builder` archetype project structure
+#### Example `builder` Archetype Project Structure
 
 ```
 .
@@ -656,6 +723,27 @@ path base is necessary include:
 
 * Webpack entry points, aliases
 * Karma included files (that cannot be `require.resolve`-ed)
+
+### Avoid npm Lifecycle Commands
+
+We recommend _not_ using any of the special `npm` `scripts` commands listed in
+https://docs.npmjs.com/misc/scripts such as:
+
+* prepublish, postinstall
+* test
+* stop, start
+
+in your archetype `scripts`. This is due to the fact that the archetype
+`package.json` files are themselves consumed by `npm` for publishing (which
+can lead to tasks executing for the _archetype_ instead of the project _using_
+the archetype) and potentially lead to awkward recursive composed task
+scenarios.
+
+Instead, we recommend adding an `npm:<task>` prefix to your tasks to identify
+them as usable in root projects for real `npm` lifecycle tasks.
+
+We plan on issuing warnings for archetypes that do implement lifecycle tasks
+in: https://github.com/FormidableLabs/builder/issues/81
 
 ### Other Process Execution
 
