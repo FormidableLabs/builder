@@ -698,18 +698,40 @@ module.exports = function (config) {
 
 ## Tips, Tricks, & Notes
 
+### PATH, NODE_PATH Resolution
+
+Builder uses some magic to enhance `PATH` and `NODE_PATH` to look in the
+installed modules of builder archetypes and in the root of your project (per
+normal). We mutate both of these environment variables to resolve in the
+following order:
+
+`PATH`:
+
+1. `<cwd>/node_modules/<archetype>/.bin`
+2. `<cwd>/node_modules/.bin`
+3. Existing `PATH`
+
+`NODE_PATH`:
+
+1. `<cwd>/node_modules/<archetype>/node_modules`
+2. `<cwd>/node_modules`
+3. Existing `NODE_PATH`
+
+The order of resolution doesn't often come up, but can sometimes be a factor
+in diagnosing archetype issues and script / file paths, especially when using
+`npm` v3.
+
 ### Project Root
 
-Builder uses some magic to enhance `NODE_PATH` to look in the root of your
-project (normal) and in the installed modules of builder archetypes. This
-latter path enhancement sometimes throws tools / libraries for a loop. We
-recommend using `require.resolve("LIBRARY_OR_REQUIRE_PATH")` to get the
-appropriate installed file path to a dependency.
+The enhancements to `NODE_PATH` that `builder` performs can throw tools /
+libraries for a loop. Generally speaking, we recommend using
+`require.resolve("LIBRARY_OR_REQUIRE_PATH")` to get the appropriate installed
+file path to a dependency.
 
 This comes up in situations including:
 
 * Webpack loaders
-* Karma included files
+* Karma included files∏
 
 The other thing that comes up in our Archetype configuration file is the
 general _requirement_ that builder is running from the project root, not
