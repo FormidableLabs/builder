@@ -1,6 +1,11 @@
 History
 =======
 
+## Current
+
+* Add support for `package.json:config` analogous to `npm`.
+  [#89](https://github.com/FormidableLabs/builder/issues/89)
+
 ## 2.6.0
 
 * Fix bug wherein `builder --version` displayed help instead of version.
