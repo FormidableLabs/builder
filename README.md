@@ -282,6 +282,9 @@ Flags:
 * `--[no-]bail`: End all processes after the first failure (default: `true`)
 * `--envs-path`: Path to JSON env variable array file (default: `null`)
 
+_Note_: The environments JSON array will overwrite **existing** values in the
+environment.
+
 ###### Custom Flags
 
 Just like [`npm run <task> [-- <args>...]`](https://docs.npmjs.com/cli/run-script),
@@ -323,6 +326,7 @@ The rough heuristic here is if we have custom arguments:
 1. If a `builder <action>` command, append with ` -- ` to pass through.
 2. If a non-`builder` command, then append without ` -- ` token.
 
+
 ## Tasks
 
 The underlying concept here is that `builder` `script` commands simply _are_
@@ -363,6 +367,193 @@ $ builder concurrent foo bar
 With `concurrent`, all tasks continue running until they all complete _or_
 any task exits with a non-zero exit code, in which case all still alive tasks
 are killed and the Builder process exits with the error code.
+
+
+## npm Config
+
+`builder` supports `package.json` `config` properties the same way that `npm`
+does, with slight enhancements in consideration of multiple `package.json`'s
+in play.
+
+### `npm` Config Overview
+
+As a refresher, `npm` utilizes the `config` field of `package.json` to make
+"per-package" environment variables to `scripts` tasks. For example, if you
+have:
+
+```js
+{
+  "config": {
+    "my_name": "Bob"
+  },
+  "scripts": {
+    "get-name": "echo Hello, ${npm_package_config_my_name}."
+  }
+}
+```
+
+and ran:
+
+```sh
+$ npm run get-name
+Hello, Bob.
+```
+
+More documentation about how `npm` does per-package configuration is at:
+
+* https://docs.npmjs.com/files/package.json#config
+* https://docs.npmjs.com/misc/config#per-package-config-settings
+
+
+### Builder Configs
+
+In `builder`, for a single `package.json` this works essentially the same in
+the above example.
+
+```sh
+$ builder run get-name
+Hello, Bob.
+```
+
+However, `builder` has the added complexity of adding in `config` variables
+from archetypes and the environment. So the basic resolution order for a
+config environment variable is:
+
+1. Look to `npm_package_config_<VAR_NAME>=<VAR_VAL>` on command line.
+2. If not set, then use `<root>/package.json:config:<VAR_NAME>` value.
+3. If not set, then use `<archetype>/package.json:config:<VAR_NAME>` value.
+
+So, let's dive in to a slightly more complex example:
+
+```js
+// <archetype>/package.json
+{
+  "config": {
+    "my_name": "ARCH BOB"
+  },
+  "scripts": {
+    "get-name": "echo Hello, ${npm_package_config_my_name}."
+  }
+}
+
+// <root>/package.json
+{
+  "config": {
+    "my_name": "ROOT JANE"
+  }
+}
+```
+
+When we run the `builder` command, the `<root>` value overrides:
+
+```sh
+$ builder run get-name
+Hello, ROOT JANE.
+```
+
+We can inject a command line flag to override even this value:
+
+```sh
+$ npm_package_config_my_name="CLI JOE" builder run get-name
+Hello, CLI JOE.
+```
+
+_Note_ that the ability to override via the process environment is unique
+to `builder` and not available in real `npm`.
+
+### Config Notes
+
+#### Tip - Use String Values
+
+Although `config` properties can be something like:
+
+```js
+"config": {
+  "enabled": true
+}
+```
+
+We strongly recommend that you always set _strings_ like:
+
+```js
+"config": {
+  "enabled": "true"
+}
+```
+
+And deal just with _string values_ in your tasks, and files. The reasoning here
+is that when overriding values from the command line, the values will always
+be strings, which has a potential for messy, hard-to-diagnose bugs if the
+overridden value is not also a string.
+
+#### npmrc Configuration
+
+`npm` has additional functionality for `config` values that are **not**
+presently supported, such as issuing commands like
+`npm config set <pkg-name>:my_name Bill` that store values in `~/.npmrc` and
+then override the `package.json` values at execution time. We _may_ extend
+support for this as well, but not at the present.
+
+#### Command Line Environment Variables
+
+`npm` does **not** support overriding `config` environment variables from the
+actual environment. So doing something in our original example like:
+
+```sh
+$ npm_package_config_my_name=George npm run get-name
+Hello, Bob.
+```
+
+In fact, npm will refuse to even add environment variables starting with
+`npm_package_config` to the `npm run` environment. E.g.
+
+```js
+{
+  "config": {},
+  "scripts": {
+    "get-npm-val": "echo NPM VAR: ${npm_package_config_var}",
+    "get-env-val": "echo ENV VAR: ${env_var}"
+  }
+}
+```
+
+The `npm` config variable doesn't make it through:
+
+```sh
+$ npm_package_config_var=SET npm run get-npm-val
+NPM VAR:
+```
+
+While a normal environment variable will:
+
+```sh
+$ env_var=SET npm run get-env-val
+ENV VAR: SET
+```
+
+By contrast, `builder` _does_ pass through environment variables already
+existing on the command line, and moreover those overrides takes precedence over
+the root and archetype package.json values. Those same examples with `builder`
+show that the environment variables _do_ make it through:
+
+```sh
+$ npm_package_config_var=SET builder run get-npm-val
+NPM VAR: SET
+
+$ env_var=SET builder run get-env-val
+ENV VAR: SET
+```
+
+Things are a little more complex when using with `builder envs`, but the
+rough rule is that the environment JSON array wins when specified, otherwise
+the existing environment is used:
+
+```sh
+$ npm_package_config_var=CLI builder envs get-npm-val --queue=1 \
+  '[{}, {"npm_package_config_var":"This Overrides"}]'
+NPM VAR: CLI
+NPM VAR: This Overrides
+```
 
 ## Archetypes
 
@@ -826,6 +1017,8 @@ the archetype into your project and remove all Builder dependencies:
   Remove the `npm:` prefix from any `scripts` tasks and note that you may have
   to manually resolve tasks of the same name within the archetype and also with
   your project.
+* Copy all `ARCHETYPE/package.json:config` variables to your
+  `PROJECT/package.json:config`.
 * Copy all `ARCHETYPE-dev/package.json:dependencies` to your
   `PROJECT/package.json:devDependencies`
   (e.g., from `builder-react-component-dev`)
