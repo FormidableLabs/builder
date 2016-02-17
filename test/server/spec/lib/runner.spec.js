@@ -102,7 +102,10 @@ describe("lib/runner", function () {
       expect(replaceToken("TOK/  \/hi .* TOk/ ", "TOK", "SUB")).to.equal("SUB/  \/hi .* TOk/ ");
     });
 
-    it("replaces after quotes");
+    it("replaces after quotes", function () {
+      expect(replaceToken("'TOK' \"TOK/More\"", "TOK", "SUB")).to.equal("'SUB' \"SUB/More\"");
+      expect(replaceToken("T/K hello 'T/K/T/K'", "T/K", "S/B")).to.equal("S/B hello 'S/B/T/K'");
+    });
 
     it("replaces after whitespace", function () {
       expect(replaceToken("TOK TOK", "TOK", "SUB")).to.equal("SUB SUB");
