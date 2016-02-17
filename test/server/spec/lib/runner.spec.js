@@ -103,7 +103,12 @@ describe("lib/runner", function () {
     });
 
     it("replaces after quotes");
-    it("replaces after whitespace");
+
+    it("replaces after whitespace", function () {
+      expect(replaceToken("TOK TOK", "TOK", "SUB")).to.equal("SUB SUB");
+      expect(replaceToken("TOK hello TOK", "TOK", "SUB")).to.equal("SUB hello SUB");
+      expect(replaceToken("echo TOK/foo/TOK", "TOK", "SUB")).to.equal("echo SUB/foo/TOK");
+    });
   });
 
 });
