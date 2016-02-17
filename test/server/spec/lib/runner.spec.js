@@ -82,7 +82,7 @@ describe("lib/runner", function () {
 
   });
 
-  describe("#replaceToken", function () {
+  describe.only("#replaceToken", function () {
     var replaceToken = runner._replaceToken;
 
     it("leaves strings without tokens unchanged", function () {
@@ -94,7 +94,13 @@ describe("lib/runner", function () {
 
     it("skips tokens after slashes");
     it("skips tokens after characters");
-    it("replaces at the beginning of strings");
+
+    it("replaces at the beginning of strings", function () {
+      expect(replaceToken("TOK", "TOK", "SUB")).to.equal("SUB");
+      expect(replaceToken("TOK hello", "TOK", "SUB")).to.equal("SUB hello");
+      expect(replaceToken("TOK  hello TOk ", "TOK", "SUB")).to.equal("SUB  hello TOk ");
+    });
+
     it("replaces after quotes");
     it("replaces after whitespace");
   });
