@@ -98,7 +98,8 @@ describe("lib/runner", function () {
     it("replaces at the beginning of strings", function () {
       expect(replaceToken("TOK", "TOK", "SUB")).to.equal("SUB");
       expect(replaceToken("TOK hello", "TOK", "SUB")).to.equal("SUB hello");
-      expect(replaceToken("TOK  hello TOk ", "TOK", "SUB")).to.equal("SUB  hello TOk ");
+      expect(replaceToken("TOK [hello]*", "TOK", "SUB")).to.equal("SUB [hello]*");
+      expect(replaceToken("TOK/  \/hi .* TOk/ ", "TOK", "SUB")).to.equal("SUB/  \/hi .* TOk/ ");
     });
 
     it("replaces after quotes");
