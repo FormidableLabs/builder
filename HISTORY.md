@@ -1,7 +1,7 @@
 History
 =======
 
-## Current
+## 2.7.0
 
 * Add support for `package.json:config` analogous to `npm`.
   [#89](https://github.com/FormidableLabs/builder/issues/89)
