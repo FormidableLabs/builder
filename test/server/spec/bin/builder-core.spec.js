@@ -60,12 +60,22 @@ describe("bin/builder-core", function () {
       } else if (base.fileExists(path.join("node_modules", mod))) {
         return JSON.parse(base.fileRead(path.join("node_modules", mod)));
       }
+      throw new Error("Cannot require: " + mod);
     });
+  });
+
+  afterEach(function () {
+    // Remove mutations to the process environment.
+    delete process.env.npm_package_config__test_message; // eslint-disable-line camelcase
   });
 
   describe("errors", function () {
 
     it("errors on invalid action", function () {
+      base.mockFs({
+        "package.json": "{}"
+      });
+
       var callback = base.sandbox.spy();
 
       try {
@@ -87,6 +97,9 @@ describe("bin/builder-core", function () {
 
     it("runs version", stdioWrap(function (done) {
       base.sandbox.spy(Task.prototype, "version");
+      base.mockFs({
+        "package.json": "{}"
+      });
 
       run({
         argv: ["node", "builder", "--version"]
@@ -106,6 +119,9 @@ describe("bin/builder-core", function () {
 
     it("runs help with no arguments", function (done) {
       base.sandbox.spy(Task.prototype, "help");
+      base.mockFs({
+        "package.json": "{}"
+      });
 
       run({
         argv: ["node", "builder"]
@@ -121,6 +137,9 @@ describe("bin/builder-core", function () {
 
     it("runs help with `builder run` alone", function (done) {
       base.sandbox.spy(Task.prototype, "help");
+      base.mockFs({
+        "package.json": "{}"
+      });
 
       run({
         argv: ["node", "builder", "run"]
@@ -137,6 +156,9 @@ describe("bin/builder-core", function () {
     it("runs help with flags", function (done) {
       base.sandbox.spy(Task.prototype, "help");
       base.sandbox.spy(Task.prototype, "run");
+      base.mockFs({
+        "package.json": "{}"
+      });
 
       run({
         argv: ["node", "builder", "run", "foo", "--help"]
@@ -153,6 +175,9 @@ describe("bin/builder-core", function () {
 
     it("runs help for run command", function (done) {
       base.sandbox.spy(Task.prototype, "help");
+      base.mockFs({
+        "package.json": "{}"
+      });
 
       run({
         argv: ["node", "builder", "help", "run"]
@@ -196,6 +221,7 @@ describe("bin/builder-core", function () {
       base.sandbox.spy(Task.prototype, "run");
       base.mockFs({
         ".builderrc": "---\narchetypes:\n  - mock-archetype",
+        "package.json": "{}",
         "node_modules": {
           "mock-archetype": {
             "package.json": JSON.stringify({
@@ -219,6 +245,37 @@ describe("bin/builder-core", function () {
       });
 
     }));
+
+    it("ignores archetype builder:-prefaced tasks", function () {
+      base.mockFs({
+        ".builderrc": "---\narchetypes:\n  - mock-archetype",
+        "package.json": "{}",
+        "node_modules": {
+          "mock-archetype": {
+            "package.json": JSON.stringify({
+              "scripts": {
+                "builder:foo": "echo FOO"
+              }
+            }, null, 2)
+          }
+        }
+      });
+
+      var callback = base.sandbox.spy();
+
+      try {
+        run({
+          argv: ["node", "builder", "run", "builder:foo"]
+        }, callback);
+      } catch (err) {
+        expect(err).to.have.property("message")
+          .that.contains("Unable to find task for: builder:foo");
+        expect(callback).to.not.be.called;
+        return;
+      }
+
+      throw new Error("should have already thrown");
+    });
 
     it("overrides a <archetype> command with a <root> one", stdioWrap(function (done) {
       base.sandbox.spy(Task.prototype, "run");
@@ -294,7 +351,6 @@ describe("bin/builder-core", function () {
       base.mockFs({
         "package.json": JSON.stringify({
           "scripts": {
-            // *real* fs for script references. (`0` runs forever).
             "setup": "node test/server/fixtures/repeat-script.js 2 SETUP",
             "bar": "node test/server/fixtures/repeat-script.js 5 BAR_TASK"
           }
@@ -324,7 +380,6 @@ describe("bin/builder-core", function () {
       base.mockFs({
         "package.json": JSON.stringify({
           "scripts": {
-            // *real* fs for script references. (`0` runs forever).
             "setup": "node test/server/fixtures/repeat-script.js 2 SETUP 1",
             "bar": "node test/server/fixtures/repeat-script.js 10 BAR_TASK"
           }
@@ -375,6 +430,176 @@ describe("bin/builder-core", function () {
         done();
       });
 
+    }));
+
+    it("runs with base config value", stdioWrap(function (done) {
+      base.sandbox.spy(Task.prototype, "run");
+      base.mockFs({
+        "package.json": JSON.stringify({
+          "config": {
+            "_test_message": "from base config"
+          },
+          "scripts": {
+            "echo": "node test/server/fixtures/echo.js"
+          }
+        }, null, 2)
+      });
+
+      run({
+        argv: ["node", "builder", "run", "echo"]
+      }, function (err) {
+        if (err) { return done(err); }
+
+        expect(Task.prototype.run).to.have.callCount(1);
+        expect(process.stdout.write)
+          .to.be.calledWithMatch("string - from base config");
+
+        done();
+      });
+    }));
+
+    it("runs with archetype config value", stdioWrap(function (done) {
+      base.sandbox.spy(Task.prototype, "run");
+      base.mockFs({
+        ".builderrc": "---\narchetypes:\n  - mock-archetype",
+        "package.json": "{}",
+        "node_modules": {
+          "mock-archetype": {
+            "package.json": JSON.stringify({
+              "config": {
+                "_test_message": "from archetype"
+              },
+              "scripts": {
+                "echo": "node test/server/fixtures/echo.js"
+              }
+            }, null, 2)
+          }
+        }
+      });
+
+      run({
+        argv: ["node", "builder", "run", "echo"]
+      }, function (err) {
+        if (err) { return done(err); }
+
+        expect(Task.prototype.run).to.have.callCount(1);
+        expect(process.stdout.write)
+          .to.be.calledWithMatch("string - from archetype");
+
+        done();
+      });
+    }));
+
+    it("runs with empty base + non-empty archetype config value", stdioWrap(function (done) {
+      base.sandbox.spy(Task.prototype, "run");
+      base.mockFs({
+        ".builderrc": "---\narchetypes:\n  - mock-archetype",
+        "package.json": JSON.stringify({
+          "config": {
+            "_test_message": "" // base with empty strings wins.
+          }
+        }, null, 2),
+        "node_modules": {
+          "mock-archetype": {
+            "package.json": JSON.stringify({
+              "config": {
+                "_test_message": "from archetype"
+              },
+              "scripts": {
+                "echo": "node test/server/fixtures/echo.js"
+              }
+            }, null, 2)
+          }
+        }
+      });
+
+      run({
+        argv: ["node", "builder", "run", "echo"]
+      }, function (err) {
+        if (err) { return done(err); }
+
+        expect(Task.prototype.run).to.have.callCount(1);
+        expect(process.stdout.write)
+          .to.be.calledWithMatch("string - EMPTY");
+
+        done();
+      });
+    }));
+
+    it("runs with real ENV overriding archetype config value", stdioWrap(function (done) {
+      base.sandbox.spy(Task.prototype, "run");
+      base.mockFs({
+        ".builderrc": "---\narchetypes:\n  - mock-archetype",
+        "package.json": "{}",
+        "node_modules": {
+          "mock-archetype": {
+            "package.json": JSON.stringify({
+              "config": {
+                "_test_message": "from archetype"
+              },
+              "scripts": {
+                "echo": "node test/server/fixtures/echo.js"
+              }
+            }, null, 2)
+          }
+        }
+      });
+
+      /*eslint-disable camelcase*/
+      process.env.npm_package_config__test_message = "from real env";
+      /*eslint-enable camelcase*/
+
+      run({
+        argv: ["node", "builder", "run", "echo"]
+      }, function (err) {
+        if (err) { return done(err); }
+
+        expect(Task.prototype.run).to.have.callCount(1);
+        expect(process.stdout.write)
+          .to.be.calledWithMatch("string - from real env");
+
+        done();
+      });
+    }));
+
+    it("runs with real ENV overriding base + archetype config values", stdioWrap(function (done) {
+      base.sandbox.spy(Task.prototype, "run");
+      base.mockFs({
+        ".builderrc": "---\narchetypes:\n  - mock-archetype",
+        "package.json": JSON.stringify({
+          "config": {
+            "_test_message": "from base"
+          }
+        }, null, 2),
+        "node_modules": {
+          "mock-archetype": {
+            "package.json": JSON.stringify({
+              "config": {
+                "_test_message": "from archetype"
+              },
+              "scripts": {
+                "echo": "node test/server/fixtures/echo.js"
+              }
+            }, null, 2)
+          }
+        }
+      });
+
+      /*eslint-disable camelcase*/
+      process.env.npm_package_config__test_message = "from real env";
+      /*eslint-enable camelcase*/
+
+      run({
+        argv: ["node", "builder", "run", "echo"]
+      }, function (err) {
+        if (err) { return done(err); }
+
+        expect(Task.prototype.run).to.have.callCount(1);
+        expect(process.stdout.write)
+          .to.be.calledWithMatch("string - from real env");
+
+        done();
+      });
     }));
 
   });
@@ -454,6 +679,46 @@ describe("bin/builder-core", function () {
     it("runs with --setup");
     it("runs with --queue=1, --bail=false");
 
+    it("runs with base overriding archetype config value", stdioWrap(function (done) {
+      base.sandbox.spy(Task.prototype, "concurrent");
+      base.mockFs({
+        ".builderrc": "---\narchetypes:\n  - mock-archetype",
+        "package.json": JSON.stringify({
+          "config": {
+            "_test_message": "from base"
+          },
+          "scripts": {
+            "echo2": "node test/server/fixtures/echo.js TWO"
+          }
+        }, null, 2),
+        "node_modules": {
+          "mock-archetype": {
+            "package.json": JSON.stringify({
+              "config": {
+                "_test_message": "from archetype"
+              },
+              "scripts": {
+                "echo1": "node test/server/fixtures/echo.js ONE"
+              }
+            }, null, 2)
+          }
+        }
+      });
+
+      run({
+        argv: ["node", "builder", "concurrent", "echo1", "echo2"]
+      }, function (err) {
+        if (err) { return done(err); }
+
+        expect(Task.prototype.concurrent).to.have.callCount(1);
+        expect(process.stdout.write)
+          .to.be.calledWithMatch("string - from base - ONE").and
+          .to.be.calledWithMatch("string - from base - TWO");
+
+        done();
+      });
+    }));
+
   });
 
   describe("builder envs", function () {
@@ -488,22 +753,23 @@ describe("bin/builder-core", function () {
 
     }));
 
-    it("runs <root>/package.json multiple env commands with --buffer", stdioWrap(function (done) {
+    it("runs multiple env commands with --buffer, --envs-path", stdioWrap(function (done) {
       base.sandbox.spy(Task.prototype, "envs");
       base.mockFs({
         "package.json": JSON.stringify({
           "scripts": {
             "echo": "echo ROOT " + (/^win/.test(process.platform) ? "%MY_VAR%" : "$MY_VAR")
           }
-        }, null, 2)
-      });
-
-      run({
-        argv: ["node", "builder", "envs", "--buffer", "echo", JSON.stringify([
+        }, null, 2),
+        "envs.json": JSON.stringify([
           { MY_VAR: "hi" },
           { MY_VAR: "ho" },
           { MY_VAR: "yo" }
-        ])]
+        ])
+      });
+
+      run({
+        argv: ["node", "builder", "envs", "--buffer", "echo", "--envs-path=envs.json"]
       }, function (err) {
         if (err) { return done(err); }
 
@@ -522,6 +788,7 @@ describe("bin/builder-core", function () {
       base.sandbox.spy(Task.prototype, "envs");
       base.mockFs({
         ".builderrc": "---\narchetypes:\n  - mock-archetype",
+        "package.json": "{}",
         "node_modules": {
           "mock-archetype": {
             "package.json": JSON.stringify({
@@ -690,6 +957,84 @@ describe("bin/builder-core", function () {
     it("runs with --setup");
     it("runs with --tries=2");
     it("runs with --queue=1, --bail=false");
+
+    it("runs with envs overriding base config value", stdioWrap(function (done) {
+      base.sandbox.spy(Task.prototype, "envs");
+      base.mockFs({
+        "package.json": JSON.stringify({
+          "config": {
+            "_test_message": "from base"
+          },
+          "scripts": {
+            "echo": "node test/server/fixtures/echo.js"
+          }
+        }, null, 2)
+      });
+
+      run({
+        argv: ["node", "builder", "envs", "echo", JSON.stringify([
+          {},
+          { "npm_package_config__test_message": "from array1" },
+          { "npm_package_config__test_message": "from array2" }
+        ])]
+      }, function (err) {
+        if (err) { return done(err); }
+
+        expect(Task.prototype.envs).to.have.callCount(1);
+        expect(process.stdout.write)
+          .to.be.calledWithMatch("string - from base").and
+          .to.be.calledWithMatch("string - from array1").and
+          .to.be.calledWithMatch("string - from array2");
+
+        done();
+      });
+    }));
+
+    it("runs with envs real ENV overriding base + arch config value", stdioWrap(function (done) {
+      base.sandbox.spy(Task.prototype, "envs");
+      base.mockFs({
+        ".builderrc": "---\narchetypes:\n  - mock-archetype",
+        "package.json": JSON.stringify({
+          "config": {
+            "_test_message": "from base"
+          }
+        }, null, 2),
+        "node_modules": {
+          "mock-archetype": {
+            "package.json": JSON.stringify({
+              "config": {
+                "_test_message": "from archetype"
+              },
+              "scripts": {
+                "echo": "node test/server/fixtures/echo.js"
+              }
+            }, null, 2)
+          }
+        }
+      });
+
+      /*eslint-disable camelcase*/
+      process.env.npm_package_config__test_message = "from real env";
+      /*eslint-enable camelcase*/
+
+      run({
+        argv: ["node", "builder", "envs", "echo", JSON.stringify([
+          {}, // Now, real env should override this one.
+          { "npm_package_config__test_message": "from array1" },
+          { "npm_package_config__test_message": "from array2" }
+        ])]
+      }, function (err) {
+        if (err) { return done(err); }
+
+        expect(Task.prototype.envs).to.have.callCount(1);
+        expect(process.stdout.write)
+          .to.be.calledWithMatch("string - from real env").and
+          .to.be.calledWithMatch("string - from array1").and
+          .to.be.calledWithMatch("string - from array2");
+
+        done();
+      });
+    }));
 
   });
 
