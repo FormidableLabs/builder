@@ -51,6 +51,7 @@ describe("lib/args", function () {
     it("handles defaults for run flags", function () {
       expect(_flags(args.run(argv))).to.deep.equal({
         tries: 1,
+        expandArchetype: false,
         setup: null
       });
     });
@@ -59,6 +60,7 @@ describe("lib/args", function () {
       argv = argv.concat(["--tries=2"]);
       expect(_flags(args.run(argv))).to.deep.equal({
         tries: 2,
+        expandArchetype: false,
         setup: null
       });
     });
@@ -68,16 +70,19 @@ describe("lib/args", function () {
 
       expect(_flags(args.run(argv.concat(["--tries=-1"])))).to.deep.equal({
         tries: 1,
+        expandArchetype: false,
         setup: null
       });
 
       expect(_flags(args.run(argv.concat(["--tries=BAD"])))).to.deep.equal({
         tries: 1,
+        expandArchetype: false,
         setup: null
       });
 
       expect(_flags(args.run(argv.concat(["--tries="])))).to.deep.equal({
         tries: 1,
+        expandArchetype: false,
         setup: null
       });
     });
@@ -86,6 +91,7 @@ describe("lib/args", function () {
       argv = argv.concat(["--setup=foo"]);
       expect(_flags(args.run(argv))).to.deep.equal({
         tries: 1,
+        expandArchetype: false,
         setup: "foo"
       });
     });
@@ -94,6 +100,7 @@ describe("lib/args", function () {
       argv = argv.concat(["--setup="]);
       expect(_flags(args.run(argv))).to.deep.equal({
         tries: 1,
+        expandArchetype: false,
         setup: null
       });
     });
@@ -107,6 +114,7 @@ describe("lib/args", function () {
         queue: null,
         buffer: false,
         tries: 1,
+        expandArchetype: false,
         setup: null,
         bail: true
       });
@@ -118,6 +126,7 @@ describe("lib/args", function () {
         queue: 2,
         buffer: true,
         tries: 2,
+        expandArchetype: false,
         setup: null,
         bail: false
       });
@@ -128,6 +137,7 @@ describe("lib/args", function () {
         queue: null,
         buffer: true,
         tries: 1,
+        expandArchetype: false,
         setup: null,
         bail: true
       });
@@ -136,6 +146,7 @@ describe("lib/args", function () {
         queue: null,
         buffer: false,
         tries: 1,
+        expandArchetype: false,
         setup: null,
         bail: true
       });
@@ -144,6 +155,7 @@ describe("lib/args", function () {
         queue: null,
         buffer: false,
         tries: 1,
+        expandArchetype: false,
         setup: null,
         bail: true
       });
@@ -152,6 +164,7 @@ describe("lib/args", function () {
         queue: null,
         buffer: true,
         tries: 1,
+        expandArchetype: false,
         setup: null,
         bail: true
       });
@@ -160,6 +173,7 @@ describe("lib/args", function () {
         queue: null,
         buffer: true,
         tries: 1,
+        expandArchetype: false,
         setup: null,
         bail: true
       });
@@ -170,6 +184,7 @@ describe("lib/args", function () {
         queue: null,
         buffer: false,
         tries: 1,
+        expandArchetype: false,
         setup: null,
         bail: true
       });
@@ -178,6 +193,7 @@ describe("lib/args", function () {
         queue: null,
         buffer: false,
         tries: 1,
+        expandArchetype: false,
         setup: null,
         bail: false
       });
@@ -186,6 +202,7 @@ describe("lib/args", function () {
         queue: null,
         buffer: false,
         tries: 1,
+        expandArchetype: false,
         setup: null,
         bail: false
       });
@@ -194,6 +211,7 @@ describe("lib/args", function () {
         queue: null,
         buffer: false,
         tries: 1,
+        expandArchetype: false,
         setup: null,
         bail: true
       });
@@ -202,6 +220,7 @@ describe("lib/args", function () {
         queue: null,
         buffer: false,
         tries: 1,
+        expandArchetype: false,
         setup: null,
         bail: true
       });
@@ -213,6 +232,7 @@ describe("lib/args", function () {
         queue: null,
         buffer: false,
         tries: 1,
+        expandArchetype: false,
         setup: null,
         bail: true
       });
@@ -221,6 +241,7 @@ describe("lib/args", function () {
         queue: 2,
         buffer: false,
         tries: 1,
+        expandArchetype: false,
         setup: null,
         bail: true
       });
@@ -229,6 +250,7 @@ describe("lib/args", function () {
         queue: null,
         buffer: false,
         tries: 1,
+        expandArchetype: false,
         setup: null,
         bail: true
       });
@@ -240,6 +262,7 @@ describe("lib/args", function () {
         queue: null,
         buffer: false,
         tries: 1,
+        expandArchetype: false,
         setup: null,
         bail: true
       });
@@ -248,6 +271,7 @@ describe("lib/args", function () {
         queue: null,
         buffer: false,
         tries: 2,
+        expandArchetype: false,
         setup: null,
         bail: true
       });
@@ -256,6 +280,7 @@ describe("lib/args", function () {
         queue: null,
         buffer: false,
         tries: 1,
+        expandArchetype: false,
         setup: null,
         bail: true
       });
@@ -267,6 +292,7 @@ describe("lib/args", function () {
         queue: null,
         buffer: false,
         tries: 1,
+        expandArchetype: false,
         setup: null,
         bail: false
       });
@@ -283,6 +309,7 @@ describe("lib/args", function () {
         envsPath: null,
         buffer: false,
         tries: 1,
+        expandArchetype: false,
         setup: null,
         bail: true
       });
@@ -297,6 +324,7 @@ describe("lib/args", function () {
         envsPath: dummyPath,
         buffer: true,
         tries: 2,
+        expandArchetype: false,
         setup: null,
         bail: true
       });
@@ -309,6 +337,7 @@ describe("lib/args", function () {
         envsPath: null,
         buffer: false,
         tries: 1,
+        expandArchetype: false,
         setup: null,
         bail: true
       });

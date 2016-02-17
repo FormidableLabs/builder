@@ -220,6 +220,7 @@ $ builder run <task>
 Flags:
 
 * `--builderrc`: Path to builder config file (default: `.builderrc`)
+* `--expand-archetype`: Expand `node_modules/<archetype>` with full path (default: `false`)
 * `--tries`: Number of times to attempt a task (default: `1`)
 * `--setup`: Single task to run for the entirety of `<action>`.
 
@@ -237,6 +238,7 @@ $ builder concurrent <task1> <task2> <task3>
 Flags:
 
 * `--builderrc`: Path to builder config file (default: `.builderrc`)
+* `--expand-archetype`: Expand `node_modules/<archetype>` with full path (default: `false`)
 * `--tries`: Number of times to attempt a task (default: `1`)
 * `--setup`: Single task to run for the entirety of `<action>`.
 * `--queue`: Number of concurrent processes to run (default: unlimited - `0|null`)
@@ -275,6 +277,7 @@ $ builder envs <task> '[{ "FOO": "VAL1", "BAR": "VAL2" }, { "FOO": "VAL3" }]'
 Flags:
 
 * `--builderrc`: Path to builder config file (default: `.builderrc`)
+* `--expand-archetype`: Expand `node_modules/<archetype>` with full path (default: `false`)
 * `--tries`: Number of times to attempt a task (default: `1`)
 * `--setup`: Single task to run for the entirety of `<action>`.
 * `--queue`: Number of concurrent processes to run (default: unlimited - `0|null`)
@@ -326,6 +329,78 @@ The rough heuristic here is if we have custom arguments:
 1. If a `builder <action>` command, append with ` -- ` to pass through.
 2. If a non-`builder` command, then append without ` -- ` token.
 
+###### Expanding the Archetype Path
+
+Builder tasks often refer to configuration files in the archetype itself like:
+
+```js
+"postinstall": "webpack --bail --config node_modules/<archetype>/config/webpack/webpack.config.js",
+```
+
+In npm v2 this wasn't a problem because dependencies were usually nested. In
+npm v3, this all changes with aggressive
+[flattening](https://docs.npmjs.com/cli/dedupe) of dependencies. With flattened
+dependencies, the change that the archetype and its dependencies no longer have
+a predictable contained structure increases.
+
+Thus, commands like the above succeed if the installation ends up like:
+
+```
+node_modules/
+  <a module>/
+    node_modules/
+      <archetype>/
+        node_modules/
+          webpack/
+```
+
+If npm flattens the tree like:
+
+```
+node_modules/
+  <a module>/
+  <archetype>/
+  webpack/
+```
+
+Then `builder` can still find `webpack` due to its `PATH` and `NODE_PATH`
+mutations. But an issue arises with something like a `postinstall` step after
+this flattening in that the current working directory of the process will be
+`PATH/TO/node_modules/<a module>/`, which in this flattened scenario would
+**not** find the file:
+
+```
+node_modules/<archetype>/config/webpack/webpack.config.js
+```
+
+because relative to `node_modules/<a module>/` it is now at:
+
+```
+../<archetype>/config/webpack/webpack.config.js
+```
+
+To address this problem `builder` has an `--expand-archetype` flag that will
+replace an occurence of the specific `node_modules/<archetype>` in one of the
+archetype commands with the _full path_ to the archetype, to guarantee
+referenced files are correctly available.
+
+Some notes:
+
+* The only real scenario you'll need this is for a module that needs to run
+  a `postinstall` or something as part of an install in a larger project.
+  Root git clone projects controlled by an archetype should work just fine
+  because the archetype will be predictably located at:
+  `node_modules/<archetype>`
+* The `--expand-archetype` only expands the specific archetype string for its
+  **own** commands and not those in the root projects or other archetypes.
+* The replacement assumes you are using `/` forward slash characters which
+  are the recommended cross-platform way to construct file paths (even on
+  windows).
+* The replacement only replaces at the _start_ of a command string or after
+  whitespace. This means it _won't_ replace `../node_modules/<archetype>` or
+  even `./node_modules/<archetype>`. (In the last case, just omit the `./`
+  in front of a path -- it's a great habit to pick up as `./` breaks on Windows
+  and omitting `./` works on all platforms!)
 
 ## Tasks
 

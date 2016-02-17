@@ -602,6 +602,47 @@ describe("bin/builder-core", function () {
       });
     }));
 
+    // TODO: IMPLEMENT
+    describe("expands paths with --expand-archetype", function () {
+
+      it("Skips `../node_modules/<archetype>`");
+      it("Skips `other/node_modules/<archetype>`");
+
+      it.skip("Replaces `node_modules/<archetype>`", stdioWrap(function (done) {
+        base.sandbox.spy(Task.prototype, "run");
+        base.mockFs({
+          ".builderrc": "---\narchetypes:\n  - mock-archetype",
+          "package.json": JSON.stringify({
+            "scripts": {
+              "bar": "echo EXPANDED node_modules/mock-archetype/A_FILE.txt"
+            }
+          }, null, 2),
+          "node_modules": {
+            "mock-archetype": {
+              "package.json": JSON.stringify({}, null, 2)
+            }
+          }
+        });
+
+        run({
+          argv: ["node", "builder", "--expand-archetype", "run", "bar"]
+        }, function (err) {
+          if (err) { return done(err); }
+
+          expect(Task.prototype.run).to.be.calledOnce;
+          expect(process.stdout.write).to.be.calledWithMatch(
+            "EXPANDED " + path.join(process.cwd(), "node_modules/mock-archetype/A_FILE.txt")
+          );
+
+          done();
+        });
+      }));
+
+      it("Replaces `./node_modules/<archetype>`");
+      it("Propagates flag to sub-task");
+
+    });
+
   });
 
   describe("builder concurrent", function () {
