@@ -82,4 +82,21 @@ describe("lib/runner", function () {
 
   });
 
+  describe("#replaceToken", function () {
+    var replaceToken = runner._replaceToken;
+
+    it("leaves strings without tokens unchanged", function () {
+      expect(replaceToken("", "t", "r")).to.equal("");
+      expect(replaceToken(" ", "t", "r")).to.equal(" ");
+      expect(replaceToken("  ", "t", "r")).to.equal("  ");
+      expect(replaceToken("no_match", "T", "R")).to.equal("no_match");
+    });
+
+    it("skips tokens after slashes");
+    it("skips tokens after characters");
+    it("replaces at the beginning of strings");
+    it("replaces after quotes");
+    it("replaces after whitespace");
+  });
+
 });
