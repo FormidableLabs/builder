@@ -58,12 +58,12 @@ describe("bin/builder-core", function () {
       if (base.fileExists(mod)) {
         return {
           mod: JSON.parse(base.fileRead(mod)),
-          path: path.resolve(mod)
+          path: path.dirname(path.resolve(mod))
         };
       } else if (base.fileExists(path.join("node_modules", mod))) {
         return {
           mod: JSON.parse(base.fileRead(path.join("node_modules", mod))),
-          path: path.resolve(path.join("node_modules", mod))
+          path: path.dirname(path.resolve(path.join("node_modules", mod)))
         };
       }
       throw new Error("Cannot require: " + mod);
