@@ -609,8 +609,9 @@ describe("bin/builder-core", function () {
     }));
 
     // TODO: IMPLEMENT
-    describe.skip("expands paths with --expand-archetype", function () {
+    describe.only("expands paths with --expand-archetype", function () {
 
+      // TODO: IMPLEMENT
       it("Skips `../node_modules/<archetype>`");
       it("Skips `other/node_modules/<archetype>`");
 
@@ -618,14 +619,14 @@ describe("bin/builder-core", function () {
         base.sandbox.spy(Task.prototype, "run");
         base.mockFs({
           ".builderrc": "---\narchetypes:\n  - mock-archetype",
-          "package.json": JSON.stringify({
-            "scripts": {
-              "bar": "echo EXPANDED node_modules/mock-archetype/A_FILE.txt"
-            }
-          }, null, 2),
+          "package.json": JSON.stringify({}, null, 2),
           "node_modules": {
             "mock-archetype": {
-              "package.json": JSON.stringify({}, null, 2)
+              "package.json": JSON.stringify({
+                "scripts": {
+                  "bar": "echo EXPANDED node_modules/mock-archetype/A_FILE.txt"
+                }
+              }, null, 2)
             }
           }
         });
@@ -644,9 +645,39 @@ describe("bin/builder-core", function () {
         });
       }));
 
+      // TODO: IMPLEMENT
       it("Replaces `./node_modules/<archetype>`");
       it("Propagates flag to sub-task");
-      it("Skips replacing root project tasks");
+
+      it("Skips replacing root project tasks", stdioWrap(function (done) {
+        base.sandbox.spy(Task.prototype, "run");
+        base.mockFs({
+          ".builderrc": "---\narchetypes:\n  - mock-archetype",
+          "package.json": JSON.stringify({
+            "scripts": {
+              "bar": "echo WONT_EXPAND node_modules/mock-archetype/A_FILE.txt"
+            }
+          }, null, 2),
+          "node_modules": {
+            "mock-archetype": {
+              "package.json": JSON.stringify({}, null, 2)
+            }
+          }
+        });
+
+        run({
+          argv: ["node", "builder", "--expand-archetype", "run", "bar"]
+        }, function (err) {
+          if (err) { return done(err); }
+
+          expect(Task.prototype.run).to.be.calledOnce;
+          expect(process.stdout.write).to.be.calledWithMatch(
+            "WONT_EXPAND node_modules/mock-archetype/A_FILE.txt"
+          );
+
+          done();
+        });
+      }));
 
     });
 
