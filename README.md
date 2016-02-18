@@ -384,6 +384,15 @@ replace an occurence of the specific `node_modules/<archetype>` in one of the
 archetype commands with the _full path_ to the archetype, to guarantee
 referenced files are correctly available.
 
+The basic heuristic of things to replace is:
+
+* `^node_modules/<archetype>`: Token is very first string.
+* `[\s\t]node_modules/<archetype>`: Whitespace before token.
+* `['"]node_modules/<archetype>`: Quotes before token.
+    * _Note_ that the path coming back from the underlying
+     `require.resolve(module)` will likely be escaped, so things like
+     whitespace in a path + quotes around it may not expand correctly.
+
 Some notes:
 
 * The only real scenario you'll need this is for a module that needs to run
