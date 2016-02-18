@@ -56,9 +56,15 @@ describe("bin/builder-core", function () {
     // Skip `require()`-ing at all so we avoid `require` cache issues.
     base.sandbox.stub(Config.prototype, "_lazyRequire", function (mod) {
       if (base.fileExists(mod)) {
-        return JSON.parse(base.fileRead(mod));
+        return {
+          mod: JSON.parse(base.fileRead(mod)),
+          path: path.resolve(mod)
+        };
       } else if (base.fileExists(path.join("node_modules", mod))) {
-        return JSON.parse(base.fileRead(path.join("node_modules", mod)));
+        return {
+          mod: JSON.parse(base.fileRead(path.join("node_modules", mod))),
+          path: path.resolve(path.join("node_modules", mod))
+        };
       }
       throw new Error("Cannot require: " + mod);
     });
@@ -603,12 +609,12 @@ describe("bin/builder-core", function () {
     }));
 
     // TODO: IMPLEMENT
-    describe("expands paths with --expand-archetype", function () {
+    describe.skip("expands paths with --expand-archetype", function () {
 
       it("Skips `../node_modules/<archetype>`");
       it("Skips `other/node_modules/<archetype>`");
 
-      it.skip("Replaces `node_modules/<archetype>`", stdioWrap(function (done) {
+      it("Replaces `node_modules/<archetype>`", stdioWrap(function (done) {
         base.sandbox.spy(Task.prototype, "run");
         base.mockFs({
           ".builderrc": "---\narchetypes:\n  - mock-archetype",
@@ -640,6 +646,7 @@ describe("bin/builder-core", function () {
 
       it("Replaces `./node_modules/<archetype>`");
       it("Propagates flag to sub-task");
+      it("Skips replacing root project tasks");
 
     });
 
