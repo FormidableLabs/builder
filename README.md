@@ -400,6 +400,8 @@ Some notes:
   Root git clone projects controlled by an archetype should work just fine
   because the archetype will be predictably located at:
   `node_modules/<archetype>`
+* The `--expand-archetype` flag gets propagated down to all composed `builder`
+  commands internally.
 * The `--expand-archetype` only expands the specific archetype string for its
   **own** commands and not those in the root projects or other archetypes.
 * The replacement assumes you are using `/` forward slash characters which
