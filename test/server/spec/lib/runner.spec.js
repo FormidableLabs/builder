@@ -14,28 +14,28 @@ describe("lib/runner", function () {
       it("handles base cases", function () {
         expect(cmdWithCustom("foo")).to.equal("foo");
         expect(cmdWithCustom("foo --before")).to.equal("foo --before");
-        expect(cmdWithCustom("bar", { _customArgs: [] })).to.equal("bar");
+        expect(cmdWithCustom("bar", { _customFlags: [] })).to.equal("bar");
       });
 
       it("adds custom arguments", function () {
-        expect(cmdWithCustom("foo", { _customArgs: ["--bar"] })).to.equal("foo --bar");
-        expect(cmdWithCustom("foo --before", { _customArgs: ["--bar", "2", "--baz=3"] }))
+        expect(cmdWithCustom("foo", { _customFlags: ["--bar"] })).to.equal("foo --bar");
+        expect(cmdWithCustom("foo --before", { _customFlags: ["--bar", "2", "--baz=3"] }))
           .to.equal("foo --before --bar 2 --baz=3");
       });
 
       it("handles quoted --", function () {
-        expect(cmdWithCustom("foo \"-- in quotes\"", { _customArgs: ["--bar"] }))
+        expect(cmdWithCustom("foo \"-- in quotes\"", { _customFlags: ["--bar"] }))
           .to.equal("foo \"-- in quotes\" --bar");
-        expect(cmdWithCustom("foo '-- in quotes'", { _customArgs: ["--bar"] }))
+        expect(cmdWithCustom("foo '-- in quotes'", { _customFlags: ["--bar"] }))
           .to.equal("foo '-- in quotes' --bar");
-        expect(cmdWithCustom("foo '{\"--\": \"in -- json\"}'", { _customArgs: ["--bar"] }))
+        expect(cmdWithCustom("foo '{\"--\": \"in -- json\"}'", { _customFlags: ["--bar"] }))
           .to.equal("foo '{\"--\": \"in -- json\"}' --bar");
       });
 
       it("adds custom arguments with existing custom arguments", function () {
-        expect(cmdWithCustom("foo -- --first", { _customArgs: ["--second"] }))
+        expect(cmdWithCustom("foo -- --first", { _customFlags: ["--second"] }))
           .to.equal("foo -- --first --second");
-        expect(cmdWithCustom("foo --before -- --first", { _customArgs: ["--second"] }))
+        expect(cmdWithCustom("foo --before -- --first", { _customFlags: ["--second"] }))
           .to.equal("foo --before -- --first --second");
       });
     });
@@ -49,34 +49,64 @@ describe("lib/runner", function () {
       });
 
       it("adds custom arguments", function () {
-        expect(cmdWithCustom("builder", { _customArgs: ["--bar"], _isBuilderTask: true }))
-          .to.equal("builder -- --bar");
+        var env;
 
-        // Preserve `--before` _before_ the `--`.
+        env = {};
+        expect(cmdWithCustom("builder", { _customFlags: ["--bar"], _isBuilderTask: true }, env))
+          .to.equal("builder");
+        expect(env).to.have.property("_BUILDER_ARGS_CUSTOM_FLAGS")
+          .that.equals(JSON.stringify(["--bar"]));
+
+        // Add in environment.
+        env = { _BUILDER_ARGS_CUSTOM_FLAGS: JSON.stringify(["--env", "hi"]) };
         expect(cmdWithCustom("builder --before",
-          { _customArgs: ["--bar", "2", "--baz=3"], _isBuilderTask: true }))
-          .to.equal("builder --before -- --bar 2 --baz=3");
+          { _customFlags: ["--bar", "2", "--baz=3"], _isBuilderTask: true }, env))
+          .to.equal("builder --before");
+        expect(env).to.have.property("_BUILDER_ARGS_CUSTOM_FLAGS")
+          .that.equals(JSON.stringify(["--bar", "2", "--baz=3", "--env", "hi"]));
       });
 
       it("handles quoted --", function () {
+        var env;
+
+        env = {};
         expect(cmdWithCustom("builder \"-- in quotes\"",
-          { _customArgs: ["--bar"], _isBuilderTask: true }))
-          .to.equal("builder \"-- in quotes\" -- --bar");
+          { _customFlags: ["--bar"], _isBuilderTask: true }, env))
+          .to.equal("builder \"-- in quotes\"");
+        expect(env).to.have.property("_BUILDER_ARGS_CUSTOM_FLAGS")
+          .that.equals(JSON.stringify(["--bar"]));
+
+        env = {};
         expect(cmdWithCustom("builder '-- in quotes'",
-          { _customArgs: ["--bar"], _isBuilderTask: true }))
-          .to.equal("builder '-- in quotes' -- --bar");
+          { _customFlags: ["--bar"], _isBuilderTask: true }, env))
+          .to.equal("builder '-- in quotes'");
+        expect(env).to.have.property("_BUILDER_ARGS_CUSTOM_FLAGS")
+          .that.equals(JSON.stringify(["--bar"]));
+
+        env = {};
         expect(cmdWithCustom("builder '{\"--\": \"in -- json\"}'",
-          { _customArgs: ["--bar"], _isBuilderTask: true }))
-          .to.equal("builder '{\"--\": \"in -- json\"}' -- --bar");
+          { _customFlags: ["--bar"], _isBuilderTask: true }, env))
+          .to.equal("builder '{\"--\": \"in -- json\"}'");
+        expect(env).to.have.property("_BUILDER_ARGS_CUSTOM_FLAGS")
+          .that.equals(JSON.stringify(["--bar"]));
       });
 
       it("adds custom arguments with existing custom arguments", function () {
+        var env;
+
+        env = {};
         expect(cmdWithCustom("builder -- --first",
-          { _customArgs: ["--second"], _isBuilderTask: true }))
-          .to.equal("builder -- --first --second");
+          { _customFlags: ["--second"], _isBuilderTask: true }, env))
+          .to.equal("builder -- --first");
+        expect(env).to.have.property("_BUILDER_ARGS_CUSTOM_FLAGS")
+          .that.equals(JSON.stringify(["--second"]));
+
+        env = {};
         expect(cmdWithCustom("builder --before -- --first",
-          { _customArgs: ["--second"], _isBuilderTask: true }))
-          .to.equal("builder --before -- --first --second");
+          { _customFlags: ["--second"], _isBuilderTask: true }, env))
+          .to.equal("builder --before -- --first");
+        expect(env).to.have.property("_BUILDER_ARGS_CUSTOM_FLAGS")
+          .that.equals(JSON.stringify(["--second"]));
       });
     });
 

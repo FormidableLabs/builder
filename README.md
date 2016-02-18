@@ -323,7 +323,8 @@ down --way --the --all --my-custom-flag
 
 The rough heuristic here is if we have custom arguments:
 
-1. If a `builder <action>` command, append with ` -- ` to pass through.
+1. If a `builder <action>` command, pass through using builder-specific
+   environment variables. (Builder uses `_BUILDER_ARGS_CUSTOM_FLAGS`).
 2. If a non-`builder` command, then append without ` -- ` token.
 
 
