@@ -1,6 +1,11 @@
 History
 =======
 
+## 2.7.1
+
+* Propagate `--` flags via environment instead of command line mutation.
+  [#92](https://github.com/FormidableLabs/builder/issues/92)
+
 ## 2.7.0
 
 * Add support for `package.json:config` analogous to `npm`.
