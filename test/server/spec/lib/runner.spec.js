@@ -112,4 +112,45 @@ describe("lib/runner", function () {
 
   });
 
+  describe("#replaceToken", function () {
+    var replaceToken = runner._replaceToken;
+
+    it("leaves strings without tokens unchanged", function () {
+      expect(replaceToken("", "t", "r")).to.equal("");
+      expect(replaceToken(" ", "t", "r")).to.equal(" ");
+      expect(replaceToken("  ", "t", "r")).to.equal("  ");
+      expect(replaceToken("no_match", "T", "R")).to.equal("no_match");
+    });
+
+    it("skips tokens after slashes", function () {
+      expect(replaceToken("/TOK", "TOK", "SUB")).to.equal("/TOK");
+      expect(replaceToken("hello ./TOK", "TOK", "SUB")).to.equal("hello ./TOK");
+      expect(replaceToken("/TOK/TOK/TOK", "TOK", "SUB")).to.equal("/TOK/TOK/TOK");
+    });
+
+    it("skips tokens after characters", function () {
+      expect(replaceToken("aTOK", "TOK", "SUB")).to.equal("aTOK");
+      expect(replaceToken("TKTOK ", "TOK", "SUB")).to.equal("TKTOK ");
+      expect(replaceToken("TO.*KTOK", "TOK", "SUB")).to.equal("TO.*KTOK");
+    });
+
+    it("replaces at the beginning of strings", function () {
+      expect(replaceToken("TOK", "TOK", "SUB")).to.equal("SUB");
+      expect(replaceToken("TOK hello", "TOK", "SUB")).to.equal("SUB hello");
+      expect(replaceToken("TOK [hello]*", "TOK", "SUB")).to.equal("SUB [hello]*");
+      expect(replaceToken("TOK/  \/hi .* TOk/ ", "TOK", "SUB")).to.equal("SUB/  \/hi .* TOk/ ");
+    });
+
+    it("replaces after quotes", function () {
+      expect(replaceToken("'TOK' \"TOK/More\"", "TOK", "SUB")).to.equal("'SUB' \"SUB/More\"");
+      expect(replaceToken("T/K hello 'T/K/T/K'", "T/K", "S/B")).to.equal("S/B hello 'S/B/T/K'");
+    });
+
+    it("replaces after whitespace", function () {
+      expect(replaceToken("TOK TOK", "TOK", "SUB")).to.equal("SUB SUB");
+      expect(replaceToken("TOK hello TOK", "TOK", "SUB")).to.equal("SUB hello SUB");
+      expect(replaceToken("echo TOK/foo/TOK", "TOK", "SUB")).to.equal("echo SUB/foo/TOK");
+    });
+  });
+
 });

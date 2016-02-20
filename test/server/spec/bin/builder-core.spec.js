@@ -56,9 +56,15 @@ describe("bin/builder-core", function () {
     // Skip `require()`-ing at all so we avoid `require` cache issues.
     base.sandbox.stub(Config.prototype, "_lazyRequire", function (mod) {
       if (base.fileExists(mod)) {
-        return JSON.parse(base.fileRead(mod));
+        return {
+          mod: JSON.parse(base.fileRead(mod)),
+          path: path.dirname(path.resolve(mod))
+        };
       } else if (base.fileExists(path.join("node_modules", mod))) {
-        return JSON.parse(base.fileRead(path.join("node_modules", mod)));
+        return {
+          mod: JSON.parse(base.fileRead(path.join("node_modules", mod))),
+          path: path.dirname(path.resolve(path.join("node_modules", mod)))
+        };
       }
       throw new Error("Cannot require: " + mod);
     });
@@ -601,6 +607,194 @@ describe("bin/builder-core", function () {
         done();
       });
     }));
+
+    describe("expands paths with --expand-archetype", function () {
+
+      it("Skips `../node_modules/<archetype>`", stdioWrap(function (done) {
+        base.sandbox.spy(Task.prototype, "run");
+        base.mockFs({
+          ".builderrc": "---\narchetypes:\n  - mock-archetype",
+          "package.json": JSON.stringify({}, null, 2),
+          "node_modules": {
+            "mock-archetype": {
+              "package.json": JSON.stringify({
+                "scripts": {
+                  "bar": "echo WONT_EXPAND ../node_modules/mock-archetype/A_FILE.txt"
+                }
+              }, null, 2)
+            }
+          }
+        });
+
+        run({
+          argv: ["node", "builder", "--expand-archetype", "run", "bar"]
+        }, function (err) {
+          if (err) { return done(err); }
+
+          expect(Task.prototype.run).to.be.calledOnce;
+          expect(process.stdout.write).to.be.calledWithMatch(
+            "WONT_EXPAND ../node_modules/mock-archetype/A_FILE.txt"
+          );
+
+          done();
+        });
+      }));
+
+      it("Skips `other/node_modules/<archetype>`", stdioWrap(function (done) {
+        base.sandbox.spy(Task.prototype, "run");
+        base.mockFs({
+          ".builderrc": "---\narchetypes:\n  - mock-archetype",
+          "package.json": JSON.stringify({}, null, 2),
+          "node_modules": {
+            "mock-archetype": {
+              "package.json": JSON.stringify({
+                "scripts": {
+                  "bar": "echo WONT_EXPAND other/node_modules/mock-archetype/A_FILE.txt"
+                }
+              }, null, 2)
+            }
+          }
+        });
+
+        run({
+          argv: ["node", "builder", "--expand-archetype", "run", "bar"]
+        }, function (err) {
+          if (err) { return done(err); }
+
+          expect(Task.prototype.run).to.be.calledOnce;
+          expect(process.stdout.write).to.be.calledWithMatch(
+            "WONT_EXPAND other/node_modules/mock-archetype/A_FILE.txt"
+          );
+
+          done();
+        });
+      }));
+
+      it("Replaces `node_modules/<archetype>`", stdioWrap(function (done) {
+        base.sandbox.spy(Task.prototype, "run");
+        base.mockFs({
+          ".builderrc": "---\narchetypes:\n  - mock-archetype",
+          "package.json": JSON.stringify({}, null, 2),
+          "node_modules": {
+            "mock-archetype": {
+              "package.json": JSON.stringify({
+                "scripts": {
+                  "bar": "echo EXPANDED node_modules/mock-archetype/A_FILE.txt"
+                }
+              }, null, 2)
+            }
+          }
+        });
+
+        run({
+          argv: ["node", "builder", "--expand-archetype", "run", "bar"]
+        }, function (err) {
+          if (err) { return done(err); }
+
+          expect(Task.prototype.run).to.be.calledOnce;
+          expect(process.stdout.write).to.be.calledWithMatch(
+            "EXPANDED " + path.join(process.cwd(), "node_modules/mock-archetype/A_FILE.txt")
+          );
+
+          done();
+        });
+      }));
+
+      it("Replaces `\"node_modules/<archetype>`", stdioWrap(function (done) {
+        base.sandbox.spy(Task.prototype, "run");
+        base.mockFs({
+          ".builderrc": "---\narchetypes:\n  - mock-archetype",
+          "package.json": JSON.stringify({}, null, 2),
+          "node_modules": {
+            "mock-archetype": {
+              "package.json": JSON.stringify({
+                "scripts": {
+                  // Note: Need double escaping here for command line echo.
+                  // Note: Not sure if the quote escaping is the same on windows.
+                  "bar": "echo EXPANDED \\\"node_modules/mock-archetype/A_FILE.txt\\\""
+                }
+              }, null, 2)
+            }
+          }
+        });
+
+        run({
+          argv: ["node", "builder", "--expand-archetype", "run", "bar"]
+        }, function (err) {
+          if (err) { return done(err); }
+
+          expect(Task.prototype.run).to.be.calledOnce;
+          expect(process.stdout.write).to.be.calledWithMatch(
+            "EXPANDED \"" + path.join(process.cwd(), "node_modules/mock-archetype/A_FILE.txt\"")
+          );
+
+          done();
+        });
+      }));
+
+      it("Propagates flag to sub-task", stdioWrap(function (done) {
+        base.sandbox.spy(Task.prototype, "run");
+        base.mockFs({
+          ".builderrc": "---\narchetypes:\n  - mock-archetype",
+          "package.json": JSON.stringify({}, null, 2),
+          "node_modules": {
+            "mock-archetype": {
+              "package.json": JSON.stringify({
+                "scripts": {
+                  "bar": "echo EXPANDED node_modules/mock-archetype/A_FILE.txt"
+                }
+              }, null, 2)
+            }
+          }
+        });
+
+        process.env._BUILDER_ARGS_EXPAND_ARCHETYPE = "true";
+
+        run({
+          argv: ["node", "builder", "run", "bar"]
+        }, function (err) {
+          if (err) { return done(err); }
+
+          expect(Task.prototype.run).to.be.calledOnce;
+          expect(process.stdout.write).to.be.calledWithMatch(
+            "EXPANDED " + path.join(process.cwd(), "node_modules/mock-archetype/A_FILE.txt")
+          );
+
+          done();
+        });
+      }));
+
+      it("Skips replacing root project tasks", stdioWrap(function (done) {
+        base.sandbox.spy(Task.prototype, "run");
+        base.mockFs({
+          ".builderrc": "---\narchetypes:\n  - mock-archetype",
+          "package.json": JSON.stringify({
+            "scripts": {
+              "bar": "echo WONT_EXPAND node_modules/mock-archetype/A_FILE.txt"
+            }
+          }, null, 2),
+          "node_modules": {
+            "mock-archetype": {
+              "package.json": JSON.stringify({}, null, 2)
+            }
+          }
+        });
+
+        run({
+          argv: ["node", "builder", "--expand-archetype", "run", "bar"]
+        }, function (err) {
+          if (err) { return done(err); }
+
+          expect(Task.prototype.run).to.be.calledOnce;
+          expect(process.stdout.write).to.be.calledWithMatch(
+            "WONT_EXPAND node_modules/mock-archetype/A_FILE.txt"
+          );
+
+          done();
+        });
+      }));
+
+    });
 
   });
 
