@@ -220,6 +220,7 @@ $ builder run <task>
 Flags:
 
 * `--builderrc`: Path to builder config file (default: `.builderrc`)
+* `--expand-archetype`: Expand `node_modules/<archetype>` with full path (default: `false`)
 * `--tries`: Number of times to attempt a task (default: `1`)
 * `--setup`: Single task to run for the entirety of `<action>`.
 
@@ -237,6 +238,7 @@ $ builder concurrent <task1> <task2> <task3>
 Flags:
 
 * `--builderrc`: Path to builder config file (default: `.builderrc`)
+* `--expand-archetype`: Expand `node_modules/<archetype>` with full path (default: `false`)
 * `--tries`: Number of times to attempt a task (default: `1`)
 * `--setup`: Single task to run for the entirety of `<action>`.
 * `--queue`: Number of concurrent processes to run (default: unlimited - `0|null`)
@@ -275,6 +277,7 @@ $ builder envs <task> '[{ "FOO": "VAL1", "BAR": "VAL2" }, { "FOO": "VAL3" }]'
 Flags:
 
 * `--builderrc`: Path to builder config file (default: `.builderrc`)
+* `--expand-archetype`: Expand `node_modules/<archetype>` with full path (default: `false`)
 * `--tries`: Number of times to attempt a task (default: `1`)
 * `--setup`: Single task to run for the entirety of `<action>`.
 * `--queue`: Number of concurrent processes to run (default: unlimited - `0|null`)
@@ -327,6 +330,89 @@ The rough heuristic here is if we have custom arguments:
    environment variables. (Builder uses `_BUILDER_ARGS_CUSTOM_FLAGS`).
 2. If a non-`builder` command, then append without ` -- ` token.
 
+###### Expanding the Archetype Path
+
+Builder tasks often refer to configuration files in the archetype itself like:
+
+```js
+"postinstall": "webpack --bail --config node_modules/<archetype>/config/webpack/webpack.config.js",
+```
+
+In npm v2 this wasn't a problem because dependencies were usually nested. In
+npm v3, this all changes with aggressive
+[flattening](https://docs.npmjs.com/cli/dedupe) of dependencies. With flattened
+dependencies, the chance that the archetype and its dependencies no longer have
+a predictable contained structure increases.
+
+Thus, commands like the above succeed if the installation ends up like:
+
+```
+node_modules/
+  <a module>/
+    node_modules/
+      <archetype>/
+        node_modules/
+          webpack/
+```
+
+If npm flattens the tree like:
+
+```
+node_modules/
+  <a module>/
+  <archetype>/
+  webpack/
+```
+
+Then `builder` can still find `webpack` due to its `PATH` and `NODE_PATH`
+mutations. But an issue arises with something like a `postinstall` step after
+this flattening in that the current working directory of the process will be
+`PATH/TO/node_modules/<a module>/`, which in this flattened scenario would
+**not** find the file:
+
+```
+node_modules/<archetype>/config/webpack/webpack.config.js
+```
+
+because relative to `node_modules/<a module>/` it is now at:
+
+```
+../<archetype>/config/webpack/webpack.config.js
+```
+
+To address this problem `builder` has an `--expand-archetype` flag that will
+replace an occurrence of the specific `node_modules/<archetype>` in one of the
+archetype commands with the _full path_ to the archetype, to guarantee
+referenced files are correctly available.
+
+The basic heuristic of things to replace is:
+
+* `^node_modules/<archetype>`: Token is very first string.
+* `[\s\t]node_modules/<archetype>`: Whitespace before token.
+* `['"]node_modules/<archetype>`: Quotes before token.
+    * _Note_ that the path coming back from the underlying
+     `require.resolve(module)` will likely be escaped, so things like
+     whitespace in a path + quotes around it may not expand correctly.
+
+Some notes:
+
+* The only real scenario you'll need this is for a module that needs to run
+  a `postinstall` or something as part of an install in a larger project.
+  Root git clone projects controlled by an archetype should work just fine
+  because the archetype will be predictably located at:
+  `node_modules/<archetype>`
+* The `--expand-archetype` flag gets propagated down to all composed `builder`
+  commands internally.
+* The `--expand-archetype` only expands the specific archetype string for its
+  **own** commands and not those in the root projects or other archetypes.
+* The replacement assumes you are using `/` forward slash characters which
+  are the recommended cross-platform way to construct file paths (even on
+  windows).
+* The replacement only replaces at the _start_ of a command string or after
+  whitespace. This means it _won't_ replace `../node_modules/<archetype>` or
+  even `./node_modules/<archetype>`. (In the last case, just omit the `./`
+  in front of a path -- it's a great habit to pick up as `./` breaks on Windows
+  and omitting `./` works on all platforms!)
 
 ## Tasks
 
@@ -601,7 +687,7 @@ The resolution order for a `script` task (say, `foo`) present in all three
 * Look through `ROOT/package.json` then the configured archetypes in _reverse_
   order: `ARCHETYPE_TWO/package.json`, then `ARCHETYPE_ONE/package.json` for
   a matching task `foo`
-* If found `foo`, check if it is a "passthrough" task, which means it delegates
+* If found `foo`, check if it is a "pass-through" task, which means it delegates
   to a later instance -- basically `"foo": "builder run foo"`. If so, then look
   to next instance of task found in order above.
 
@@ -725,7 +811,7 @@ Read the [`builder-support` docs](https://github.com/FormidableLabs/builder-supp
 to learn more about how dev archetypes are easily managed with
 `builder-support gen-dev`.
 
-#### NOTE: Application vs Archetype Dependencies
+#### NOTE: Application vs. Archetype Dependencies
 
 While we would love to have `builder` manage _all_ the dependencies of an
 application, the practical realities of how npm works is that archetypes can
@@ -890,13 +976,35 @@ module.exports = function (config) {
 
 ## Tips, Tricks, & Notes
 
+### PATH, NODE_PATH Resolution
+
+Builder uses some magic to enhance `PATH` and `NODE_PATH` to look in the
+installed modules of builder archetypes and in the root of your project (per
+normal). We mutate both of these environment variables to resolve in the
+following order:
+
+`PATH`:
+
+1. `<cwd>/node_modules/<archetype>/.bin`
+2. `<cwd>/node_modules/.bin`
+3. Existing `PATH`
+
+`NODE_PATH`:
+
+1. `<cwd>/node_modules/<archetype>/node_modules`
+2. `<cwd>/node_modules`
+3. Existing `NODE_PATH`
+
+The order of resolution doesn't often come up, but can sometimes be a factor
+in diagnosing archetype issues and script / file paths, especially when using
+`npm` v3.
+
 ### Project Root
 
-Builder uses some magic to enhance `NODE_PATH` to look in the root of your
-project (normal) and in the installed modules of builder archetypes. This
-latter path enhancement sometimes throws tools / libraries for a loop. We
-recommend using `require.resolve("LIBRARY_OR_REQUIRE_PATH")` to get the
-appropriate installed file path to a dependency.
+The enhancements to `NODE_PATH` that `builder` performs can throw tools /
+libraries for a loop. Generally speaking, we recommend using
+`require.resolve("LIBRARY_OR_REQUIRE_PATH")` to get the appropriate installed
+file path to a dependency.
 
 This comes up in situations including:
 
@@ -1019,7 +1127,7 @@ Builder-free and back to a normal `npm`-controlled project.
 ### Versions v1, v2, v3
 
 The `builder` project effectively starts at `v2.x.x`. Prior to that Builder was
-a small DOM utility that fell into disuse, so we repurposed it for a new
+a small DOM utility that fell into disuse, so we re-purposed it for a new
 wonderful destiny! But, because we follow semver, that means everything starts
 at `v2` and as a helpful tip / warning:
 

@@ -1,6 +1,14 @@
 History
 =======
 
+## Current
+
+* Revises `PATH`, `NODE_PATH` ordering to place archetype first, then root
+  project.
+* Add `--expand-archetype` flag to expand `node_modules/<archetype` tokens in
+  task strings.
+  [builder-victory-component#23](https://github.com/FormidableLabs/builder-victory-component/issues/23)
+
 ## 2.7.1
 
 * Propagate `--` flags via environment instead of command line mutation.
