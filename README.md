@@ -1009,7 +1009,7 @@ file path to a dependency.
 This comes up in situations including:
 
 * Webpack loaders
-* Karma included files
+* Karma included files∏
 
 The other thing that comes up in our Archetype configuration file is the
 general _requirement_ that builder is running from the project root, not
