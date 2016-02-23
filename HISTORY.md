@@ -1,7 +1,7 @@
 History
 =======
 
-## Current
+## 2.8.0
 
 * Revises `PATH`, `NODE_PATH` ordering to place archetype first, then root
   project.
