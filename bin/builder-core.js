@@ -14,6 +14,7 @@ var log = require("../lib/log");
  * @param {Object}    [opts]      Options object
  * @param {Object}    [opts.env]  Environment object to mutate (Default `process.env`)
  * @param {Array}     [opts.argv] Arguments array (Default: `process.argv`)
+ * @param {Array}     [opts.msgs] Array of log messages (`{ level, type, msg }`)
  * @param {Function}  callback    Callback `(err)`
  * @returns {void}
  */
@@ -28,6 +29,17 @@ module.exports = function (opts, callback) {
   var env = new Environment({
     config: config,
     env: opts.env
+  });
+
+  // Set up logger state.
+  log.setLevel({
+    env: env,
+    argv: opts.argv
+  });
+
+  // Drain outer `builder` messages manually (may be global or locally-sourced).
+  (opts.msgs || []).forEach(function (obj) {
+    log[obj.level](obj.type, obj.msg);
   });
 
   // Infer task to run

@@ -219,10 +219,12 @@ $ builder run <task>
 
 Flags:
 
-* `--builderrc`: Path to builder config file (default: `.builderrc`)
-* `--expand-archetype`: Expand `node_modules/<archetype>` with full path (default: `false`)
 * `--tries`: Number of times to attempt a task (default: `1`)
-* `--setup`: Single task to run for the entirety of `<action>`.
+* `--setup`: Single task to run for the entirety of `<action>`
+* `--quiet`: Silence logging
+* `--log-level`: Level to log at (`info`, `warn`, `error`, `none`)
+* `--expand-archetype`: Expand `node_modules/<archetype>` with full path (default: `false`)
+* `--builderrc`: Path to builder config file (default: `.builderrc`)
 
 ##### builder concurrent
 
@@ -237,13 +239,15 @@ $ builder concurrent <task1> <task2> <task3>
 
 Flags:
 
-* `--builderrc`: Path to builder config file (default: `.builderrc`)
-* `--expand-archetype`: Expand `node_modules/<archetype>` with full path (default: `false`)
 * `--tries`: Number of times to attempt a task (default: `1`)
-* `--setup`: Single task to run for the entirety of `<action>`.
+* `--setup`: Single task to run for the entirety of `<action>`
 * `--queue`: Number of concurrent processes to run (default: unlimited - `0|null`)
 * `--[no-]buffer`: Buffer output until process end (default: `false`)
 * `--[no-]bail`: End all processes after the first failure (default: `true`)
+* `--quiet`: Silence logging
+* `--log-level`: Level to log at (`info`, `warn`, `error`, `none`)
+* `--expand-archetype`: Expand `node_modules/<archetype>` with full path (default: `false`)
+* `--builderrc`: Path to builder config file (default: `.builderrc`)
 
 Note that `tries` will retry _individual_ tasks that are part of the concurrent
 group, not the group itself. So, if `builder concurrent --tries=3 foo bar baz`
@@ -276,14 +280,16 @@ $ builder envs <task> '[{ "FOO": "VAL1", "BAR": "VAL2" }, { "FOO": "VAL3" }]'
 
 Flags:
 
-* `--builderrc`: Path to builder config file (default: `.builderrc`)
-* `--expand-archetype`: Expand `node_modules/<archetype>` with full path (default: `false`)
 * `--tries`: Number of times to attempt a task (default: `1`)
-* `--setup`: Single task to run for the entirety of `<action>`.
+* `--setup`: Single task to run for the entirety of `<action>`
 * `--queue`: Number of concurrent processes to run (default: unlimited - `0|null`)
 * `--[no-]buffer`: Buffer output until process end (default: `false`)
 * `--[no-]bail`: End all processes after the first failure (default: `true`)
 * `--envs-path`: Path to JSON env variable array file (default: `null`)
+* `--quiet`: Silence logging
+* `--log-level`: Level to log at (`info`, `warn`, `error`, `none`)
+* `--expand-archetype`: Expand `node_modules/<archetype>` with full path (default: `false`)
+* `--builderrc`: Path to builder config file (default: `.builderrc`)
 
 _Note_: The environments JSON array will overwrite **existing** values in the
 environment.

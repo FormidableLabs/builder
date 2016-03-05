@@ -24,6 +24,8 @@ describe("lib/args", function () {
       expect(_flags(args.general(argv))).to.deep.equal({
         builderrc: ".builderrc",
         help: false,
+        logLevel: "info",
+        quiet: false,
         version: false
       });
     });
@@ -36,6 +38,8 @@ describe("lib/args", function () {
       expect(_flags(args.general(argv))).to.deep.equal({
         builderrc: dummyPath,
         help: false,
+        logLevel: "info",
+        quiet: false,
         version: false
       });
     });
