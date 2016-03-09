@@ -97,6 +97,26 @@ describe("bin/builder-core", function () {
       throw new Error("should have already thrown");
     });
 
+    it("errors on bad log level", function () {
+      base.mockFs({
+        "package.json": "{}"
+      });
+
+      var callback = base.sandbox.spy();
+
+      try {
+        run({
+          argv: ["node", "builder", "help", "--log-level=BAD"]
+        }, callback);
+      } catch (err) {
+        expect(err).to.have.property("message").that.contains("Unknown log level: BAD");
+        expect(callback).to.not.be.called;
+        return;
+      }
+
+      throw new Error("should have already thrown");
+    });
+
   });
 
   describe("builder --version", function () {
@@ -217,6 +237,62 @@ describe("bin/builder-core", function () {
 
         expect(Task.prototype.run).to.be.calledOnce;
         expect(process.stdout.write).to.be.calledWithMatch("BAR_TASK");
+
+        done();
+      });
+
+    }));
+
+    it("runs with quiet log output", stdioWrap(function (done) {
+      base.sandbox.spy(Task.prototype, "run");
+      base.mockFs({
+        "package.json": JSON.stringify({
+          "scripts": {
+            "bar": "echo BAR_TASK"
+          }
+        }, null, 2)
+      });
+
+      run({
+        argv: ["node", "builder", "run", "--quiet", "bar"]
+      }, function (err) {
+        if (err) { return done(err); }
+
+        expect(Task.prototype.run).to.be.calledOnce;
+        expect(process.stdout.write).to.be.calledWithMatch("BAR_TASK");
+        expect(logStubs.info).not.be.called;
+        expect(logStubs.warn).not.be.called;
+        expect(logStubs.error).not.be.called;
+
+        done();
+      });
+    }));
+
+    it("runs with specified log level", stdioWrap(function (done) {
+      base.sandbox.stub(process.stderr, "write");
+      base.sandbox.spy(Task.prototype, "run");
+      base.mockFs({
+        "package.json": JSON.stringify({
+          "scripts": {
+            "bar": "BAD_COMMAND"
+          }
+        }, null, 2)
+      });
+
+      run({
+        argv: ["node", "builder", "run", "--log-level=error", "bar"]
+      }, function (err) {
+        expect(err).to.have.property("message")
+          .that.contains("Command failed").and
+          .that.contains("BAD_COMMAND");
+
+        expect(Task.prototype.run).to.be.calledOnce;
+        expect(process.stderr.write).to.be.calledWithMatch("BAD_COMMAND");
+        expect(logStubs.info).not.be.called;
+        expect(logStubs.warn).not.be.called;
+        expect(logStubs.error)
+          .to.be.calledWithMatch("Command failed").and
+          .to.be.calledWithMatch("BAD_COMMAND");
 
         done();
       });

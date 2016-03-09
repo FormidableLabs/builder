@@ -11,3 +11,4 @@ globals:
 rules:
   no-unused-expressions: 0  # Disable for Chai expression assertions.
   max-nested-callbacks: 0   # Disable for nested describes.
+  max-statements: [2, 20]   # More statements allowed in tests.

@@ -11,6 +11,7 @@
 var mockFs = require("mock-fs");
 var fs = require("fs");
 var sinon = require("sinon");
+var log = require("../../../lib/log");
 
 var base = module.exports = {
   // Generic test helpers.
@@ -43,4 +44,5 @@ beforeEach(function () {
 afterEach(function () {
   base.mockFs.restore();
   base.sandbox.restore();
+  log._unsetLevel();
 });

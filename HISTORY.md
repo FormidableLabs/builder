@@ -1,6 +1,11 @@
 History
 =======
 
+## Current
+
+* Add configurable log levels via `--log-level=LEVEL` and `--quiet`.
+  [#6](https://github.com/FormidableLabs/builder/issues/6)
+
 ## 2.8.0
 
 * Revises `PATH`, `NODE_PATH` ordering to place archetype first, then root
