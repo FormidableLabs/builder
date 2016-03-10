@@ -1,7 +1,7 @@
 History
 =======
 
-## Current
+## 2.9.0
 
 * Add configurable log levels via `--log-level=LEVEL` and `--quiet`.
   [#6](https://github.com/FormidableLabs/builder/issues/6)
