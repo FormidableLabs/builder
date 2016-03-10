@@ -1,6 +1,12 @@
 History
 =======
 
+## 2.9.1
+
+* Refactor lodash calls to be tolerant of v3 or v4 as a temporary bandaid to
+  a solution for the real underlying issue of:
+  [#99](https://github.com/FormidableLabs/builder/issues/99)
+
 ## 2.9.0
 
 * Add configurable log levels via `--log-level=LEVEL` and `--quiet`.
