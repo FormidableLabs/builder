@@ -1008,8 +1008,8 @@ in diagnosing archetype issues and script / file paths, especially when using
 ### Alternative to `npm link`
 
 In some cases, `npm link` can interfere with the order of resolution. If you
-run into strange resolution problems, you can develop locally with the
-following in your consuming project's `package.json`:
+run into resolution problems, you can develop locally with the
+following in your consuming project's `package.json` as an alternative to `npm link`:
 ```json
 {
   "dependencies": {
