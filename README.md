@@ -745,24 +745,6 @@ Moving common tasks into an archetype is fairly straightforward and requires
 just a few tweaks to the paths defined in configuration and scripts in order
 to work correctly.
 
-### A Note on `npm link`
-Do not use `npm link` when developing an archetype. `npm link` runs `npm install` on the archetype, which can interfere with builder's path resolution. As an alternative, use `npm pack`, which creates a tarball of what would be published to npm, and temporarily point to the tarball in your `package.json`.
-
-In your archetype directory:
-`npm pack && pushd dev && npm pack && popd`
-
-In your consuming project's `package.json`:
-```json
-{
-  "dependencies": {
-    "YOUR_ARCHETYPE_NAME": "/path/to/your/archetype/YOUR_ARCHETYPE_NAME.tar.gz"
-  },
-  "devDependencies": {
-    "YOUR_ARCHETYPE_NAME_dev": "/path/to/your/archetype/dev/YOUR_ARCHETYPE_NAME_dev.tar.gz"
-  }
-}
-```
-
 #### Initializing your project
 
 An archetype is simply a standard npm module with a valid `package.json`. To set
@@ -1022,6 +1004,22 @@ following order:
 The order of resolution doesn't often come up, but can sometimes be a factor
 in diagnosing archetype issues and script / file paths, especially when using
 `npm` v3.
+
+### Alternative to `npm link`
+
+In some cases, `npm link` can interfere with the order of resolution. If you
+run into strange resolution problems, you can develop locally with the
+following in your consuming project's `package.json`:
+```json
+{
+  "dependencies": {
+    "YOUR_ARCHETYPE_NAME": "file:../YOUR_ARCHETYPE_REPO"
+  },
+  "devDependencies": {
+    "YOUR_ARCHETYPE_NAME_dev": "file:../YOUR_ARCHETYPE_REPO/dev"
+  }
+}
+```
 
 ### Project Root
 
