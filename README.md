@@ -1005,6 +1005,23 @@ The order of resolution doesn't often come up, but can sometimes be a factor
 in diagnosing archetype issues and script / file paths, especially when using
 `npm` v3.
 
+### Alternative to `npm link`
+
+In some cases, `npm link` can interfere with the order of resolution. If you
+run into resolution problems, you can develop locally with the
+following in your consuming project's `package.json` as an alternative to `npm link`:
+
+```json
+{
+  "dependencies": {
+    "YOUR_ARCHETYPE_NAME": "file:../YOUR_ARCHETYPE_REPO"
+  },
+  "devDependencies": {
+    "YOUR_ARCHETYPE_NAME_dev": "file:../YOUR_ARCHETYPE_REPO/dev"
+  }
+}
+```
+
 ### Project Root
 
 The enhancements to `NODE_PATH` that `builder` performs can throw tools /
