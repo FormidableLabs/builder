@@ -8,6 +8,12 @@ var Task = require("../lib/task");
 var runner = require("../lib/runner");
 var log = require("../lib/log");
 
+// TODO: HERE DEBUGORAMA
+/*eslint-disable no-console*/
+console.log("TODO HERE PATH\n", "NODE_PATH=" + process.env.NODE_PATH);
+console.log("TODO HERE LODASH\n", require.resolve("lodash"));
+/*eslint-enable no-console*/
+
 /**
  * Builder runner.
  *
