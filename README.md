@@ -848,7 +848,7 @@ Node modules layout:
         lib-name@right-version
 ```
 
-This unfortunately mean that the search path for `require("lib-name")` is:
+This unfortunately means that the search path for `require("lib-name")` is:
 
 ```
 # From file path priority resolution
@@ -872,7 +872,7 @@ file to the dev archetype: `<archetype-dev>/require.js`
 module.exports = require;
 ```
 
-My exporting the `require` from the dev archetype, the resolution starts in the
+By exporting the `require` from the dev archetype, the resolution starts in the
 dev archetype and thus ensures the dev archetype "wins" for the archetype tasks.
 Thus in any archetype files that do a `require`, simply switch to:
 
@@ -884,7 +884,7 @@ var modPath = require("<archetype-dev>/require").resolve("lib-name"); // Module 
 And the dependency from the dev archetype is guaranteed to "win" no matter what
 happens with actual module layout from npm installation.
 
-_Note_ that because an file from within the normal `<archetype>` will naturally
+_Note_ that because a file from within the normal `<archetype>` will naturally
 search `<archetype>/node_modules` before hitting `<root>/node_modules` you do
 not need to use this `require` pattern for normal archetype dependencies in
 archetype Node.js files.
