@@ -869,6 +869,7 @@ To remedy this situation, we encourage a very simple pattern to have Node.js
 file to the dev archetype: `<archetype-dev>/require.js`
 
 ```js
+// Contents of <archetype-dev>/require.js
 module.exports = require;
 ```
 
@@ -891,10 +892,27 @@ archetype Node.js files.
 
 Node.js files in the normal production archetype do not need a
 `<archetype>/require.js` file akin to the dev archetype because
-`<archetype>/node_modules` is already at top of the require search path.
+`<archetype>/node_modules` is already at the top of the require search path.
 However, some projects may wish to have an archetype control _and provide_
 application dependencies and dev dependencies, which we discuss in the
 [next section](#application-vs-archetype-dependencies)
+
+###### ES.next Imports and The Module Pattern
+
+The module pattern works great for any `require()`-based CommoneJS code.
+Unfortunately, when using babel and ES.next imports like:
+
+```js
+import _ from "lodash";
+```
+
+The module pattern is _not_ available because the actual `require("lodash")`
+statement spit out during transpilation is not directly accessible to the
+developer.
+
+We have [ticket #111](https://github.com/FormidableLabs/builder/issues/111) out
+to write a babel plugin to make the module pattern semantics available during
+babel transpilation as well.
 
 #### Application vs. Archetype Dependencies
 
@@ -927,6 +945,7 @@ then you can follow [the module pattern](#the-module-pattern) and provide an
 `<archetype>/require.js` file consisting of:
 
 ```js
+// Contents of <archetype>/require.js
 module.exports = require;
 ```
 
