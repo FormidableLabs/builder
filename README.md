@@ -51,9 +51,9 @@ Builder is not opinionated, although archetypes _are_ and typically dictate
 file structure, standard configurations, and dev workflows. Builder supports
 this in an agnostic way, providing essentially the following:
 
-* `NODE_PATH`, `PATH` enhancements to run, build, import from archetypes so
-  task dependencies and configurations don't have to be installed directly in a
-  root project.
+* `NODE_PATH`, `PATH` enhancements and module patterns to run, build, import
+  from archetypes so task dependencies and configurations don't have to be
+  installed directly in a root project.
 * A task runner capable of single tasks (`run`) or multiple concurrent tasks
   (`concurrent`).
 * An intelligent merging of `package.json` `scripts` tasks.
@@ -96,7 +96,7 @@ To help you keep up with project-specific builder requirements, a globally-insta
 `builder` will detect if a locally-installed version of `builder` is
 available and switch to that instead:
 
-```
+```sh
 $ /GLOBAL/PATH/TO/builder
 [builder:local-detect] Switched to local builder at: ./node_modules/builder/bin/builder-core.js
 
@@ -745,7 +745,7 @@ Moving common tasks into an archetype is fairly straightforward and requires
 just a few tweaks to the paths defined in configuration and scripts in order
 to work correctly.
 
-#### Initializing your project
+#### Initializing a Project
 
 An archetype is simply a standard npm module with a valid `package.json`. To set
 up a new archetype from scratch, make a directory for your new archetype,
@@ -817,14 +817,108 @@ Read the [`builder-support` docs](https://github.com/FormidableLabs/builder-supp
 to learn more about how dev archetypes are easily managed with
 `builder-support gen-dev`.
 
-#### NOTE: Application vs. Archetype Dependencies
+#### Node Require Resolution and Module Pattern
 
-While we would love to have `builder` manage _all_ the dependencies of an
-application, the practical realities of how npm works is that archetypes can
-only manage dependencies for `scripts` commands **run by a `builder` command**.
-`builder` mutates `PATH` and `NODE_PATH` to include archetype dependencies, but
-without this `builder` magic, ordinary code won't otherwise be able to use
-archetype dependencies.
+As a background primer, whenever a file has a `require("lib-name")` in it, Node
+performs the following check for `/path/to/ultimate/file.js`:
+
+```
+/path/to/ultimate/node_modules/lib-name
+/path/to/node_modules/lib-name
+/path/node_modules/lib-name
+/node_modules/lib-name
+```
+
+After this, Node then checks for `NODE_PATH` for additional paths to search.
+This presents a potentially awkward pattern when combined with npm
+deduplication / flattening for say a file like:
+`<root>/node_modules/<archetype>/config/my-config.js` that requires
+`lib-name@right-version` as follows:
+
+Node modules layout:
+
+```
+<root>/
+  node_modules/
+    lib-name@wrong-version
+    <archetype>/
+      config/my-config.js         // require("lib-name");
+    <archetype-dev>/
+      node_modules/
+        lib-name@right-version
+```
+
+This unfortunately means that the search path for `require("lib-name")` is:
+
+```
+# From file path priority resolution
+<root>/node_modules/<archetype>/config/node_modules
+<root>/node_modules/<archetype>/node_modules
+<root>/node_modules/node_modules
+<root>/node_modules                                   // Matches `lib-name@wrong-version`!!!
+
+# Now, from `NODE_PATH`
+<root>/node_modules/<archetype>/node_modules
+<root>/node_modules/<archetype-dev>/node_modules      // Too late for `right-version`.
+```
+
+##### The Module Pattern
+
+To remedy this situation, we encourage a very simple pattern to have Node.js
+`require`'s start from the dev archetype when appropriate by adding a one-line
+file to the dev archetype: `<archetype-dev>/require.js`
+
+```js
+// Contents of <archetype-dev>/require.js
+module.exports = require;
+```
+
+By exporting the `require` from the dev archetype, the resolution starts in the
+dev archetype and thus ensures the dev archetype "wins" for the archetype tasks.
+Thus in any archetype files that do a `require`, simply switch to:
+
+```js
+var mod = require("<archetype-dev>/require")("lib-name");             // Module
+var modPath = require("<archetype-dev>/require").resolve("lib-name"); // Module path
+```
+
+And the dependency from the dev archetype is guaranteed to "win" no matter what
+happens with actual module layout from npm installation.
+
+_Note_ that because a file from within the normal `<archetype>` will naturally
+search `<archetype>/node_modules` before hitting `<root>/node_modules` you do
+not need to use this `require` pattern for normal archetype dependencies in
+archetype Node.js files.
+
+Node.js files in the normal production archetype do not need a
+`<archetype>/require.js` file akin to the dev archetype because
+`<archetype>/node_modules` is already at the top of the require search path.
+However, some projects may wish to have an archetype control _and provide_
+application dependencies and dev dependencies, which we discuss in the
+[next section](#application-vs-archetype-dependencies)
+
+###### ES.next Imports and The Module Pattern
+
+The module pattern works great for any `require()`-based CommoneJS code.
+Unfortunately, when using babel and ES.next imports like:
+
+```js
+import _ from "lodash";
+```
+
+The module pattern is _not_ available because the actual `require("lodash")`
+statement spit out during transpilation is not directly accessible to the
+developer.
+
+We have [ticket #111](https://github.com/FormidableLabs/builder/issues/111) out
+to write a babel plugin to make the module pattern semantics available during
+babel transpilation as well.
+
+#### Application vs. Archetype Dependencies
+
+Out of the box `builder` does not manage application dependencies, instead
+managing dependencies only for builder _workflows_ and _tasks_, e.g. things
+starting with the `builder` command.
 
 Most notably, this means that if your _application_ code includes a dependency
 like `lodash`:
@@ -836,7 +930,7 @@ var _ = require("lodash");
 module.exports = _.camelCase("Hi There");
 ```
 
-and the root project is consumed in _anything besides a `builder` command_,
+and the root project is consumed by _anything besides a `builder` command_,
 then it **must** have a dependency like:
 
 ```js
@@ -846,12 +940,51 @@ then it **must** have a dependency like:
 }
 ```
 
-And, _even if_ your `<archetype>/package.json` also includes the exact same
-dependency.
+However, if you want to use builder to _also_ manage application dependencies,
+then you can follow [the module pattern](#the-module-pattern) and provide an
+`<archetype>/require.js` file consisting of:
 
-This rule applies to even simple scenarios such as the root project being
-published to npm, after which other users will rely on the code outside of
-`builder` processes.
+```js
+// Contents of <archetype>/require.js
+module.exports = require;
+```
+
+The root project could then require code like:
+
+
+```js
+var modFromProd = require("<archetype>/require")("lib-name");               // Module
+var pathFromProd = require("<archetype>/require").resolve("lib-name");      // Module path
+var modFromDev = require("<archetype-dev>/require")("lib-name");            // Module
+var pathFromDev = require("<archetype-dev>/require").resolve("lib-name");   // Module path
+```
+
+Using the above pattern, `<archetype>` or `<archetype-dev>` dependencies would
+override `<root>/node_modules` dependencies reliably and irrespective of npm
+flattening.
+
+So, turning back to our original example, we could utilize archetype
+dependencies by refactoring to something like:
+
+
+```js
+// <root>/src/index.js
+var _ = require("<archetype>/require")("lodash");
+
+module.exports = _.camelCase("Hi There");
+```
+
+and dev code like:
+
+
+```js
+// <root>/test/index.js
+var _ = require("<archetype-dev>/require")("lodash");
+
+module.exports = _.camelCase("Hi There");
+```
+
+after which you would _not_ need a `lodash` dependency in `root/package.json`.
 
 #### Moving `dependencies` and `scripts` to a New Archetype
 
@@ -872,7 +1005,10 @@ _Note_ that you should only copy `dependencies` from `<root>/package.json` to
 
 You can then remove any dependencies _only_ used by the `scripts` tasks that
 you have moved to the archetype. However, take care to
-[not remove real application dependencies](#note-application-vs-archetype-dependencies).
+[not remove real application dependencies](#application-vs-archetype-dependencies)
+unless you are using a module pattern to provide
+[application dependencies](#application-dependencies).
+
 
 ##### Moving `scripts` and Config Files
 
@@ -945,7 +1081,8 @@ module.exports = function (config) {
       [MAIN_PATH]: ["webpack"]
     },
     files: [
-      require.resolve("sinon/pkg/sinon"),
+      require.resolve("sinon/pkg/sinon"),                             // Normal archetype
+      require("<archetype-dev>/require").resolve("sinon/pkg/sinon"),  // Dev archetype
       MAIN_PATH
     ],
   });
@@ -977,6 +1114,7 @@ module.exports = function (config) {
 │       └── webpack.config.test.js
 ├── dev
 │   └── package.json
+│   └── require.js
 └── package.json
 ```
 
@@ -992,18 +1130,38 @@ following order:
 `PATH`:
 
 1. `<cwd>/node_modules/<archetype>/.bin`
-2. `<cwd>/node_modules/.bin`
-3. Existing `PATH`
+2. `<cwd>/node_modules/<archetype-dev>/.bin`
+3. `<cwd>/node_modules/.bin`
+4. Existing `PATH`
 
-`NODE_PATH`:
+`require` + `NODE_PATH`: For `file.js` with a `require`
 
-1. `<cwd>/node_modules/<archetype>/node_modules`
-2. `<cwd>/node_modules`
-3. Existing `NODE_PATH`
+1. `/PATH/TO/file.js` (all sub directories + `node_modules` going down the tree)
+2. `<cwd>/node_modules/<archetype>/node_modules`
+3. `<cwd>/node_modules/<archetype-dev>/node_modules`
+4. `<cwd>/node_modules`
+5. Existing `NODE_PATH`
 
 The order of resolution doesn't often come up, but can sometimes be a factor
 in diagnosing archetype issues and script / file paths, especially when using
 `npm` v3.
+
+### Alternative to `npm link`
+
+In some cases, `npm link` can interfere with the order of resolution. If you
+run into resolution problems, you can develop locally with the
+following in your consuming project's `package.json` as an alternative to `npm link`:
+
+```json
+{
+  "dependencies": {
+    "YOUR_ARCHETYPE_NAME": "file:../YOUR_ARCHETYPE_REPO"
+  },
+  "devDependencies": {
+    "YOUR_ARCHETYPE_NAME_dev": "file:../YOUR_ARCHETYPE_REPO/dev"
+  }
+}
+```
 
 ### Project Root
 
@@ -1119,6 +1277,9 @@ the archetype into your project and remove all Builder dependencies:
   For example, for `builder-react-component` you would need to copy the
   `builder-react-component/config` directory to `PROJECT/config` (or a renamed
   directory).
+* Replace all instances of `require("<archetype-dev>/require")` and
+  `require("<archetype>/require")` with `require` in configuration / other
+  Node.js files from the archetype.
 * Review all of the combined `scripts` tasks and:
     * resolve duplicate task names
     * revise configuration file paths for the moved files
