@@ -1,7 +1,7 @@
 History
 =======
 
-## Current
+## 2.10.0
 
 * Add `--unlimited-buffer` shell output option.
 
