@@ -1,6 +1,10 @@
 History
 =======
 
+## Current
+
+* Add `--unlimited-buffer` shell output option.
+
 ## 2.9.1
 
 * Refactor lodash calls to be tolerant of v3 or v4 as a temporary bandaid to
