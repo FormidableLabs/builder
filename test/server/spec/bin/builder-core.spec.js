@@ -216,6 +216,38 @@ describe("bin/builder-core", function () {
         done();
       });
     });
+
+    // Regression test for: https://github.com/FormidableLabs/builder/issues/113
+    it("runs help with config in archetype", function (done) {
+      base.sandbox.spy(Task.prototype, "help");
+      base.mockFs({
+        ".builderrc": "---\narchetypes:\n  - mock-archetype",
+        "package.json": "{}",
+        "node_modules": {
+          "mock-archetype": {
+            "package.json": JSON.stringify({
+              "config": {
+                "_test_message": "from archetype"
+              }
+            }, null, 2)
+          }
+        }
+      });
+
+      run({
+        argv: ["node", "builder", "help"]
+      }, function (err) {
+        if (err) { return done(err); }
+
+        expect(Task.prototype.help).to.be.calledOnce;
+        expect(logStubs.info)
+          .to.be.calledWithMatch("Task Configs").and
+          .to.be.calledWithMatch("_test_message");
+
+        done();
+      });
+    });
+
   });
 
   describe("builder run", function () {
@@ -265,6 +297,7 @@ describe("bin/builder-core", function () {
       });
 
     }));
+
     it("runs with quiet log output", stdioWrap(function (done) {
       base.sandbox.spy(Task.prototype, "run");
       base.mockFs({
