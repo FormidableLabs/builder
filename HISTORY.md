@@ -1,6 +1,11 @@
 History
 =======
 
+## 2.10.1
+
+* Fix error from config in archetype but not root package.json.
+  [#113](https://github.com/FormidableLabs/builder/issues/113)
+
 ## 2.10.0
 
 * Add `--unlimited-buffer` shell output option.
