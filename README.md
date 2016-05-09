@@ -917,6 +917,47 @@ We have [ticket #111](https://github.com/FormidableLabs/builder/issues/111) out
 to write a babel plugin to make the module pattern semantics available during
 babel transpilation as well.
 
+#### Frontend Resolution and Module Pattern
+
+An analogous situation occurs for frontend JS code in the production archetype,
+but with a different solution. If frontend web application code that has
+dependencies from a dev archetype,  the build environment will need to be
+enhanced to search within the dev archetype.
+
+For webpack, this means adding the dev archetype modules directory explicitly
+to the code (`resolve.root`) and loader (`resolveLoader.root`) configurations
+as appropriate. So, something like:
+
+```js
+// <archetype>/config/webpack.config.js
+
+// Stash the location of `<archetype-dev>/node_modules`
+//
+// A normal `require.resolve` looks at `package.json:main`. We instead want
+// just the _directory_ of the module. So use heuristic of finding dir of
+// package.json which **must** exist at a predictable location.
+var archetypeDevNodeModules = path.join(
+  path.dirname(require.resolve("<archetype-dev>/package.json")),
+  "node_modules"
+);
+
+// Webpack configuration.
+module.exports = {
+  // ...
+  resolve: {
+    // ...
+    root: [archetypeNodeModules]
+  },
+  resolveLoader: {
+    // ...
+    root: [archetypeNodeModules]
+  }
+};
+```
+
+For other frontend loaders like Browserify, Rollup, etc., an analogous
+configuration would be required.
+
 #### Application vs. Archetype Dependencies
 
 Out of the box `builder` does not manage application dependencies, instead
