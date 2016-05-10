@@ -929,7 +929,7 @@ to the code (`resolve.root`) and loader (`resolveLoader.root`) configurations
 as appropriate. So, something like:
 
 ```js
-// <archetype>/config/webpack.config.js
+// <archetype>/config/webpack.config.test.js
 
 // Stash the location of `<archetype-dev>/node_modules`
 //
@@ -957,6 +957,13 @@ module.exports = {
 
 For other frontend loaders like Browserify, Rollup, etc., an analogous
 configuration would be required.
+
+Note that you should _only_ use this pattern for files that are used for dev
+workflows. For example, if `webpack.config.js` is part of the prod workflow
+(for maybe a `postinstall` build or something), then you can't do a
+`path.dirname(require.resolve("<archetype-dev>/package.json"))` because the dev
+archetype isn't installed. Instead, only add the dev archetype modules directory
+to code that can only be called from **dev** workflows.
 
 **Shared Node / Frontend Code**: Unfortunately, the preferred Node and Webpack
 methods of importing dev archetype dependencies are _different_, which makes
