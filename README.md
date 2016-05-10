@@ -920,11 +920,11 @@ babel transpilation as well.
 #### Frontend Resolution and Module Pattern
 
 An analogous situation occurs for frontend JS code in the production archetype,
-but with a different solution. If frontend web application code that has
-dependencies from a dev archetype,  the build environment will need to be
-enhanced to search within the dev archetype.
+but with a different solution. If frontend JS code has dependencies within a dev
+archetype, the build environment will need to be enhanced to search the
+dev archetype's `node_modules`. (This often occurs in frontend test suites).
 
-For webpack, this means adding the dev archetype modules directory explicitly
+For Webpack, this means adding the dev archetype modules directory explicitly
 to the code (`resolve.root`) and loader (`resolveLoader.root`) configurations
 as appropriate. So, something like:
 
@@ -957,6 +957,13 @@ module.exports = {
 
 For other frontend loaders like Browserify, Rollup, etc., an analogous
 configuration would be required.
+
+**Shared Node / Frontend Code**: Unfortunately, the preferred Node and Webpack
+methods of importing dev archetype dependencies are _different_, which makes
+setup a little awkward for shared code that runs both on the frontend and in
+Node. While this situation won't often come up for dev dependencies, if it does
+one option is to do an environment detect and conditionally do different imports
+based on if in Node or frontend (Webpack).
 
 #### Application vs. Archetype Dependencies
 
