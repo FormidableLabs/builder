@@ -917,6 +917,61 @@ We have [ticket #111](https://github.com/FormidableLabs/builder/issues/111) out
 to write a babel plugin to make the module pattern semantics available during
 babel transpilation as well.
 
+#### Frontend Resolution and Module Pattern
+
+An analogous situation occurs for frontend JS code in the production archetype,
+but with a different solution. If frontend JS code has dependencies within a dev
+archetype, the build environment will need to be enhanced to search the
+dev archetype's `node_modules`. (This often occurs in frontend test suites).
+
+For Webpack, this means adding the dev archetype modules directory explicitly
+to the code (`resolve.root`) and loader (`resolveLoader.root`) configurations
+as appropriate. So, something like:
+
+```js
+// <archetype>/config/webpack.config.test.js
+
+// Stash the location of `<archetype-dev>/node_modules`
+//
+// A normal `require.resolve` looks at `package.json:main`. We instead want
+// just the _directory_ of the module. So use heuristic of finding dir of
+// package.json which **must** exist at a predictable location.
+var archetypeDevNodeModules = path.join(
+  path.dirname(require.resolve("<archetype-dev>/package.json")),
+  "node_modules"
+);
+
+// Webpack configuration.
+module.exports = {
+  // ...
+  resolve: {
+    // ...
+    root: [archetypeNodeModules]
+  },
+  resolveLoader: {
+    // ...
+    root: [archetypeNodeModules]
+  }
+};
+```
+
+For other frontend loaders like Browserify, Rollup, etc., an analogous
+configuration would be required.
+
+Note that you should _only_ use this pattern for files that are used for dev
+workflows. For example, if `webpack.config.js` is part of the prod workflow
+(for maybe a `postinstall` build or something), then you can't do a
+`path.dirname(require.resolve("<archetype-dev>/package.json"))` because the dev
+archetype isn't installed. Instead, only add the dev archetype modules directory
+to code that can only be called from **dev** workflows.
+
+**Shared Node / Frontend Code**: Unfortunately, the preferred Node and Webpack
+methods of importing dev archetype dependencies are _different_, which makes
+setup a little awkward for shared code that runs both on the frontend and in
+Node. While this situation won't often come up for dev dependencies, if it does
+one option is to do an environment detect and conditionally do different imports
+based on if in Node or frontend (Webpack).
+
 #### Application vs. Archetype Dependencies
 
 Out of the box `builder` does not manage application dependencies, instead
