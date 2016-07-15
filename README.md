@@ -41,6 +41,62 @@ the rough goals and motivations behind the project.
   (`env`). It also provides useful controls for task retries, buffered output,
   setup tasks, etc.
 
+**Contents**:
+
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
+
+- [Overview](#overview)
+  - [Usage](#usage)
+    - [Global Install](#global-install)
+    - [Local Install](#local-install)
+      - [PATH Augmentation](#path-augmentation)
+      - [Full Path Invocation](#full-path-invocation)
+    - [Configuration](#configuration)
+    - [Builder Actions](#builder-actions)
+      - [builder run](#builder-run)
+      - [builder concurrent](#builder-concurrent)
+      - [builder envs](#builder-envs)
+        - [Custom Flags](#custom-flags)
+        - [Expanding the Archetype Path](#expanding-the-archetype-path)
+- [Tasks](#tasks)
+- [npm Config](#npm-config)
+  - [`npm` Config Overview](#npm-config-overview)
+  - [Builder Configs](#builder-configs)
+  - [Config Notes](#config-notes)
+    - [Tip - Use String Values](#tip---use-string-values)
+    - [npmrc Configuration](#npmrc-configuration)
+    - [Command Line Environment Variables](#command-line-environment-variables)
+- [Archetypes](#archetypes)
+  - [Task Resolution](#task-resolution)
+  - [Special Archetype Tasks](#special-archetype-tasks)
+  - [Creating an Archetype](#creating-an-archetype)
+    - [Initializing a Project](#initializing-a-project)
+    - [Managing the `dev` Archetype](#managing-the-dev-archetype)
+    - [Node Require Resolution and Module Pattern](#node-require-resolution-and-module-pattern)
+      - [The Module Pattern](#the-module-pattern)
+        - [ES.next Imports and The Module Pattern](#esnext-imports-and-the-module-pattern)
+    - [Frontend Resolution and Module Pattern](#frontend-resolution-and-module-pattern)
+    - [Application vs. Archetype Dependencies](#application-vs-archetype-dependencies)
+    - [Moving `dependencies` and `scripts` to a New Archetype](#moving-dependencies-and-scripts-to-a-new-archetype)
+      - [Moving `dependencies` and `devDependencies` from an Existing `package.json`](#moving-dependencies-and-devdependencies-from-an-existing-packagejson)
+      - [Moving `scripts` and Config Files](#moving-scripts-and-config-files)
+      - [Updating Path and Module References in Config Files](#updating-path-and-module-references-in-config-files)
+    - [Example `builder` Archetype Project Structure](#example-builder-archetype-project-structure)
+- [Tips, Tricks, & Notes](#tips-tricks-&-notes)
+  - [PATH, NODE_PATH Resolution](#path-node_path-resolution)
+  - [Alternative to `npm link`](#alternative-to-npm-link)
+  - [Project Root](#project-root)
+  - [Avoid npm Lifecycle Commands](#avoid-npm-lifecycle-commands)
+  - [Other Process Execution](#other-process-execution)
+  - [Terminal Color](#terminal-color)
+  - [Why Exec?](#why-exec)
+  - [I Give Up. How Do I Abandon Builder?](#i-give-up-how-do-i-abandon-builder)
+  - [Versions v1, v2, v3](#versions-v1-v2-v3)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 ## Overview
 
 At a high level `builder` is a tool for consuming `package.json` `scripts`

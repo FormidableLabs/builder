@@ -1,6 +1,11 @@
 History
 =======
 
+## Unreleased
+
+* Add auto-TOC to README.md.
+  [#101](https://github.com/FormidableLabs/builder/issues/101)
+
 ## 2.10.1
 
 * Fix error from config in archetype but not root package.json.

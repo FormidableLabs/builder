@@ -13,6 +13,8 @@
   },
   "homepage": "https://github.com/FormidableLabs/builder",
   "scripts": {
+    "builder:build-md-toc": "doctoc --notitle README.md",
+    "builder:build": "npm run builder:build-md-toc",
     "builder:lint-server": "eslint --color -c .eslintrc-server lib bin",
     "builder:lint-server-test": "eslint --color -c .eslintrc-server-test test",
     "builder:lint": "npm run builder:lint-server && npm run builder:lint-server-test",
@@ -35,6 +37,7 @@
   "devDependencies": {
     "chai": "^3.4.1",
     "coveralls": "^2.11.4",
+    "doctoc": "^1.2.0",
     "eslint": "^1.7.3",
     "eslint-config-defaults": "^7.0.1",
     "eslint-plugin-filenames": "^0.1.2",
