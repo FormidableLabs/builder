@@ -1247,7 +1247,7 @@ describe("bin/builder-core", function () {
           .that.contains("Unexpected token");
 
         expect(logStubs.error)
-          .to.be.calledWithMatch("Failed to load JSON object");
+          .to.be.calledWithMatch("load environments string / path with error: SyntaxError");
 
         done();
       });
@@ -1271,7 +1271,7 @@ describe("bin/builder-core", function () {
           .that.contains("ENOENT");
 
         expect(logStubs.error)
-          .to.be.calledWithMatch("Failed to load JSON file");
+          .to.be.calledWithMatch("load environments string / path with error: Error: ENOENT");
 
         done();
       });
