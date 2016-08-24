@@ -3,6 +3,8 @@ History
 
 ## Unreleased
 
+* Add `console.log()` hack to flush buffers in `builder concurrent --buffer`.
+  [#120](https://github.com/FormidableLabs/builder/issues/120)
 * Add auto-TOC to README.md.
   [#101](https://github.com/FormidableLabs/builder/issues/101)
 
