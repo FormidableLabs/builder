@@ -1,6 +1,8 @@
 Contributing
 ============
 
+## Pull Requests
+
 Before submitting a PR / pulishing a release make sure to:
 
 * Run all tests / checks with: `npm run builder:check`
