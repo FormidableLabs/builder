@@ -19,8 +19,11 @@
  *   }
  * }
  * ```
+ *
+ * Secondarily falls back on real environment variable `TEST_MESSAGE` if above
+ * is not set.
  */
-var msg = process.env.npm_package_config__test_message;
+var msg = process.env.npm_package_config__test_message || process.env.TEST_MESSAGE;
 var extra = process.argv[2] || "";
 var out = typeof msg + " - " + (msg || "EMPTY") + (extra ? " - " + extra : "");
 process.stdout.write(out + "\n");
