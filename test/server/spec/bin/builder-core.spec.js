@@ -383,6 +383,31 @@ describe("bin/builder-core", function () {
 
     }));
 
+    it("ignores root builder:-prefaced tasks", function () {
+      base.mockFs({
+        "package.json": JSON.stringify({
+          "scripts": {
+            "builder:foo": "echo FOO"
+          }
+        }, null, 2)
+      });
+
+      var callback = base.sandbox.spy();
+
+      try {
+        run({
+          argv: ["node", "builder", "run", "builder:foo"]
+        }, callback);
+      } catch (err) {
+        expect(err).to.have.property("message")
+          .that.contains("Unable to find task for: builder:foo");
+        expect(callback).to.not.be.called;
+        return;
+      }
+
+      throw new Error("should have already thrown");
+    });
+
     it("ignores archetype builder:-prefaced tasks", function () {
       base.mockFs({
         ".builderrc": "---\narchetypes:\n  - mock-archetype",

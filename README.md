@@ -798,6 +798,9 @@ and then in your `<root>/package.json` using the _real_ lifecycle task name.
 "test": "builder run npm:test"
 ```
 
+Additionally, `builder` will ignore any tasks in a root or archetype
+`package.json:scripts` that begins with a `builder:` prefix.
+
 ### Creating an Archetype
 
 Moving common tasks into an archetype is fairly straightforward and requires

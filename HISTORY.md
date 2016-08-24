@@ -3,6 +3,8 @@ History
 
 ## Unreleased
 
+* Ignore `builder:`-prefixed tasks in root project `package.json:scripts`.
+  Previously only ignored in archetype `package.json:scripts`.
 * Add `--env` environment variable flag.
   [#45](https://github.com/FormidableLabs/builder/issues/45)
 * Add auto-TOC to README.md.

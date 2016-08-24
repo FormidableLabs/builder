@@ -27,7 +27,9 @@ describe("lib/args", function () {
         logLevel: "info",
         unlimitedBuffer: false,
         quiet: false,
-        version: false
+        version: false,
+        env: null,
+        envPath: null
       });
     });
 
@@ -42,7 +44,9 @@ describe("lib/args", function () {
         logLevel: "info",
         unlimitedBuffer: false,
         quiet: false,
-        version: false
+        version: false,
+        env: null,
+        envPath: null
       });
     });
 
