@@ -45,4 +45,14 @@ afterEach(function () {
   base.mockFs.restore();
   base.sandbox.restore();
   log._unsetLevel();
+  try {
+    fs.unlinkSync("stdout.log");
+  } catch (err) {
+    // No worries.
+  }
+  try {
+    fs.unlinkSync("stderr.log");
+  } catch (err) {
+    // No worries.
+  }
 });

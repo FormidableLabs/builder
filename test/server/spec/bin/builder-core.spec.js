@@ -10,15 +10,27 @@
  * Tests _do_ however use real process `exec`'s. This _slightly_ slows things
  * down, but allows us to have some very real use case scenarios.
  */
+var fs = require("fs");
 var path = require("path");
 var chalk = require("chalk");
 
+var pkg = require("../../../../package.json");
 var Config = require("../../../../lib/config");
 var Task = require("../../../../lib/task");
 var log = require("../../../../lib/log");
 var run = require("../../../../bin/builder-core");
 
 var base = require("../base.spec");
+
+var readOut = function () {
+  base.mockFs.restore();
+  return fs.readFileSync("stdout.log", { encoding: "utf8" });
+};
+
+var readErr = function () {
+  base.mockFs.restore();
+  return fs.readFileSync("stderr.log", { encoding: "utf8" });
+};
 
 describe("bin/builder-core", function () {
   var logStubs;
@@ -101,6 +113,7 @@ describe("bin/builder-core", function () {
   describe("builder --version", function () {
 
     it("runs version", function (done) {
+      base.sandbox.spy(process.stdout, "write");
       base.sandbox.spy(Task.prototype, "version");
       base.mockFs({
         "package.json": "{}"
@@ -112,6 +125,7 @@ describe("bin/builder-core", function () {
         if (err) { return done(err); }
 
         expect(Task.prototype.version).to.be.calledOnce;
+        expect(process.stdout.write).to.be.calledWithMatch(pkg.version);
 
         done();
       });
@@ -235,7 +249,7 @@ describe("bin/builder-core", function () {
       base.mockFs({
         "package.json": JSON.stringify({
           "scripts": {
-            "bar": "echo BAR_TASK"
+            "bar": "echo BAR_TASK >> stdout.log"
           }
         }, null, 2)
       });
@@ -246,6 +260,7 @@ describe("bin/builder-core", function () {
         if (err) { return done(err); }
 
         expect(Task.prototype.run).to.be.calledOnce;
+        expect(readOut()).to.contain("BAR_TASK");
 
         done();
       });
@@ -257,7 +272,7 @@ describe("bin/builder-core", function () {
       base.mockFs({
         "package.json": JSON.stringify({
           "scripts": {
-            "bar": "echo BAR_TASK"
+            "bar": "echo BAR_TASK >> stdout.log"
           }
         }, null, 2)
       });
@@ -268,6 +283,7 @@ describe("bin/builder-core", function () {
         if (err) { return done(err); }
 
         expect(Task.prototype.run).to.be.calledOnce;
+        expect(readOut()).to.contain("BAR_TASK");
 
         done();
       });
@@ -279,7 +295,7 @@ describe("bin/builder-core", function () {
       base.mockFs({
         "package.json": JSON.stringify({
           "scripts": {
-            "bar": "echo BAR_TASK"
+            "bar": "echo BAR_TASK >> stdout.log"
           }
         }, null, 2)
       });
@@ -290,6 +306,7 @@ describe("bin/builder-core", function () {
         if (err) { return done(err); }
 
         expect(Task.prototype.run).to.be.calledOnce;
+        expect(readOut()).to.contain("BAR_TASK");
         expect(logStubs.info).not.be.called;
         expect(logStubs.warn).not.be.called;
         expect(logStubs.error).not.be.called;
@@ -303,7 +320,7 @@ describe("bin/builder-core", function () {
       base.mockFs({
         "package.json": JSON.stringify({
           "scripts": {
-            "bar": "BAD_COMMAND"
+            "bar": "BAD_COMMAND 2>> stderr.log"
           }
         }, null, 2)
       });
@@ -316,6 +333,7 @@ describe("bin/builder-core", function () {
           .that.contains("BAD_COMMAND");
 
         expect(Task.prototype.run).to.be.calledOnce;
+        expect(readErr()).to.contain("BAD_COMMAND");
         expect(logStubs.info).not.be.called;
         expect(logStubs.warn).not.be.called;
         expect(logStubs.error)
@@ -336,7 +354,7 @@ describe("bin/builder-core", function () {
           "mock-archetype": {
             "package.json": JSON.stringify({
               "scripts": {
-                "foo": "echo FOO_TASK"
+                "foo": "echo FOO_TASK >> stdout.log"
               }
             }, null, 2)
           }
@@ -349,6 +367,7 @@ describe("bin/builder-core", function () {
         if (err) { return done(err); }
 
         expect(Task.prototype.run).to.be.calledOnce;
+        expect(readOut()).to.contain("FOO_TASK");
 
         done();
       });
@@ -392,14 +411,14 @@ describe("bin/builder-core", function () {
         ".builderrc": "---\narchetypes:\n  - mock-archetype",
         "package.json": JSON.stringify({
           "scripts": {
-            "foo": "echo ROOT_TASK"
+            "foo": "echo ROOT_TASK >> stdout.log"
           }
         }, null, 2),
         "node_modules": {
           "mock-archetype": {
             "package.json": JSON.stringify({
               "scripts": {
-                "foo": "echo ARCH_TASK"
+                "foo": "echo ARCH_TASK >> stdout.log"
               }
             }, null, 2)
           }
@@ -412,6 +431,7 @@ describe("bin/builder-core", function () {
         if (err) { return done(err); }
 
         expect(Task.prototype.run).to.be.calledOnce;
+        expect(readOut()).to.contain("ROOT_TASK");
 
         done();
       });
@@ -430,8 +450,8 @@ describe("bin/builder-core", function () {
         "package.json": JSON.stringify({
           "scripts": {
             // *real* fs for script references. (`0` runs forever).
-            "setup": "node test/server/fixtures/repeat-script.js 0 SETUP",
-            "bar": "node test/server/fixtures/repeat-script.js 5 BAR_TASK"
+            "setup": "node test/server/fixtures/repeat-script.js 0 SETUP >> stdout.log",
+            "bar": "node test/server/fixtures/repeat-script.js 5 BAR_TASK >> stdout.log"
           }
         }, null, 2)
       });
@@ -442,6 +462,10 @@ describe("bin/builder-core", function () {
         if (err) { return done(err); }
 
         expect(Task.prototype.run).to.have.callCount(2);
+        expect(readOut())
+          .to.contain("SETUP").and
+          .to.contain("BAR_TASK").and
+          .to.contain("EXIT - BAR_TASK - 0");
 
         done();
       });
@@ -511,7 +535,7 @@ describe("bin/builder-core", function () {
       base.mockFs({
         "package.json": JSON.stringify({
           "scripts": {
-            "foo": "BAD_COMMAND"
+            "foo": "BAD_COMMAND 2>> stderr.log"
           }
         }, null, 2)
       });
@@ -524,6 +548,7 @@ describe("bin/builder-core", function () {
           .that.contains("BAD_COMMAND");
 
         expect(Task.prototype.run).to.be.calledOnce;
+        expect(readErr()).to.contain("BAD_COMMAND");
         expect(logStubs.warn).to.be.calledWithMatch(chalk.red("1") + " tries left");
         expect(logStubs.error)
           .to.be.calledWithMatch("Command failed").and
@@ -542,7 +567,7 @@ describe("bin/builder-core", function () {
             "_test_message": "from base config"
           },
           "scripts": {
-            "echo": "node test/server/fixtures/echo.js"
+            "echo": "node test/server/fixtures/echo.js >> stdout.log"
           }
         }, null, 2)
       });
@@ -553,6 +578,7 @@ describe("bin/builder-core", function () {
         if (err) { return done(err); }
 
         expect(Task.prototype.run).to.have.callCount(1);
+        expect(readOut()).to.contain("string - from base config");
 
         done();
       });
@@ -570,7 +596,7 @@ describe("bin/builder-core", function () {
                 "_test_message": "from archetype"
               },
               "scripts": {
-                "echo": "node test/server/fixtures/echo.js"
+                "echo": "node test/server/fixtures/echo.js >> stdout.log"
               }
             }, null, 2)
           }
@@ -583,6 +609,7 @@ describe("bin/builder-core", function () {
         if (err) { return done(err); }
 
         expect(Task.prototype.run).to.have.callCount(1);
+        expect(readOut()).to.contain("string - from archetype");
 
         done();
       });
@@ -604,7 +631,7 @@ describe("bin/builder-core", function () {
                 "_test_message": "from archetype"
               },
               "scripts": {
-                "echo": "node test/server/fixtures/echo.js"
+                "echo": "node test/server/fixtures/echo.js >> stdout.log"
               }
             }, null, 2)
           }
@@ -617,6 +644,7 @@ describe("bin/builder-core", function () {
         if (err) { return done(err); }
 
         expect(Task.prototype.run).to.have.callCount(1);
+        expect(readOut()).to.contain("string - EMPTY");
 
         done();
       });
@@ -634,7 +662,7 @@ describe("bin/builder-core", function () {
                 "_test_message": "from archetype"
               },
               "scripts": {
-                "echo": "node test/server/fixtures/echo.js"
+                "echo": "node test/server/fixtures/echo.js >> stdout.log"
               }
             }, null, 2)
           }
@@ -651,6 +679,7 @@ describe("bin/builder-core", function () {
         if (err) { return done(err); }
 
         expect(Task.prototype.run).to.have.callCount(1);
+        expect(readOut()).to.contain("string - from real env");
 
         done();
       });
@@ -672,7 +701,7 @@ describe("bin/builder-core", function () {
                 "_test_message": "from archetype"
               },
               "scripts": {
-                "echo": "node test/server/fixtures/echo.js"
+                "echo": "node test/server/fixtures/echo.js >> stdout.log"
               }
             }, null, 2)
           }
@@ -689,6 +718,7 @@ describe("bin/builder-core", function () {
         if (err) { return done(err); }
 
         expect(Task.prototype.run).to.have.callCount(1);
+        expect(readOut()).to.contain("string - from real env");
 
         done();
       });
@@ -705,7 +735,7 @@ describe("bin/builder-core", function () {
             "mock-archetype": {
               "package.json": JSON.stringify({
                 "scripts": {
-                  "bar": "echo WONT_EXPAND ../node_modules/mock-archetype/A_FILE.txt"
+                  "bar": "echo WONT_EXPAND ../node_modules/mock-archetype/A_FILE.txt >> stdout.log"
                 }
               }, null, 2)
             }
@@ -718,6 +748,9 @@ describe("bin/builder-core", function () {
           if (err) { return done(err); }
 
           expect(Task.prototype.run).to.be.calledOnce;
+          expect(readOut()).to.contain(
+            "WONT_EXPAND ../node_modules/mock-archetype/A_FILE.txt"
+          );
 
           done();
         });
@@ -732,7 +765,8 @@ describe("bin/builder-core", function () {
             "mock-archetype": {
               "package.json": JSON.stringify({
                 "scripts": {
-                  "bar": "echo WONT_EXPAND other/node_modules/mock-archetype/A_FILE.txt"
+                  "bar": "echo WONT_EXPAND " +
+                    "other/node_modules/mock-archetype/A_FILE.txt >> stdout.log"
                 }
               }, null, 2)
             }
@@ -745,6 +779,9 @@ describe("bin/builder-core", function () {
           if (err) { return done(err); }
 
           expect(Task.prototype.run).to.be.calledOnce;
+          expect(readOut()).to.contain(
+            "WONT_EXPAND other/node_modules/mock-archetype/A_FILE.txt"
+          );
 
           done();
         });
@@ -759,7 +796,7 @@ describe("bin/builder-core", function () {
             "mock-archetype": {
               "package.json": JSON.stringify({
                 "scripts": {
-                  "bar": "echo EXPANDED node_modules/mock-archetype/A_FILE.txt"
+                  "bar": "echo EXPANDED node_modules/mock-archetype/A_FILE.txt >> stdout.log"
                 }
               }, null, 2)
             }
@@ -772,6 +809,9 @@ describe("bin/builder-core", function () {
           if (err) { return done(err); }
 
           expect(Task.prototype.run).to.be.calledOnce;
+          expect(readOut()).to.contain(
+            "EXPANDED " + path.join(process.cwd(), "node_modules/mock-archetype/A_FILE.txt")
+          );
 
           done();
         });
@@ -788,7 +828,8 @@ describe("bin/builder-core", function () {
                 "scripts": {
                   // Note: Need double escaping here for command line echo.
                   // Note: Not sure if the quote escaping is the same on windows.
-                  "bar": "echo EXPANDED \\\"node_modules/mock-archetype/A_FILE.txt\\\""
+                  "bar": "echo EXPANDED " +
+                    "\\\"node_modules/mock-archetype/A_FILE.txt\\\" >> stdout.log"
                 }
               }, null, 2)
             }
@@ -801,6 +842,9 @@ describe("bin/builder-core", function () {
           if (err) { return done(err); }
 
           expect(Task.prototype.run).to.be.calledOnce;
+          expect(readOut()).to.contain(
+            "EXPANDED \"" + path.join(process.cwd(), "node_modules/mock-archetype/A_FILE.txt\"")
+          );
 
           done();
         });
@@ -815,7 +859,7 @@ describe("bin/builder-core", function () {
             "mock-archetype": {
               "package.json": JSON.stringify({
                 "scripts": {
-                  "bar": "echo EXPANDED node_modules/mock-archetype/A_FILE.txt"
+                  "bar": "echo EXPANDED node_modules/mock-archetype/A_FILE.txt >> stdout.log"
                 }
               }, null, 2)
             }
@@ -830,6 +874,9 @@ describe("bin/builder-core", function () {
           if (err) { return done(err); }
 
           expect(Task.prototype.run).to.be.calledOnce;
+          expect(readOut()).to.contain(
+            "EXPANDED " + path.join(process.cwd(), "node_modules/mock-archetype/A_FILE.txt")
+          );
 
           done();
         });
@@ -841,7 +888,7 @@ describe("bin/builder-core", function () {
           ".builderrc": "---\narchetypes:\n  - mock-archetype",
           "package.json": JSON.stringify({
             "scripts": {
-              "bar": "echo WONT_EXPAND node_modules/mock-archetype/A_FILE.txt"
+              "bar": "echo WONT_EXPAND node_modules/mock-archetype/A_FILE.txt >> stdout.log"
             }
           }, null, 2),
           "node_modules": {
@@ -857,6 +904,9 @@ describe("bin/builder-core", function () {
           if (err) { return done(err); }
 
           expect(Task.prototype.run).to.be.calledOnce;
+          expect(readOut()).to.contain(
+            "WONT_EXPAND node_modules/mock-archetype/A_FILE.txt"
+          );
 
           done();
         });
@@ -873,9 +923,9 @@ describe("bin/builder-core", function () {
       base.mockFs({
         "package.json": JSON.stringify({
           "scripts": {
-            "one": "echo ONE_TASK",
-            "two": "echo TWO_TASK",
-            "three": "echo THREE_TASK"
+            "one": "echo ONE_TASK >> stdout.log",
+            "two": "echo TWO_TASK >> stdout.log",
+            "three": "echo THREE_TASK >> stdout.log"
           }
         }, null, 2)
       });
@@ -886,6 +936,10 @@ describe("bin/builder-core", function () {
         if (err) { return done(err); }
 
         expect(Task.prototype.concurrent).to.be.calledOnce;
+        expect(readOut())
+          .to.contain("ONE_TASK").and
+          .to.contain("TWO_TASK").and
+          .to.contain("THREE_TASK");
 
         done();
       });
@@ -898,17 +952,17 @@ describe("bin/builder-core", function () {
         ".builderrc": "---\narchetypes:\n  - mock-archetype",
         "package.json": JSON.stringify({
           "scripts": {
-            "two": "echo TWO_ROOT_TASK",
-            "three": "echo THREE_ROOT_TASK"
+            "two": "echo TWO_ROOT_TASK >> stdout.log",
+            "three": "echo THREE_ROOT_TASK >> stdout.log"
           }
         }, null, 2),
         "node_modules": {
           "mock-archetype": {
             "package.json": JSON.stringify({
               "scripts": {
-                "one": "echo ONE_TASK",
-                "two": "echo TWO_TASK",
-                "three": "echo THREE_TASK"
+                "one": "echo ONE_TASK >> stdout.log",
+                "two": "echo TWO_TASK >> stdout.log",
+                "three": "echo THREE_TASK >> stdout.log"
               }
             }, null, 2)
           }
@@ -921,6 +975,10 @@ describe("bin/builder-core", function () {
         if (err) { return done(err); }
 
         expect(Task.prototype.concurrent).to.be.calledOnce;
+        expect(readOut())
+          .to.contain("ONE_TASK").and
+          .to.contain("TWO_ROOT_TASK").and
+          .to.contain("THREE_ROOT_TASK");
 
         done();
       });
@@ -942,7 +1000,7 @@ describe("bin/builder-core", function () {
             "_test_message": "from base"
           },
           "scripts": {
-            "echo2": "node test/server/fixtures/echo.js TWO"
+            "echo2": "node test/server/fixtures/echo.js TWO >> stdout.log"
           }
         }, null, 2),
         "node_modules": {
@@ -952,7 +1010,7 @@ describe("bin/builder-core", function () {
                 "_test_message": "from archetype"
               },
               "scripts": {
-                "echo1": "node test/server/fixtures/echo.js ONE"
+                "echo1": "node test/server/fixtures/echo.js ONE >> stdout.log"
               }
             }, null, 2)
           }
@@ -965,6 +1023,9 @@ describe("bin/builder-core", function () {
         if (err) { return done(err); }
 
         expect(Task.prototype.concurrent).to.have.callCount(1);
+        expect(readOut())
+          .to.contain("string - from base - ONE").and
+          .to.contain("string - from base - TWO");
 
         done();
       });
@@ -979,7 +1040,8 @@ describe("bin/builder-core", function () {
       base.mockFs({
         "package.json": JSON.stringify({
           "scripts": {
-            "echo": "echo ROOT " + (/^win/.test(process.platform) ? "%MY_VAR%" : "$MY_VAR")
+            "echo": "echo ROOT " + (/^win/.test(process.platform) ? "%MY_VAR%" : "$MY_VAR") +
+              " >> stdout.log"
           }
         }, null, 2)
       });
@@ -994,6 +1056,10 @@ describe("bin/builder-core", function () {
         if (err) { return done(err); }
 
         expect(Task.prototype.envs).to.be.calledOnce;
+        expect(readOut())
+          .to.contain("ROOT hi").and
+          .to.contain("ROOT ho").and
+          .to.contain("ROOT yo");
 
         done();
       });
@@ -1005,7 +1071,8 @@ describe("bin/builder-core", function () {
       base.mockFs({
         "package.json": JSON.stringify({
           "scripts": {
-            "echo": "echo ROOT " + (/^win/.test(process.platform) ? "%MY_VAR%" : "$MY_VAR")
+            "echo": "echo ROOT " + (/^win/.test(process.platform) ? "%MY_VAR%" : "$MY_VAR") +
+              " >> stdout.log"
           }
         }, null, 2),
         "envs.json": JSON.stringify([
@@ -1021,6 +1088,10 @@ describe("bin/builder-core", function () {
         if (err) { return done(err); }
 
         expect(Task.prototype.envs).to.be.calledOnce;
+        expect(readOut())
+          .to.contain("ROOT hi").and
+          .to.contain("ROOT ho").and
+          .to.contain("ROOT yo");
 
         done();
       });
@@ -1036,7 +1107,8 @@ describe("bin/builder-core", function () {
           "mock-archetype": {
             "package.json": JSON.stringify({
               "scripts": {
-                "echo": "echo ARCH " + (/^win/.test(process.platform) ? "%MY_VAR%" : "$MY_VAR")
+                "echo": "echo ARCH " + (/^win/.test(process.platform) ? "%MY_VAR%" : "$MY_VAR") +
+                  " >> stdout.log"
               }
             }, null, 2)
           }
@@ -1053,6 +1125,10 @@ describe("bin/builder-core", function () {
         if (err) { return done(err); }
 
         expect(Task.prototype.envs).to.be.calledOnce;
+        expect(readOut())
+          .to.contain("ARCH hi").and
+          .to.contain("ARCH ho").and
+          .to.contain("ARCH yo");
 
         done();
       });
@@ -1065,14 +1141,16 @@ describe("bin/builder-core", function () {
         ".builderrc": "---\narchetypes:\n  - mock-archetype",
         "package.json": JSON.stringify({
           "scripts": {
-            "echo": "echo ROOT " + (/^win/.test(process.platform) ? "%MY_VAR%" : "$MY_VAR")
+            "echo": "echo ROOT " + (/^win/.test(process.platform) ? "%MY_VAR%" : "$MY_VAR") +
+              " >> stdout.log"
           }
         }, null, 2),
         "node_modules": {
           "mock-archetype": {
             "package.json": JSON.stringify({
               "scripts": {
-                "echo": "echo ARCH " + (/^win/.test(process.platform) ? "%MY_VAR%" : "$MY_VAR")
+                "echo": "echo ARCH " + (/^win/.test(process.platform) ? "%MY_VAR%" : "$MY_VAR") +
+                  " >> stdout.log"
               }
             }, null, 2)
           }
@@ -1089,6 +1167,10 @@ describe("bin/builder-core", function () {
         if (err) { return done(err); }
 
         expect(Task.prototype.envs).to.be.calledOnce;
+        expect(readOut())
+          .to.contain("ROOT hi").and
+          .to.contain("ROOT ho").and
+          .to.contain("ROOT yo");
 
         done();
       });
@@ -1201,7 +1283,7 @@ describe("bin/builder-core", function () {
             "_test_message": "from base"
           },
           "scripts": {
-            "echo": "node test/server/fixtures/echo.js"
+            "echo": "node test/server/fixtures/echo.js >> stdout.log"
           }
         }, null, 2)
       });
@@ -1216,6 +1298,10 @@ describe("bin/builder-core", function () {
         if (err) { return done(err); }
 
         expect(Task.prototype.envs).to.have.callCount(1);
+        expect(readOut())
+          .to.contain("string - from base").and
+          .to.contain("string - from array1").and
+          .to.contain("string - from array2");
 
         done();
       });
@@ -1237,7 +1323,7 @@ describe("bin/builder-core", function () {
                 "_test_message": "from archetype"
               },
               "scripts": {
-                "echo": "node test/server/fixtures/echo.js"
+                "echo": "node test/server/fixtures/echo.js >> stdout.log"
               }
             }, null, 2)
           }
@@ -1258,6 +1344,10 @@ describe("bin/builder-core", function () {
         if (err) { return done(err); }
 
         expect(Task.prototype.envs).to.have.callCount(1);
+        expect(readOut())
+          .to.contain("string - from real env").and
+          .to.contain("string - from array1").and
+          .to.contain("string - from array2");
 
         done();
       });
