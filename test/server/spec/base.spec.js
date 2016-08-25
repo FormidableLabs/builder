@@ -8,6 +8,7 @@
  * **Note**: Because there is a global sandbox server unit tests should always
  * be run in a separate process from other types of tests.
  */
+var async = require("async");
 var mockFs = require("mock-fs");
 var fs = require("fs");
 var sinon = require("sinon");
@@ -41,8 +42,14 @@ beforeEach(function () {
   });
 });
 
-afterEach(function () {
+afterEach(function (done) {
   base.mockFs.restore();
   base.sandbox.restore();
   log._unsetLevel();
+
+  // Remove logs, ignoring errors.
+  async.parallel([
+    function (cb) { fs.unlink("stdout.log", function () { cb(); }); },
+    function (cb) { fs.unlink("stderr.log", function () { cb(); }); }
+  ], done);
 });

@@ -25,7 +25,6 @@ describe("lib/args", function () {
         builderrc: ".builderrc",
         help: false,
         logLevel: "info",
-        unlimitedBuffer: false,
         quiet: false,
         version: false
       });
@@ -40,7 +39,6 @@ describe("lib/args", function () {
         builderrc: dummyPath,
         help: false,
         logLevel: "info",
-        unlimitedBuffer: false,
         quiet: false,
         version: false
       });

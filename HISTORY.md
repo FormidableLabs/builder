@@ -3,6 +3,11 @@ History
 
 ## Unreleased
 
+* **BREAKING**: Remove `--unlimited-buffer` command line option. It is unneeded
+  with switch to `spawn`.
+* Switch from `exec` to `spawn` child process spawning for better stdio/stderr
+  propagation. ( [@exogen][] )
+  [#20](https://github.com/FormidableLabs/builder/issues/20)
 * Add auto-TOC to README.md.
   [#101](https://github.com/FormidableLabs/builder/issues/101)
 
