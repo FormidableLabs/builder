@@ -276,30 +276,6 @@ describe("bin/builder-core", function () {
 
     });
 
-    it("runs a with an unlimited buffer", function (done) {
-      base.sandbox.spy(Task.prototype, "run");
-      base.mockFs({
-        "package.json": JSON.stringify({
-          "scripts": {
-            "bar": "echo BAR_TASK >> stdout.log"
-          }
-        }, null, 2)
-      });
-
-      run({
-        argv: ["node", "builder", "run", "--unlimited-buffer", "bar"]
-      }, function (err) {
-        if (err) { return done(err); }
-
-        expect(Task.prototype.run).to.be.calledOnce;
-
-        readFile("stdout.log", function (data) {
-          expect(data).to.contain("BAR_TASK");
-        }, done);
-      });
-
-    });
-
     it("runs with quiet log output", function (done) {
       base.sandbox.spy(Task.prototype, "run");
       base.mockFs({

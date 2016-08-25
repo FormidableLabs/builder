@@ -279,7 +279,6 @@ Flags:
 * `--setup`: Single task to run for the entirety of `<action>`
 * `--quiet`: Silence logging
 * `--log-level`: Level to log at (`info`, `warn`, `error`, `none`)
-* `--unlimited-buffer`: Unlimited shell output buffer.
 * `--expand-archetype`: Expand `node_modules/<archetype>` with full path (default: `false`)
 * `--builderrc`: Path to builder config file (default: `.builderrc`)
 
@@ -303,7 +302,6 @@ Flags:
 * `--[no-]bail`: End all processes after the first failure (default: `true`)
 * `--quiet`: Silence logging
 * `--log-level`: Level to log at (`info`, `warn`, `error`, `none`)
-* `--unlimited-buffer`: Unlimited shell output buffer.
 * `--expand-archetype`: Expand `node_modules/<archetype>` with full path (default: `false`)
 * `--builderrc`: Path to builder config file (default: `.builderrc`)
 
@@ -346,7 +344,6 @@ Flags:
 * `--envs-path`: Path to JSON env variable array file (default: `null`)
 * `--quiet`: Silence logging
 * `--log-level`: Level to log at (`info`, `warn`, `error`, `none`)
-* `--unlimited-buffer`: Unlimited shell output buffer.
 * `--expand-archetype`: Expand `node_modules/<archetype>` with full path (default: `false`)
 * `--builderrc`: Path to builder config file (default: `.builderrc`)
 
