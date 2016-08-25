@@ -1,7 +1,7 @@
 "use strict";
 
 var childProcess = require("child_process");
-var EventEmitter = require("events");
+var EventEmitter = require("events").EventEmitter;
 
 var spawn = require("../../../../lib/spawn");
 
