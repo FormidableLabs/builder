@@ -13,33 +13,12 @@
 var path = require("path");
 var chalk = require("chalk");
 
-var pkg = require("../../../../package.json");
 var Config = require("../../../../lib/config");
 var Task = require("../../../../lib/task");
 var log = require("../../../../lib/log");
 var run = require("../../../../bin/builder-core");
 
 var base = require("../base.spec");
-
-// Helpers
-// **Note**: It would be great to just stub stderr, stdout in beforeEach,
-// but then we don't get test output. So, we manually stub with this wrapper.
-var stdioWrap = function (fn) {
-  return function (done) {
-    base.sandbox.stub(process.stdout, "write");
-
-    var _done = function (err) {
-      process.stdout.write.restore();
-      done(err);
-    };
-
-    try {
-      return fn(_done);
-    } catch (err) {
-      return _done(err);
-    }
-  };
-};
 
 describe("bin/builder-core", function () {
   var logStubs;
@@ -121,7 +100,7 @@ describe("bin/builder-core", function () {
 
   describe("builder --version", function () {
 
-    it("runs version", stdioWrap(function (done) {
+    it("runs version", function (done) {
       base.sandbox.spy(Task.prototype, "version");
       base.mockFs({
         "package.json": "{}"
@@ -133,11 +112,10 @@ describe("bin/builder-core", function () {
         if (err) { return done(err); }
 
         expect(Task.prototype.version).to.be.calledOnce;
-        expect(process.stdout.write).to.be.calledWithMatch(pkg.version);
 
         done();
       });
-    }));
+    });
 
   });
 
@@ -252,7 +230,7 @@ describe("bin/builder-core", function () {
 
   describe("builder run", function () {
 
-    it("runs a <root>/package.json command", stdioWrap(function (done) {
+    it("runs a <root>/package.json command", function (done) {
       base.sandbox.spy(Task.prototype, "run");
       base.mockFs({
         "package.json": JSON.stringify({
@@ -268,14 +246,13 @@ describe("bin/builder-core", function () {
         if (err) { return done(err); }
 
         expect(Task.prototype.run).to.be.calledOnce;
-        expect(process.stdout.write).to.be.calledWithMatch("BAR_TASK");
 
         done();
       });
 
-    }));
+    });
 
-    it("runs a with an unlimited buffer", stdioWrap(function (done) {
+    it("runs a with an unlimited buffer", function (done) {
       base.sandbox.spy(Task.prototype, "run");
       base.mockFs({
         "package.json": JSON.stringify({
@@ -291,14 +268,13 @@ describe("bin/builder-core", function () {
         if (err) { return done(err); }
 
         expect(Task.prototype.run).to.be.calledOnce;
-        expect(process.stdout.write).to.be.calledWithMatch("BAR_TASK");
 
         done();
       });
 
-    }));
+    });
 
-    it("runs with quiet log output", stdioWrap(function (done) {
+    it("runs with quiet log output", function (done) {
       base.sandbox.spy(Task.prototype, "run");
       base.mockFs({
         "package.json": JSON.stringify({
@@ -314,17 +290,15 @@ describe("bin/builder-core", function () {
         if (err) { return done(err); }
 
         expect(Task.prototype.run).to.be.calledOnce;
-        expect(process.stdout.write).to.be.calledWithMatch("BAR_TASK");
         expect(logStubs.info).not.be.called;
         expect(logStubs.warn).not.be.called;
         expect(logStubs.error).not.be.called;
 
         done();
       });
-    }));
+    });
 
-    it("runs with specified log level", stdioWrap(function (done) {
-      base.sandbox.stub(process.stderr, "write");
+    it("runs with specified log level", function (done) {
       base.sandbox.spy(Task.prototype, "run");
       base.mockFs({
         "package.json": JSON.stringify({
@@ -342,7 +316,6 @@ describe("bin/builder-core", function () {
           .that.contains("BAD_COMMAND");
 
         expect(Task.prototype.run).to.be.calledOnce;
-        expect(process.stderr.write).to.be.calledWithMatch("BAD_COMMAND");
         expect(logStubs.info).not.be.called;
         expect(logStubs.warn).not.be.called;
         expect(logStubs.error)
@@ -352,9 +325,9 @@ describe("bin/builder-core", function () {
         done();
       });
 
-    }));
+    });
 
-    it("runs an <archetype>/package.json command", stdioWrap(function (done) {
+    it("runs an <archetype>/package.json command", function (done) {
       base.sandbox.spy(Task.prototype, "run");
       base.mockFs({
         ".builderrc": "---\narchetypes:\n  - mock-archetype",
@@ -376,12 +349,11 @@ describe("bin/builder-core", function () {
         if (err) { return done(err); }
 
         expect(Task.prototype.run).to.be.calledOnce;
-        expect(process.stdout.write).to.be.calledWithMatch("FOO_TASK");
 
         done();
       });
 
-    }));
+    });
 
     it("ignores archetype builder:-prefaced tasks", function () {
       base.mockFs({
@@ -414,7 +386,7 @@ describe("bin/builder-core", function () {
       throw new Error("should have already thrown");
     });
 
-    it("overrides a <archetype> command with a <root> one", stdioWrap(function (done) {
+    it("overrides a <archetype> command with a <root> one", function (done) {
       base.sandbox.spy(Task.prototype, "run");
       base.mockFs({
         ".builderrc": "---\narchetypes:\n  - mock-archetype",
@@ -440,12 +412,11 @@ describe("bin/builder-core", function () {
         if (err) { return done(err); }
 
         expect(Task.prototype.run).to.be.calledOnce;
-        expect(process.stdout.write).to.be.calledWithMatch("ROOT_TASK");
 
         done();
       });
 
-    }));
+    });
 
     // TODO: This one is going to be... tough.
     // https://github.com/FormidableLabs/builder/issues/9
@@ -453,7 +424,7 @@ describe("bin/builder-core", function () {
 
     // TODO: Fix flake in --setup tests.
     // https://github.com/FormidableLabs/builder/issues/86
-    it.skip("runs with --setup", stdioWrap(function (done) {
+    it.skip("runs with --setup", function (done) {
       base.sandbox.spy(Task.prototype, "run");
       base.mockFs({
         "package.json": JSON.stringify({
@@ -471,19 +442,15 @@ describe("bin/builder-core", function () {
         if (err) { return done(err); }
 
         expect(Task.prototype.run).to.have.callCount(2);
-        expect(process.stdout.write)
-          .to.be.calledWithMatch("SETUP").and
-          .to.be.calledWithMatch("BAR_TASK").and
-          .to.be.calledWithMatch("EXIT - BAR_TASK - 0");
 
         done();
       });
 
-    }));
+    });
 
     // TODO: Fix flake in --setup tests.
     // https://github.com/FormidableLabs/builder/issues/86
-    it.skip("handles --setup early 0 exit", stdioWrap(function (done) {
+    it.skip("handles --setup early 0 exit", function (done) {
       base.sandbox.spy(Task.prototype, "run");
       base.mockFs({
         "package.json": JSON.stringify({
@@ -508,11 +475,11 @@ describe("bin/builder-core", function () {
         done();
       });
 
-    }));
+    });
 
     // TODO: Fix flake in --setup tests.
     // https://github.com/FormidableLabs/builder/issues/86
-    it.skip("handles --setup early 1 exit", stdioWrap(function (done) {
+    it.skip("handles --setup early 1 exit", function (done) {
       base.sandbox.spy(Task.prototype, "run");
       base.mockFs({
         "package.json": JSON.stringify({
@@ -537,10 +504,9 @@ describe("bin/builder-core", function () {
         done();
       });
 
-    }));
+    });
 
-    it("runs with --tries=2", stdioWrap(function (done) {
-      base.sandbox.stub(process.stderr, "write");
+    it("runs with --tries=2", function (done) {
       base.sandbox.spy(Task.prototype, "run");
       base.mockFs({
         "package.json": JSON.stringify({
@@ -558,7 +524,6 @@ describe("bin/builder-core", function () {
           .that.contains("BAD_COMMAND");
 
         expect(Task.prototype.run).to.be.calledOnce;
-        expect(process.stderr.write).to.be.calledWithMatch("BAD_COMMAND");
         expect(logStubs.warn).to.be.calledWithMatch(chalk.red("1") + " tries left");
         expect(logStubs.error)
           .to.be.calledWithMatch("Command failed").and
@@ -567,9 +532,9 @@ describe("bin/builder-core", function () {
         done();
       });
 
-    }));
+    });
 
-    it("runs with base config value", stdioWrap(function (done) {
+    it("runs with base config value", function (done) {
       base.sandbox.spy(Task.prototype, "run");
       base.mockFs({
         "package.json": JSON.stringify({
@@ -588,14 +553,12 @@ describe("bin/builder-core", function () {
         if (err) { return done(err); }
 
         expect(Task.prototype.run).to.have.callCount(1);
-        expect(process.stdout.write)
-          .to.be.calledWithMatch("string - from base config");
 
         done();
       });
-    }));
+    });
 
-    it("runs with archetype config value", stdioWrap(function (done) {
+    it("runs with archetype config value", function (done) {
       base.sandbox.spy(Task.prototype, "run");
       base.mockFs({
         ".builderrc": "---\narchetypes:\n  - mock-archetype",
@@ -620,14 +583,12 @@ describe("bin/builder-core", function () {
         if (err) { return done(err); }
 
         expect(Task.prototype.run).to.have.callCount(1);
-        expect(process.stdout.write)
-          .to.be.calledWithMatch("string - from archetype");
 
         done();
       });
-    }));
+    });
 
-    it("runs with empty base + non-empty archetype config value", stdioWrap(function (done) {
+    it("runs with empty base + non-empty archetype config value", function (done) {
       base.sandbox.spy(Task.prototype, "run");
       base.mockFs({
         ".builderrc": "---\narchetypes:\n  - mock-archetype",
@@ -656,14 +617,12 @@ describe("bin/builder-core", function () {
         if (err) { return done(err); }
 
         expect(Task.prototype.run).to.have.callCount(1);
-        expect(process.stdout.write)
-          .to.be.calledWithMatch("string - EMPTY");
 
         done();
       });
-    }));
+    });
 
-    it("runs with real ENV overriding archetype config value", stdioWrap(function (done) {
+    it("runs with real ENV overriding archetype config value", function (done) {
       base.sandbox.spy(Task.prototype, "run");
       base.mockFs({
         ".builderrc": "---\narchetypes:\n  - mock-archetype",
@@ -692,14 +651,12 @@ describe("bin/builder-core", function () {
         if (err) { return done(err); }
 
         expect(Task.prototype.run).to.have.callCount(1);
-        expect(process.stdout.write)
-          .to.be.calledWithMatch("string - from real env");
 
         done();
       });
-    }));
+    });
 
-    it("runs with real ENV overriding base + archetype config values", stdioWrap(function (done) {
+    it("runs with real ENV overriding base + archetype config values", function (done) {
       base.sandbox.spy(Task.prototype, "run");
       base.mockFs({
         ".builderrc": "---\narchetypes:\n  - mock-archetype",
@@ -732,16 +689,14 @@ describe("bin/builder-core", function () {
         if (err) { return done(err); }
 
         expect(Task.prototype.run).to.have.callCount(1);
-        expect(process.stdout.write)
-          .to.be.calledWithMatch("string - from real env");
 
         done();
       });
-    }));
+    });
 
     describe("expands paths with --expand-archetype", function () {
 
-      it("Skips `../node_modules/<archetype>`", stdioWrap(function (done) {
+      it("Skips `../node_modules/<archetype>`", function (done) {
         base.sandbox.spy(Task.prototype, "run");
         base.mockFs({
           ".builderrc": "---\narchetypes:\n  - mock-archetype",
@@ -763,15 +718,12 @@ describe("bin/builder-core", function () {
           if (err) { return done(err); }
 
           expect(Task.prototype.run).to.be.calledOnce;
-          expect(process.stdout.write).to.be.calledWithMatch(
-            "WONT_EXPAND ../node_modules/mock-archetype/A_FILE.txt"
-          );
 
           done();
         });
-      }));
+      });
 
-      it("Skips `other/node_modules/<archetype>`", stdioWrap(function (done) {
+      it("Skips `other/node_modules/<archetype>`", function (done) {
         base.sandbox.spy(Task.prototype, "run");
         base.mockFs({
           ".builderrc": "---\narchetypes:\n  - mock-archetype",
@@ -793,15 +745,12 @@ describe("bin/builder-core", function () {
           if (err) { return done(err); }
 
           expect(Task.prototype.run).to.be.calledOnce;
-          expect(process.stdout.write).to.be.calledWithMatch(
-            "WONT_EXPAND other/node_modules/mock-archetype/A_FILE.txt"
-          );
 
           done();
         });
-      }));
+      });
 
-      it("Replaces `node_modules/<archetype>`", stdioWrap(function (done) {
+      it("Replaces `node_modules/<archetype>`", function (done) {
         base.sandbox.spy(Task.prototype, "run");
         base.mockFs({
           ".builderrc": "---\narchetypes:\n  - mock-archetype",
@@ -823,15 +772,12 @@ describe("bin/builder-core", function () {
           if (err) { return done(err); }
 
           expect(Task.prototype.run).to.be.calledOnce;
-          expect(process.stdout.write).to.be.calledWithMatch(
-            "EXPANDED " + path.join(process.cwd(), "node_modules/mock-archetype/A_FILE.txt")
-          );
 
           done();
         });
-      }));
+      });
 
-      it("Replaces `\"node_modules/<archetype>`", stdioWrap(function (done) {
+      it("Replaces `\"node_modules/<archetype>`", function (done) {
         base.sandbox.spy(Task.prototype, "run");
         base.mockFs({
           ".builderrc": "---\narchetypes:\n  - mock-archetype",
@@ -855,15 +801,12 @@ describe("bin/builder-core", function () {
           if (err) { return done(err); }
 
           expect(Task.prototype.run).to.be.calledOnce;
-          expect(process.stdout.write).to.be.calledWithMatch(
-            "EXPANDED \"" + path.join(process.cwd(), "node_modules/mock-archetype/A_FILE.txt\"")
-          );
 
           done();
         });
-      }));
+      });
 
-      it("Propagates flag to sub-task", stdioWrap(function (done) {
+      it("Propagates flag to sub-task", function (done) {
         base.sandbox.spy(Task.prototype, "run");
         base.mockFs({
           ".builderrc": "---\narchetypes:\n  - mock-archetype",
@@ -887,15 +830,12 @@ describe("bin/builder-core", function () {
           if (err) { return done(err); }
 
           expect(Task.prototype.run).to.be.calledOnce;
-          expect(process.stdout.write).to.be.calledWithMatch(
-            "EXPANDED " + path.join(process.cwd(), "node_modules/mock-archetype/A_FILE.txt")
-          );
 
           done();
         });
-      }));
+      });
 
-      it("Skips replacing root project tasks", stdioWrap(function (done) {
+      it("Skips replacing root project tasks", function (done) {
         base.sandbox.spy(Task.prototype, "run");
         base.mockFs({
           ".builderrc": "---\narchetypes:\n  - mock-archetype",
@@ -917,13 +857,10 @@ describe("bin/builder-core", function () {
           if (err) { return done(err); }
 
           expect(Task.prototype.run).to.be.calledOnce;
-          expect(process.stdout.write).to.be.calledWithMatch(
-            "WONT_EXPAND node_modules/mock-archetype/A_FILE.txt"
-          );
 
           done();
         });
-      }));
+      });
 
     });
 
@@ -931,7 +868,7 @@ describe("bin/builder-core", function () {
 
   describe("builder concurrent", function () {
 
-    it("runs <root>/package.json concurrent commands", stdioWrap(function (done) {
+    it("runs <root>/package.json concurrent commands", function (done) {
       base.sandbox.spy(Task.prototype, "concurrent");
       base.mockFs({
         "package.json": JSON.stringify({
@@ -949,17 +886,13 @@ describe("bin/builder-core", function () {
         if (err) { return done(err); }
 
         expect(Task.prototype.concurrent).to.be.calledOnce;
-        expect(process.stdout.write)
-          .to.be.calledWithMatch("ONE_TASK").and
-          .to.be.calledWithMatch("TWO_TASK").and
-          .to.be.calledWithMatch("THREE_TASK");
 
         done();
       });
 
-    }));
+    });
 
-    it("runs <archetype>/package.json concurrent commands", stdioWrap(function (done) {
+    it("runs <archetype>/package.json concurrent commands", function (done) {
       base.sandbox.spy(Task.prototype, "concurrent");
       base.mockFs({
         ".builderrc": "---\narchetypes:\n  - mock-archetype",
@@ -988,15 +921,11 @@ describe("bin/builder-core", function () {
         if (err) { return done(err); }
 
         expect(Task.prototype.concurrent).to.be.calledOnce;
-        expect(process.stdout.write)
-          .to.be.calledWithMatch("ONE_TASK").and
-          .to.be.calledWithMatch("TWO_ROOT_TASK").and
-          .to.be.calledWithMatch("THREE_ROOT_TASK");
 
         done();
       });
 
-    }));
+    });
 
     // TODO: Finish outlined tests.
     // https://github.com/FormidableLabs/builder/issues/9
@@ -1004,7 +933,7 @@ describe("bin/builder-core", function () {
     it("runs with --setup");
     it("runs with --queue=1, --bail=false");
 
-    it("runs with base overriding archetype config value", stdioWrap(function (done) {
+    it("runs with base overriding archetype config value", function (done) {
       base.sandbox.spy(Task.prototype, "concurrent");
       base.mockFs({
         ".builderrc": "---\narchetypes:\n  - mock-archetype",
@@ -1036,19 +965,16 @@ describe("bin/builder-core", function () {
         if (err) { return done(err); }
 
         expect(Task.prototype.concurrent).to.have.callCount(1);
-        expect(process.stdout.write)
-          .to.be.calledWithMatch("string - from base - ONE").and
-          .to.be.calledWithMatch("string - from base - TWO");
 
         done();
       });
-    }));
+    });
 
   });
 
   describe("builder envs", function () {
 
-    it("runs <root>/package.json multiple env commands", stdioWrap(function (done) {
+    it("runs <root>/package.json multiple env commands", function (done) {
       base.sandbox.spy(Task.prototype, "envs");
       base.mockFs({
         "package.json": JSON.stringify({
@@ -1068,17 +994,13 @@ describe("bin/builder-core", function () {
         if (err) { return done(err); }
 
         expect(Task.prototype.envs).to.be.calledOnce;
-        expect(process.stdout.write)
-          .to.be.calledWithMatch("ROOT hi").and
-          .to.be.calledWithMatch("ROOT ho").and
-          .to.be.calledWithMatch("ROOT yo");
 
         done();
       });
 
-    }));
+    });
 
-    it("runs multiple env commands with --buffer, --envs-path", stdioWrap(function (done) {
+    it("runs multiple env commands with --buffer, --envs-path", function (done) {
       base.sandbox.spy(Task.prototype, "envs");
       base.mockFs({
         "package.json": JSON.stringify({
@@ -1099,17 +1021,13 @@ describe("bin/builder-core", function () {
         if (err) { return done(err); }
 
         expect(Task.prototype.envs).to.be.calledOnce;
-        expect(process.stdout.write)
-          .to.be.calledWithMatch("ROOT hi").and
-          .to.be.calledWithMatch("ROOT ho").and
-          .to.be.calledWithMatch("ROOT yo");
 
         done();
       });
 
-    }));
+    });
 
-    it("runs <archetype>/package.json multiple env commands", stdioWrap(function (done) {
+    it("runs <archetype>/package.json multiple env commands", function (done) {
       base.sandbox.spy(Task.prototype, "envs");
       base.mockFs({
         ".builderrc": "---\narchetypes:\n  - mock-archetype",
@@ -1135,17 +1053,13 @@ describe("bin/builder-core", function () {
         if (err) { return done(err); }
 
         expect(Task.prototype.envs).to.be.calledOnce;
-        expect(process.stdout.write)
-          .to.be.calledWithMatch("ARCH hi").and
-          .to.be.calledWithMatch("ARCH ho").and
-          .to.be.calledWithMatch("ARCH yo");
 
         done();
       });
 
-    }));
+    });
 
-    it("overrides <archetype>/package.json multiple env commands", stdioWrap(function (done) {
+    it("overrides <archetype>/package.json multiple env commands", function (done) {
       base.sandbox.spy(Task.prototype, "envs");
       base.mockFs({
         ".builderrc": "---\narchetypes:\n  - mock-archetype",
@@ -1175,17 +1089,13 @@ describe("bin/builder-core", function () {
         if (err) { return done(err); }
 
         expect(Task.prototype.envs).to.be.calledOnce;
-        expect(process.stdout.write)
-          .to.be.calledWithMatch("ROOT hi").and
-          .to.be.calledWithMatch("ROOT ho").and
-          .to.be.calledWithMatch("ROOT yo");
 
         done();
       });
 
-    }));
+    });
 
-    it("errors on empty JSON array", stdioWrap(function (done) {
+    it("errors on empty JSON array", function (done) {
       base.sandbox.spy(Task.prototype, "envs");
       base.mockFs({
         "package.json": JSON.stringify({
@@ -1205,9 +1115,9 @@ describe("bin/builder-core", function () {
         done();
       });
 
-    }));
+    });
 
-    it("errors on empty JSON non-array", stdioWrap(function (done) {
+    it("errors on empty JSON non-array", function (done) {
       base.sandbox.spy(Task.prototype, "envs");
       base.mockFs({
         "package.json": JSON.stringify({
@@ -1227,9 +1137,9 @@ describe("bin/builder-core", function () {
         done();
       });
 
-    }));
+    });
 
-    it("errors on malformed JSON array", stdioWrap(function (done) {
+    it("errors on malformed JSON array", function (done) {
       base.sandbox.spy(Task.prototype, "envs");
       base.mockFs({
         "package.json": JSON.stringify({
@@ -1251,9 +1161,9 @@ describe("bin/builder-core", function () {
 
         done();
       });
-    }));
+    });
 
-    it("errors on nonexistent JSON file", stdioWrap(function (done) {
+    it("errors on nonexistent JSON file", function (done) {
       base.sandbox.spy(Task.prototype, "envs");
       base.mockFs({
         "package.json": JSON.stringify({
@@ -1275,7 +1185,7 @@ describe("bin/builder-core", function () {
 
         done();
       });
-    }));
+    });
 
     // TODO: Finish outlined tests.
     // https://github.com/FormidableLabs/builder/issues/9
@@ -1283,7 +1193,7 @@ describe("bin/builder-core", function () {
     it("runs with --tries=2");
     it("runs with --queue=1, --bail=false");
 
-    it("runs with envs overriding base config value", stdioWrap(function (done) {
+    it("runs with envs overriding base config value", function (done) {
       base.sandbox.spy(Task.prototype, "envs");
       base.mockFs({
         "package.json": JSON.stringify({
@@ -1306,16 +1216,12 @@ describe("bin/builder-core", function () {
         if (err) { return done(err); }
 
         expect(Task.prototype.envs).to.have.callCount(1);
-        expect(process.stdout.write)
-          .to.be.calledWithMatch("string - from base").and
-          .to.be.calledWithMatch("string - from array1").and
-          .to.be.calledWithMatch("string - from array2");
 
         done();
       });
-    }));
+    });
 
-    it("runs with envs real ENV overriding base + arch config value", stdioWrap(function (done) {
+    it("runs with envs real ENV overriding base + arch config value", function (done) {
       base.sandbox.spy(Task.prototype, "envs");
       base.mockFs({
         ".builderrc": "---\narchetypes:\n  - mock-archetype",
@@ -1352,14 +1258,10 @@ describe("bin/builder-core", function () {
         if (err) { return done(err); }
 
         expect(Task.prototype.envs).to.have.callCount(1);
-        expect(process.stdout.write)
-          .to.be.calledWithMatch("string - from real env").and
-          .to.be.calledWithMatch("string - from array1").and
-          .to.be.calledWithMatch("string - from array2");
 
         done();
       });
-    }));
+    });
 
   });
 
