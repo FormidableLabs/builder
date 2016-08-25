@@ -11,7 +11,16 @@
 var mockFs = require("mock-fs");
 var fs = require("fs");
 var sinon = require("sinon");
+var Promise = require("es6-promise").Promise;
 var log = require("../../../lib/log");
+
+var removeFile = function (filename) {
+  return new Promise(function (resolve) {
+    fs.unlink(filename, function () {
+      resolve(); // Don't get about errors.
+    });
+  });
+};
 
 var base = module.exports = {
   // Generic test helpers.
@@ -45,14 +54,8 @@ afterEach(function () {
   base.mockFs.restore();
   base.sandbox.restore();
   log._unsetLevel();
-  try {
-    fs.unlinkSync("stdout.log");
-  } catch (err) {
-    // No worries.
-  }
-  try {
-    fs.unlinkSync("stderr.log");
-  } catch (err) {
-    // No worries.
-  }
+  return Promise.all([
+    removeFile("stdout.log"),
+    removeFile("stderr.log")
+  ]);
 });

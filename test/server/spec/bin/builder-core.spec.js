@@ -13,6 +13,7 @@
 var fs = require("fs");
 var path = require("path");
 var chalk = require("chalk");
+var Promise = require("es6-promise").Promise;
 
 var pkg = require("../../../../package.json");
 var Config = require("../../../../lib/config");
@@ -22,14 +23,13 @@ var run = require("../../../../bin/builder-core");
 
 var base = require("../base.spec");
 
-var readOut = function () {
-  base.mockFs.restore();
-  return fs.readFileSync("stdout.log", { encoding: "utf8" });
-};
-
-var readErr = function () {
-  base.mockFs.restore();
-  return fs.readFileSync("stderr.log", { encoding: "utf8" });
+var readFile = function (filename) {
+  return new Promise(function (resolve, reject) {
+    base.mockFs.restore();
+    fs.readFile(filename, { encoding: "utf8" }, function (err, data) {
+      return err ? reject(err) : resolve(data);
+    });
+  });
 };
 
 describe("bin/builder-core", function () {
@@ -260,9 +260,10 @@ describe("bin/builder-core", function () {
         if (err) { return done(err); }
 
         expect(Task.prototype.run).to.be.calledOnce;
-        expect(readOut()).to.contain("BAR_TASK");
 
-        done();
+        readFile("stdout.log").then(function (data) {
+          expect(data).to.contain("BAR_TASK");
+        }).then(done, done);
       });
 
     });
@@ -283,9 +284,10 @@ describe("bin/builder-core", function () {
         if (err) { return done(err); }
 
         expect(Task.prototype.run).to.be.calledOnce;
-        expect(readOut()).to.contain("BAR_TASK");
 
-        done();
+        readFile("stdout.log").then(function (data) {
+          expect(data).to.contain("BAR_TASK");
+        }).then(done, done);
       });
 
     });
@@ -306,12 +308,13 @@ describe("bin/builder-core", function () {
         if (err) { return done(err); }
 
         expect(Task.prototype.run).to.be.calledOnce;
-        expect(readOut()).to.contain("BAR_TASK");
         expect(logStubs.info).not.be.called;
         expect(logStubs.warn).not.be.called;
         expect(logStubs.error).not.be.called;
 
-        done();
+        readFile("stdout.log").then(function (data) {
+          expect(data).to.contain("BAR_TASK");
+        }).then(done, done);
       });
     });
 
@@ -333,14 +336,15 @@ describe("bin/builder-core", function () {
           .that.contains("BAD_COMMAND");
 
         expect(Task.prototype.run).to.be.calledOnce;
-        expect(readErr()).to.contain("BAD_COMMAND");
         expect(logStubs.info).not.be.called;
         expect(logStubs.warn).not.be.called;
         expect(logStubs.error)
           .to.be.calledWithMatch("Command failed").and
           .to.be.calledWithMatch("BAD_COMMAND");
 
-        done();
+        readFile("stderr.log").then(function (data) {
+          expect(data).to.contain("BAD_COMMAND");
+        }).then(done, done);
       });
 
     });
@@ -367,9 +371,10 @@ describe("bin/builder-core", function () {
         if (err) { return done(err); }
 
         expect(Task.prototype.run).to.be.calledOnce;
-        expect(readOut()).to.contain("FOO_TASK");
 
-        done();
+        readFile("stdout.log").then(function (data) {
+          expect(data).to.contain("FOO_TASK");
+        }).then(done, done);
       });
 
     });
@@ -431,9 +436,10 @@ describe("bin/builder-core", function () {
         if (err) { return done(err); }
 
         expect(Task.prototype.run).to.be.calledOnce;
-        expect(readOut()).to.contain("ROOT_TASK");
 
-        done();
+        readFile("stdout.log").then(function (data) {
+          expect(data).to.contain("ROOT_TASK");
+        }).then(done, done);
       });
 
     });
@@ -462,12 +468,13 @@ describe("bin/builder-core", function () {
         if (err) { return done(err); }
 
         expect(Task.prototype.run).to.have.callCount(2);
-        expect(readOut())
-          .to.contain("SETUP").and
-          .to.contain("BAR_TASK").and
-          .to.contain("EXIT - BAR_TASK - 0");
 
-        done();
+        readFile("stdout.log").then(function (data) {
+          expect(data)
+            .to.contain("SETUP").and
+            .to.contain("BAR_TASK").and
+            .to.contain("EXIT - BAR_TASK - 0");
+        }).then(done, done);
       });
 
     });
@@ -548,13 +555,14 @@ describe("bin/builder-core", function () {
           .that.contains("BAD_COMMAND");
 
         expect(Task.prototype.run).to.be.calledOnce;
-        expect(readErr()).to.contain("BAD_COMMAND");
         expect(logStubs.warn).to.be.calledWithMatch(chalk.red("1") + " tries left");
         expect(logStubs.error)
           .to.be.calledWithMatch("Command failed").and
           .to.be.calledWithMatch("BAD_COMMAND");
 
-        done();
+        readFile("stderr.log").then(function (data) {
+          expect(data).to.contain("BAD_COMMAND");
+        }).then(done, done);
       });
 
     });
@@ -578,9 +586,10 @@ describe("bin/builder-core", function () {
         if (err) { return done(err); }
 
         expect(Task.prototype.run).to.have.callCount(1);
-        expect(readOut()).to.contain("string - from base config");
 
-        done();
+        readFile("stdout.log").then(function (data) {
+          expect(data).to.contain("string - from base config");
+        }).then(done, done);
       });
     });
 
@@ -609,9 +618,10 @@ describe("bin/builder-core", function () {
         if (err) { return done(err); }
 
         expect(Task.prototype.run).to.have.callCount(1);
-        expect(readOut()).to.contain("string - from archetype");
 
-        done();
+        readFile("stdout.log").then(function (data) {
+          expect(data).to.contain("string - from archetype");
+        }).then(done, done);
       });
     });
 
@@ -644,9 +654,10 @@ describe("bin/builder-core", function () {
         if (err) { return done(err); }
 
         expect(Task.prototype.run).to.have.callCount(1);
-        expect(readOut()).to.contain("string - EMPTY");
 
-        done();
+        readFile("stdout.log").then(function (data) {
+          expect(data).to.contain("string - EMPTY");
+        }).then(done, done);
       });
     });
 
@@ -679,9 +690,10 @@ describe("bin/builder-core", function () {
         if (err) { return done(err); }
 
         expect(Task.prototype.run).to.have.callCount(1);
-        expect(readOut()).to.contain("string - from real env");
 
-        done();
+        readFile("stdout.log").then(function (data) {
+          expect(data).to.contain("string - from real env");
+        }).then(done, done);
       });
     });
 
@@ -718,9 +730,10 @@ describe("bin/builder-core", function () {
         if (err) { return done(err); }
 
         expect(Task.prototype.run).to.have.callCount(1);
-        expect(readOut()).to.contain("string - from real env");
 
-        done();
+        readFile("stdout.log").then(function (data) {
+          expect(data).to.contain("string - from real env");
+        }).then(done, done);
       });
     });
 
@@ -748,11 +761,12 @@ describe("bin/builder-core", function () {
           if (err) { return done(err); }
 
           expect(Task.prototype.run).to.be.calledOnce;
-          expect(readOut()).to.contain(
-            "WONT_EXPAND ../node_modules/mock-archetype/A_FILE.txt"
-          );
 
-          done();
+          readFile("stdout.log").then(function (data) {
+            expect(data).to.contain(
+              "WONT_EXPAND ../node_modules/mock-archetype/A_FILE.txt"
+            );
+          }).then(done, done);
         });
       });
 
@@ -779,11 +793,12 @@ describe("bin/builder-core", function () {
           if (err) { return done(err); }
 
           expect(Task.prototype.run).to.be.calledOnce;
-          expect(readOut()).to.contain(
-            "WONT_EXPAND other/node_modules/mock-archetype/A_FILE.txt"
-          );
 
-          done();
+          readFile("stdout.log").then(function (data) {
+            expect(data).to.contain(
+              "WONT_EXPAND other/node_modules/mock-archetype/A_FILE.txt"
+            );
+          }).then(done, done);
         });
       });
 
@@ -809,11 +824,12 @@ describe("bin/builder-core", function () {
           if (err) { return done(err); }
 
           expect(Task.prototype.run).to.be.calledOnce;
-          expect(readOut()).to.contain(
-            "EXPANDED " + path.join(process.cwd(), "node_modules/mock-archetype/A_FILE.txt")
-          );
 
-          done();
+          readFile("stdout.log").then(function (data) {
+            expect(data).to.contain(
+              "EXPANDED " + path.join(process.cwd(), "node_modules/mock-archetype/A_FILE.txt")
+            );
+          }).then(done, done);
         });
       });
 
@@ -842,11 +858,12 @@ describe("bin/builder-core", function () {
           if (err) { return done(err); }
 
           expect(Task.prototype.run).to.be.calledOnce;
-          expect(readOut()).to.contain(
-            "EXPANDED \"" + path.join(process.cwd(), "node_modules/mock-archetype/A_FILE.txt\"")
-          );
 
-          done();
+          readFile("stdout.log").then(function (data) {
+            expect(data).to.contain(
+              "EXPANDED \"" + path.join(process.cwd(), "node_modules/mock-archetype/A_FILE.txt\"")
+            );
+          }).then(done, done);
         });
       });
 
@@ -874,11 +891,12 @@ describe("bin/builder-core", function () {
           if (err) { return done(err); }
 
           expect(Task.prototype.run).to.be.calledOnce;
-          expect(readOut()).to.contain(
-            "EXPANDED " + path.join(process.cwd(), "node_modules/mock-archetype/A_FILE.txt")
-          );
 
-          done();
+          readFile("stdout.log").then(function (data) {
+            expect(data).to.contain(
+              "EXPANDED " + path.join(process.cwd(), "node_modules/mock-archetype/A_FILE.txt")
+            );
+          }).then(done, done);
         });
       });
 
@@ -904,11 +922,12 @@ describe("bin/builder-core", function () {
           if (err) { return done(err); }
 
           expect(Task.prototype.run).to.be.calledOnce;
-          expect(readOut()).to.contain(
-            "WONT_EXPAND node_modules/mock-archetype/A_FILE.txt"
-          );
 
-          done();
+          readFile("stdout.log").then(function (data) {
+            expect(data).to.contain(
+              "WONT_EXPAND node_modules/mock-archetype/A_FILE.txt"
+            );
+          }).then(done, done);
         });
       });
 
@@ -936,12 +955,13 @@ describe("bin/builder-core", function () {
         if (err) { return done(err); }
 
         expect(Task.prototype.concurrent).to.be.calledOnce;
-        expect(readOut())
-          .to.contain("ONE_TASK").and
-          .to.contain("TWO_TASK").and
-          .to.contain("THREE_TASK");
 
-        done();
+        readFile("stdout.log").then(function (data) {
+          expect(data)
+            .to.contain("ONE_TASK").and
+            .to.contain("TWO_TASK").and
+            .to.contain("THREE_TASK");
+        }).then(done, done);
       });
 
     });
@@ -975,12 +995,13 @@ describe("bin/builder-core", function () {
         if (err) { return done(err); }
 
         expect(Task.prototype.concurrent).to.be.calledOnce;
-        expect(readOut())
-          .to.contain("ONE_TASK").and
-          .to.contain("TWO_ROOT_TASK").and
-          .to.contain("THREE_ROOT_TASK");
 
-        done();
+        readFile("stdout.log").then(function (data) {
+          expect(data)
+            .to.contain("ONE_TASK").and
+            .to.contain("TWO_ROOT_TASK").and
+            .to.contain("THREE_ROOT_TASK");
+        }).then(done, done);
       });
 
     });
@@ -1023,11 +1044,12 @@ describe("bin/builder-core", function () {
         if (err) { return done(err); }
 
         expect(Task.prototype.concurrent).to.have.callCount(1);
-        expect(readOut())
-          .to.contain("string - from base - ONE").and
-          .to.contain("string - from base - TWO");
 
-        done();
+        readFile("stdout.log").then(function (data) {
+          expect(data)
+            .to.contain("string - from base - ONE").and
+            .to.contain("string - from base - TWO");
+        }).then(done, done);
       });
     });
 
@@ -1056,12 +1078,13 @@ describe("bin/builder-core", function () {
         if (err) { return done(err); }
 
         expect(Task.prototype.envs).to.be.calledOnce;
-        expect(readOut())
-          .to.contain("ROOT hi").and
-          .to.contain("ROOT ho").and
-          .to.contain("ROOT yo");
 
-        done();
+        readFile("stdout.log").then(function (data) {
+          expect(data)
+            .to.contain("ROOT hi").and
+            .to.contain("ROOT ho").and
+            .to.contain("ROOT yo");
+        }).then(done, done);
       });
 
     });
@@ -1088,12 +1111,13 @@ describe("bin/builder-core", function () {
         if (err) { return done(err); }
 
         expect(Task.prototype.envs).to.be.calledOnce;
-        expect(readOut())
-          .to.contain("ROOT hi").and
-          .to.contain("ROOT ho").and
-          .to.contain("ROOT yo");
 
-        done();
+        readFile("stdout.log").then(function (data) {
+          expect(data)
+            .to.contain("ROOT hi").and
+            .to.contain("ROOT ho").and
+            .to.contain("ROOT yo");
+        }).then(done, done);
       });
 
     });
@@ -1125,12 +1149,13 @@ describe("bin/builder-core", function () {
         if (err) { return done(err); }
 
         expect(Task.prototype.envs).to.be.calledOnce;
-        expect(readOut())
-          .to.contain("ARCH hi").and
-          .to.contain("ARCH ho").and
-          .to.contain("ARCH yo");
 
-        done();
+        readFile("stdout.log").then(function (data) {
+          expect(data)
+            .to.contain("ARCH hi").and
+            .to.contain("ARCH ho").and
+            .to.contain("ARCH yo");
+        }).then(done, done);
       });
 
     });
@@ -1167,12 +1192,13 @@ describe("bin/builder-core", function () {
         if (err) { return done(err); }
 
         expect(Task.prototype.envs).to.be.calledOnce;
-        expect(readOut())
-          .to.contain("ROOT hi").and
-          .to.contain("ROOT ho").and
-          .to.contain("ROOT yo");
 
-        done();
+        readFile("stdout.log").then(function (data) {
+          expect(data)
+            .to.contain("ROOT hi").and
+            .to.contain("ROOT ho").and
+            .to.contain("ROOT yo");
+        }).then(done, done);
       });
 
     });
@@ -1298,12 +1324,13 @@ describe("bin/builder-core", function () {
         if (err) { return done(err); }
 
         expect(Task.prototype.envs).to.have.callCount(1);
-        expect(readOut())
-          .to.contain("string - from base").and
-          .to.contain("string - from array1").and
-          .to.contain("string - from array2");
 
-        done();
+        readFile("stdout.log").then(function (data) {
+          expect(data)
+            .to.contain("string - from base").and
+            .to.contain("string - from array1").and
+            .to.contain("string - from array2");
+        }).then(done, done);
       });
     });
 
@@ -1344,12 +1371,13 @@ describe("bin/builder-core", function () {
         if (err) { return done(err); }
 
         expect(Task.prototype.envs).to.have.callCount(1);
-        expect(readOut())
-          .to.contain("string - from real env").and
-          .to.contain("string - from array1").and
-          .to.contain("string - from array2");
 
-        done();
+        readFile("stdout.log").then(function (data) {
+          expect(data)
+            .to.contain("string - from real env").and
+            .to.contain("string - from array1").and
+            .to.contain("string - from array2");
+        }).then(done, done);
       });
     });
 
