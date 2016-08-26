@@ -432,9 +432,7 @@ describe("bin/builder-core", function () {
     // https://github.com/FormidableLabs/builder/issues/9
     it("overrides a <archetype> command with a <root> one in a composed <archetype> command");
 
-    // TODO: Fix flake in --setup tests.
-    // https://github.com/FormidableLabs/builder/issues/86
-    it.skip("runs with --setup", function (done) {
+    it("runs with --setup", function (done) {
       base.sandbox.spy(Task.prototype, "run");
       base.mockFs({
         "package.json": JSON.stringify({
@@ -463,15 +461,13 @@ describe("bin/builder-core", function () {
 
     });
 
-    // TODO: Fix flake in --setup tests.
-    // https://github.com/FormidableLabs/builder/issues/86
-    it.skip("handles --setup early 0 exit", function (done) {
+    it("handles --setup early 0 exit", function (done) {
       base.sandbox.spy(Task.prototype, "run");
       base.mockFs({
         "package.json": JSON.stringify({
           "scripts": {
             "setup": "node test/server/fixtures/repeat-script.js 2 SETUP",
-            "bar": "node test/server/fixtures/repeat-script.js 5 BAR_TASK"
+            "bar": "sleep 10"
           }
         }, null, 2)
       });
@@ -492,15 +488,13 @@ describe("bin/builder-core", function () {
 
     });
 
-    // TODO: Fix flake in --setup tests.
-    // https://github.com/FormidableLabs/builder/issues/86
-    it.skip("handles --setup early 1 exit", function (done) {
+    it("handles --setup early 1 exit", function (done) {
       base.sandbox.spy(Task.prototype, "run");
       base.mockFs({
         "package.json": JSON.stringify({
           "scripts": {
             "setup": "node test/server/fixtures/repeat-script.js 2 SETUP 1",
-            "bar": "node test/server/fixtures/repeat-script.js 10 BAR_TASK"
+            "bar": "sleep 10"
           }
         }, null, 2)
       });
