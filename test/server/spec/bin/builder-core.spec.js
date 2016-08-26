@@ -467,7 +467,7 @@ describe("bin/builder-core", function () {
         "package.json": JSON.stringify({
           "scripts": {
             "setup": "node test/server/fixtures/repeat-script.js 2 SETUP",
-            "bar": "node test/server/fixtures/repeat-script.js 20 BAR_TASK"
+            "bar": "sleep 10"
           }
         }, null, 2)
       });
@@ -494,7 +494,7 @@ describe("bin/builder-core", function () {
         "package.json": JSON.stringify({
           "scripts": {
             "setup": "node test/server/fixtures/repeat-script.js 2 SETUP 1",
-            "bar": "node test/server/fixtures/repeat-script.js 20 BAR_TASK"
+            "bar": "sleep 10"
           }
         }, null, 2)
       });
