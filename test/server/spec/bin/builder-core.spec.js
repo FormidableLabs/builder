@@ -467,7 +467,7 @@ describe("bin/builder-core", function () {
         "package.json": JSON.stringify({
           "scripts": {
             "setup": "node test/server/fixtures/repeat-script.js 2 SETUP",
-            "bar": "node test/server/fixtures/repeat-script.js 5 BAR_TASK"
+            "bar": "node test/server/fixtures/repeat-script.js 20 BAR_TASK"
           }
         }, null, 2)
       });
@@ -494,7 +494,7 @@ describe("bin/builder-core", function () {
         "package.json": JSON.stringify({
           "scripts": {
             "setup": "node test/server/fixtures/repeat-script.js 2 SETUP 1",
-            "bar": "node test/server/fixtures/repeat-script.js 10 BAR_TASK"
+            "bar": "node test/server/fixtures/repeat-script.js 20 BAR_TASK"
           }
         }, null, 2)
       });
