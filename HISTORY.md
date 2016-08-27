@@ -10,6 +10,9 @@ History
   [#20](https://github.com/FormidableLabs/builder/issues/20)
 * Add auto-TOC to README.md.
   [#101](https://github.com/FormidableLabs/builder/issues/101)
+* Use a "safe exit" pattern to avoid immediately exiting the `builder` process
+  when there is potentially unflushed output.
+  [#124](https://github.com/FormidableLabs/builder/issues/124)
 
 ## 2.10.1
 
