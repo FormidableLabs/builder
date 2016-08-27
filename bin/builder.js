@@ -43,6 +43,8 @@ var builder = require(builderPath);
 builder({
   msgs: msgs
 }, function (err) {
-  /*eslint-disable no-process-exit*/
-  process.exit(err ? err.code || 1 : 0);
+  process.on("exit", function () {
+    /*eslint-disable no-process-exit*/
+    process.exit(err ? err.code || 1 : 0);
+  });
 });
