@@ -12,6 +12,7 @@
  */
 var fs = require("fs");
 var path = require("path");
+var async = require("async");
 var chalk = require("chalk");
 
 var pkg = require("../../../../package.json");
@@ -22,15 +23,24 @@ var run = require("../../../../bin/builder-core");
 
 var base = require("../base.spec");
 
-// Read file, do assert callbacks, and trap everything, calling `done` at the
+// Read files, do assert callbacks, and trap everything, calling `done` at the
 // end. A little limited in use as it's the *last* thing you can call in a
 // given test, but we can abstract more later if needed.
-var readFile = function (filename, callback, done) {
+var readFiles = function (files, callback, done) {
   base.mockFs.restore();
-  fs.readFile(filename, { encoding: "utf8" }, function (err, data) {
+
+  var obj = {};
+
+  async.map(files, function (filename, cb) {
+    fs.readFile(filename, { encoding: "utf8" }, function (err, data) {
+      if (err) { return cb(err); }
+      obj[filename] = data;
+      cb();
+    });
+  }, function (err) {
     try {
       if (!err) {
-        callback(data); // eslint-disable-line callback-return
+        callback(obj); // eslint-disable-line callback-return
       }
     } catch (assertErr) {
       err = assertErr;
@@ -38,6 +48,13 @@ var readFile = function (filename, callback, done) {
 
     done(err);
   });
+};
+
+// Single file alias.
+var readFile = function (filename, callback, done) {
+  readFiles([filename], function (obj) {
+    callback(obj[filename]);
+  }, done);
 };
 
 describe("bin/builder-core", function () {
@@ -438,7 +455,7 @@ describe("bin/builder-core", function () {
         "package.json": JSON.stringify({
           "scripts": {
             // *real* fs for script references. (`0` runs forever).
-            "setup": "node test/server/fixtures/repeat-script.js 0 SETUP >> stdout.log",
+            "setup": "node test/server/fixtures/repeat-script.js 0 SETUP >> stdout-setup.log",
             "bar": "node test/server/fixtures/repeat-script.js 5 BAR_TASK >> stdout.log"
           }
         }, null, 2)
@@ -451,9 +468,10 @@ describe("bin/builder-core", function () {
 
         expect(Task.prototype.run).to.have.callCount(2);
 
-        readFile("stdout.log", function (data) {
-          expect(data)
-            .to.contain("SETUP").and
+        readFiles(["stdout-setup.log", "stdout.log"], function (obj) {
+          expect(obj["stdout-setup.log"])
+            .to.contain("SETUP");
+          expect(obj["stdout.log"])
             .to.contain("BAR_TASK").and
             .to.contain("EXIT - BAR_TASK - 0");
         }, done);
@@ -920,9 +938,9 @@ describe("bin/builder-core", function () {
       base.mockFs({
         "package.json": JSON.stringify({
           "scripts": {
-            "one": "echo ONE_TASK >> stdout.log",
-            "two": "echo TWO_TASK >> stdout.log",
-            "three": "echo THREE_TASK >> stdout.log"
+            "one": "echo ONE_TASK >> stdout-1.log",
+            "two": "echo TWO_TASK >> stdout-2.log",
+            "three": "echo THREE_TASK >> stdout-3.log"
           }
         }, null, 2)
       });
@@ -934,11 +952,10 @@ describe("bin/builder-core", function () {
 
         expect(Task.prototype.concurrent).to.be.calledOnce;
 
-        readFile("stdout.log", function (data) {
-          expect(data)
-            .to.contain("ONE_TASK").and
-            .to.contain("TWO_TASK").and
-            .to.contain("THREE_TASK");
+        readFiles(["stdout-1.log", "stdout-2.log", "stdout-3.log"], function (obj) {
+          expect(obj["stdout-1.log"]).to.contain("ONE_TASK");
+          expect(obj["stdout-2.log"]).to.contain("TWO_TASK");
+          expect(obj["stdout-3.log"]).to.contain("THREE_TASK");
         }, done);
       });
 
