@@ -1,4 +1,5 @@
 [![Travis Status][trav_img]][trav_site]
+[![Appveyor Status][av_img]][av_site]
 [![Coverage Status][cov_img]][cov_site]
 
 Builder
@@ -1418,6 +1419,8 @@ things settle down in `v3.x`-on.
 [builder-react-component]: https://github.com/FormidableLabs/builder-react-component
 [trav_img]: https://api.travis-ci.org/FormidableLabs/builder.svg
 [trav_site]: https://travis-ci.org/FormidableLabs/builder
+[av_img]: https://ci.appveyor.com/api/projects/status/oq3m2hay1tl82tsj?svg=true
+[av_site]: https://ci.appveyor.com/project/FormidableLabs/builder
 [cov]: https://coveralls.io
 [cov_img]: https://img.shields.io/coveralls/FormidableLabs/builder.svg
 [cov_site]: https://coveralls.io/r/FormidableLabs/builder
