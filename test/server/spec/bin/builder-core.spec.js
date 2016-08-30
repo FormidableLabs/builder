@@ -23,6 +23,9 @@ var run = require("../../../../bin/builder-core");
 
 var base = require("../base.spec");
 
+// Cross-platform shell command strings
+var CLI_SLEEP = "node -e \"setTimeout(function () {}, 10000);\"";
+
 // Read files, do assert callbacks, and trap everything, calling `done` at the
 // end. A little limited in use as it's the *last* thing you can call in a
 // given test, but we can abstract more later if needed.
@@ -485,7 +488,7 @@ describe("bin/builder-core", function () {
         "package.json": JSON.stringify({
           "scripts": {
             "setup": "node test/server/fixtures/repeat-script.js 2 SETUP",
-            "bar": "sleep 10"
+            "bar": CLI_SLEEP
           }
         }, null, 2)
       });
@@ -512,7 +515,7 @@ describe("bin/builder-core", function () {
         "package.json": JSON.stringify({
           "scripts": {
             "setup": "node test/server/fixtures/repeat-script.js 2 SETUP 1",
-            "bar": "sleep 10"
+            "bar": CLI_SLEEP
           }
         }, null, 2)
       });
