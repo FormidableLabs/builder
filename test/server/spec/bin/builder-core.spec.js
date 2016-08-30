@@ -23,8 +23,10 @@ var run = require("../../../../bin/builder-core");
 
 var base = require("../base.spec");
 
-// Cross-platform shell command strings
+// Cross-platform shell command strings and environment variables.
 var CLI_SLEEP = "node -e \"setTimeout(function () {}, 10000);\"";
+var ENV_MY_VAR = /^win/.test(process.platform) ? "%MY_VAR%" : "$MY_VAR";
+var ENV_PROC_NUM = /^win/.test(process.platform) ? "%PROC_NUM%" : "$PROC_NUM";
 
 // Read files, do assert callbacks, and trap everything, calling `done` at the
 // end. A little limited in use as it's the *last* thing you can call in a
@@ -970,17 +972,17 @@ describe("bin/builder-core", function () {
         ".builderrc": "---\narchetypes:\n  - mock-archetype",
         "package.json": JSON.stringify({
           "scripts": {
-            "two": "echo TWO_ROOT_TASK >> stdout.log",
-            "three": "echo THREE_ROOT_TASK >> stdout.log"
+            "two": "echo TWO_ROOT_TASK >> stdout-2.log",
+            "three": "echo THREE_ROOT_TASK >> stdout-3.log"
           }
         }, null, 2),
         "node_modules": {
           "mock-archetype": {
             "package.json": JSON.stringify({
               "scripts": {
-                "one": "echo ONE_TASK >> stdout.log",
-                "two": "echo TWO_TASK >> stdout.log",
-                "three": "echo THREE_TASK >> stdout.log"
+                "one": "echo ONE_TASK >> stdout-1.log",
+                "two": "echo TWO_TASK >> stdout-2.log",
+                "three": "echo THREE_TASK >> stdout-3.log"
               }
             }, null, 2)
           }
@@ -994,11 +996,10 @@ describe("bin/builder-core", function () {
 
         expect(Task.prototype.concurrent).to.be.calledOnce;
 
-        readFile("stdout.log", function (data) {
-          expect(data)
-            .to.contain("ONE_TASK").and
-            .to.contain("TWO_ROOT_TASK").and
-            .to.contain("THREE_ROOT_TASK");
+        readFiles(["stdout-1.log", "stdout-2.log", "stdout-3.log"], function (obj) {
+          expect(obj["stdout-1.log"]).to.contain("ONE_TASK");
+          expect(obj["stdout-2.log"]).to.contain("TWO_ROOT_TASK");
+          expect(obj["stdout-3.log"]).to.contain("THREE_ROOT_TASK");
         }, done);
       });
 
@@ -1019,7 +1020,7 @@ describe("bin/builder-core", function () {
             "_test_message": "from base"
           },
           "scripts": {
-            "echo2": "node test/server/fixtures/echo.js TWO >> stdout.log"
+            "echo2": "node test/server/fixtures/echo.js TWO >> stdout-2.log"
           }
         }, null, 2),
         "node_modules": {
@@ -1029,7 +1030,7 @@ describe("bin/builder-core", function () {
                 "_test_message": "from archetype"
               },
               "scripts": {
-                "echo1": "node test/server/fixtures/echo.js ONE >> stdout.log"
+                "echo1": "node test/server/fixtures/echo.js ONE >> stdout-1.log"
               }
             }, null, 2)
           }
@@ -1043,10 +1044,9 @@ describe("bin/builder-core", function () {
 
         expect(Task.prototype.concurrent).to.have.callCount(1);
 
-        readFile("stdout.log", function (data) {
-          expect(data)
-            .to.contain("string - from base - ONE").and
-            .to.contain("string - from base - TWO");
+        readFiles(["stdout-1.log", "stdout-2.log"], function (obj) {
+          expect(obj["stdout-1.log"]).to.contain("string - from base - ONE");
+          expect(obj["stdout-2.log"]).to.contain("string - from base - TWO");
         }, done);
       });
     });
@@ -1057,31 +1057,30 @@ describe("bin/builder-core", function () {
 
     it("runs <root>/package.json multiple env commands", function (done) {
       base.sandbox.spy(Task.prototype, "envs");
+
       base.mockFs({
         "package.json": JSON.stringify({
           "scripts": {
-            "echo": "echo ROOT " + (/^win/.test(process.platform) ? "%MY_VAR%" : "$MY_VAR") +
-              " >> stdout.log"
+            "echo": "echo ROOT " + ENV_MY_VAR + " >> stdout-" + ENV_PROC_NUM + ".log"
           }
         }, null, 2)
       });
 
       run({
         argv: ["node", "builder", "envs", "echo", JSON.stringify([
-          { MY_VAR: "hi" },
-          { MY_VAR: "ho" },
-          { MY_VAR: "yo" }
+          { MY_VAR: "hi", PROC_NUM: 1 },
+          { MY_VAR: "ho", PROC_NUM: 2 },
+          { MY_VAR: "yo", PROC_NUM: 3 }
         ])]
       }, function (err) {
         if (err) { return done(err); }
 
         expect(Task.prototype.envs).to.be.calledOnce;
 
-        readFile("stdout.log", function (data) {
-          expect(data)
-            .to.contain("ROOT hi").and
-            .to.contain("ROOT ho").and
-            .to.contain("ROOT yo");
+        readFiles(["stdout-1.log", "stdout-2.log", "stdout-3.log"], function (obj) {
+          expect(obj["stdout-1.log"]).to.contain("ROOT hi");
+          expect(obj["stdout-2.log"]).to.contain("ROOT ho");
+          expect(obj["stdout-3.log"]).to.contain("ROOT yo");
         }, done);
       });
 
@@ -1089,17 +1088,17 @@ describe("bin/builder-core", function () {
 
     it("runs multiple env commands with --buffer, --envs-path", function (done) {
       base.sandbox.spy(Task.prototype, "envs");
+
       base.mockFs({
         "package.json": JSON.stringify({
           "scripts": {
-            "echo": "echo ROOT " + (/^win/.test(process.platform) ? "%MY_VAR%" : "$MY_VAR") +
-              " >> stdout.log"
+            "echo": "echo ROOT " + ENV_MY_VAR + " >> stdout-" + ENV_PROC_NUM + ".log"
           }
         }, null, 2),
         "envs.json": JSON.stringify([
-          { MY_VAR: "hi" },
-          { MY_VAR: "ho" },
-          { MY_VAR: "yo" }
+          { MY_VAR: "hi", PROC_NUM: 1 },
+          { MY_VAR: "ho", PROC_NUM: 2 },
+          { MY_VAR: "yo", PROC_NUM: 3 }
         ])
       });
 
@@ -1110,11 +1109,10 @@ describe("bin/builder-core", function () {
 
         expect(Task.prototype.envs).to.be.calledOnce;
 
-        readFile("stdout.log", function (data) {
-          expect(data)
-            .to.contain("ROOT hi").and
-            .to.contain("ROOT ho").and
-            .to.contain("ROOT yo");
+        readFiles(["stdout-1.log", "stdout-2.log", "stdout-3.log"], function (obj) {
+          expect(obj["stdout-1.log"]).to.contain("ROOT hi");
+          expect(obj["stdout-2.log"]).to.contain("ROOT ho");
+          expect(obj["stdout-3.log"]).to.contain("ROOT yo");
         }, done);
       });
 
@@ -1122,6 +1120,7 @@ describe("bin/builder-core", function () {
 
     it("runs <archetype>/package.json multiple env commands", function (done) {
       base.sandbox.spy(Task.prototype, "envs");
+
       base.mockFs({
         ".builderrc": "---\narchetypes:\n  - mock-archetype",
         "package.json": "{}",
@@ -1129,8 +1128,7 @@ describe("bin/builder-core", function () {
           "mock-archetype": {
             "package.json": JSON.stringify({
               "scripts": {
-                "echo": "echo ARCH " + (/^win/.test(process.platform) ? "%MY_VAR%" : "$MY_VAR") +
-                  " >> stdout.log"
+                "echo": "echo ARCH " + ENV_MY_VAR + " >> stdout-" + ENV_PROC_NUM + ".log"
               }
             }, null, 2)
           }
@@ -1139,20 +1137,19 @@ describe("bin/builder-core", function () {
 
       run({
         argv: ["node", "builder", "envs", "echo", JSON.stringify([
-          { MY_VAR: "hi" },
-          { MY_VAR: "ho" },
-          { MY_VAR: "yo" }
+          { MY_VAR: "hi", PROC_NUM: 1 },
+          { MY_VAR: "ho", PROC_NUM: 2 },
+          { MY_VAR: "yo", PROC_NUM: 3 }
         ])]
       }, function (err) {
         if (err) { return done(err); }
 
         expect(Task.prototype.envs).to.be.calledOnce;
 
-        readFile("stdout.log", function (data) {
-          expect(data)
-            .to.contain("ARCH hi").and
-            .to.contain("ARCH ho").and
-            .to.contain("ARCH yo");
+        readFiles(["stdout-1.log", "stdout-2.log", "stdout-3.log"], function (obj) {
+          expect(obj["stdout-1.log"]).to.contain("ARCH hi");
+          expect(obj["stdout-2.log"]).to.contain("ARCH ho");
+          expect(obj["stdout-3.log"]).to.contain("ARCH yo");
         }, done);
       });
 
@@ -1160,20 +1157,19 @@ describe("bin/builder-core", function () {
 
     it("overrides <archetype>/package.json multiple env commands", function (done) {
       base.sandbox.spy(Task.prototype, "envs");
+
       base.mockFs({
         ".builderrc": "---\narchetypes:\n  - mock-archetype",
         "package.json": JSON.stringify({
           "scripts": {
-            "echo": "echo ROOT " + (/^win/.test(process.platform) ? "%MY_VAR%" : "$MY_VAR") +
-              " >> stdout.log"
+            "echo": "echo ROOT " + ENV_MY_VAR + " >> stdout-" + ENV_PROC_NUM + ".log"
           }
         }, null, 2),
         "node_modules": {
           "mock-archetype": {
             "package.json": JSON.stringify({
               "scripts": {
-                "echo": "echo ARCH " + (/^win/.test(process.platform) ? "%MY_VAR%" : "$MY_VAR") +
-                  " >> stdout.log"
+                "echo": "echo ARCH " + ENV_MY_VAR + " >> stdout-" + ENV_PROC_NUM + ".log"
               }
             }, null, 2)
           }
@@ -1182,20 +1178,19 @@ describe("bin/builder-core", function () {
 
       run({
         argv: ["node", "builder", "envs", "echo", JSON.stringify([
-          { MY_VAR: "hi" },
-          { MY_VAR: "ho" },
-          { MY_VAR: "yo" }
+          { MY_VAR: "hi", PROC_NUM: 1 },
+          { MY_VAR: "ho", PROC_NUM: 2 },
+          { MY_VAR: "yo", PROC_NUM: 3 }
         ])]
       }, function (err) {
         if (err) { return done(err); }
 
         expect(Task.prototype.envs).to.be.calledOnce;
 
-        readFile("stdout.log", function (data) {
-          expect(data)
-            .to.contain("ROOT hi").and
-            .to.contain("ROOT ho").and
-            .to.contain("ROOT yo");
+        readFiles(["stdout-1.log", "stdout-2.log", "stdout-3.log"], function (obj) {
+          expect(obj["stdout-1.log"]).to.contain("ROOT hi");
+          expect(obj["stdout-2.log"]).to.contain("ROOT ho");
+          expect(obj["stdout-3.log"]).to.contain("ROOT yo");
         }, done);
       });
 
@@ -1206,7 +1201,7 @@ describe("bin/builder-core", function () {
       base.mockFs({
         "package.json": JSON.stringify({
           "scripts": {
-            "echo": "echo ROOT " + (/^win/.test(process.platform) ? "%MY_VAR%" : "$MY_VAR")
+            "echo": "echo ROOT " + /^win/.test(process.platform) ? "%MY_VAR%" : "$MY_VAR"
           }
         }, null, 2)
       });
@@ -1228,7 +1223,7 @@ describe("bin/builder-core", function () {
       base.mockFs({
         "package.json": JSON.stringify({
           "scripts": {
-            "echo": "echo ROOT " + (/^win/.test(process.platform) ? "%MY_VAR%" : "$MY_VAR")
+            "echo": "echo ROOT " + /^win/.test(process.platform) ? "%MY_VAR%" : "$MY_VAR"
           }
         }, null, 2)
       });
@@ -1250,7 +1245,7 @@ describe("bin/builder-core", function () {
       base.mockFs({
         "package.json": JSON.stringify({
           "scripts": {
-            "echo": "echo ROOT " + (/^win/.test(process.platform) ? "%MY_VAR%" : "$MY_VAR")
+            "echo": "echo ROOT " + /^win/.test(process.platform) ? "%MY_VAR%" : "$MY_VAR"
           }
         }, null, 2)
       });
@@ -1274,7 +1269,7 @@ describe("bin/builder-core", function () {
       base.mockFs({
         "package.json": JSON.stringify({
           "scripts": {
-            "echo": "echo ROOT " + (/^win/.test(process.platform) ? "%MY_VAR%" : "$MY_VAR")
+            "echo": "echo ROOT " + /^win/.test(process.platform) ? "%MY_VAR%" : "$MY_VAR"
           }
         }, null, 2)
       });
@@ -1301,39 +1296,48 @@ describe("bin/builder-core", function () {
 
     it("runs with envs overriding base config value", function (done) {
       base.sandbox.spy(Task.prototype, "envs");
+
       base.mockFs({
         "package.json": JSON.stringify({
           "config": {
             "_test_message": "from base"
           },
           "scripts": {
-            "echo": "node test/server/fixtures/echo.js >> stdout.log"
+            "echo": "node test/server/fixtures/echo.js >> stdout-" + ENV_PROC_NUM + ".log"
           }
         }, null, 2)
       });
 
       run({
         argv: ["node", "builder", "envs", "echo", JSON.stringify([
-          {},
-          { "npm_package_config__test_message": "from array1" },
-          { "npm_package_config__test_message": "from array2" }
+          {
+            "PROC_NUM": 1
+          },
+          {
+            "npm_package_config__test_message": "from array2",
+            "PROC_NUM": 2
+          },
+          {
+            "npm_package_config__test_message": "from array3",
+            "PROC_NUM": 3
+          }
         ])]
       }, function (err) {
         if (err) { return done(err); }
 
         expect(Task.prototype.envs).to.have.callCount(1);
 
-        readFile("stdout.log", function (data) {
-          expect(data)
-            .to.contain("string - from base").and
-            .to.contain("string - from array1").and
-            .to.contain("string - from array2");
+        readFiles(["stdout-1.log", "stdout-2.log", "stdout-3.log"], function (obj) {
+          expect(obj["stdout-1.log"]).to.contain("from base");
+          expect(obj["stdout-2.log"]).to.contain("from array2");
+          expect(obj["stdout-3.log"]).to.contain("from array3");
         }, done);
       });
     });
 
     it("runs with envs real ENV overriding base + arch config value", function (done) {
       base.sandbox.spy(Task.prototype, "envs");
+
       base.mockFs({
         ".builderrc": "---\narchetypes:\n  - mock-archetype",
         "package.json": JSON.stringify({
@@ -1348,7 +1352,7 @@ describe("bin/builder-core", function () {
                 "_test_message": "from archetype"
               },
               "scripts": {
-                "echo": "node test/server/fixtures/echo.js >> stdout.log"
+                "echo": "node test/server/fixtures/echo.js >> stdout-" + ENV_PROC_NUM + ".log"
               }
             }, null, 2)
           }
@@ -1361,20 +1365,28 @@ describe("bin/builder-core", function () {
 
       run({
         argv: ["node", "builder", "envs", "echo", JSON.stringify([
-          {}, // Now, real env should override this one.
-          { "npm_package_config__test_message": "from array1" },
-          { "npm_package_config__test_message": "from array2" }
+          // Now, real env should override this one.
+          {
+            "PROC_NUM": 1
+          },
+          {
+            "npm_package_config__test_message": "from array2",
+            "PROC_NUM": 2
+          },
+          {
+            "npm_package_config__test_message": "from array3",
+            "PROC_NUM": 3
+          }
         ])]
       }, function (err) {
         if (err) { return done(err); }
 
         expect(Task.prototype.envs).to.have.callCount(1);
 
-        readFile("stdout.log", function (data) {
-          expect(data)
-            .to.contain("string - from real env").and
-            .to.contain("string - from array1").and
-            .to.contain("string - from array2");
+        readFiles(["stdout-1.log", "stdout-2.log", "stdout-3.log"], function (obj) {
+          expect(obj["stdout-1.log"]).to.contain("from real env");
+          expect(obj["stdout-2.log"]).to.contain("from array2");
+          expect(obj["stdout-3.log"]).to.contain("from array3");
         }, done);
       });
     });
