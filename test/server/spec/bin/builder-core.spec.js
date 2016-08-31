@@ -489,7 +489,7 @@ describe("bin/builder-core", function () {
       base.mockFs({
         "package.json": JSON.stringify({
           "scripts": {
-            "setup": "node test/server/fixtures/repeat-script.js 2 SETUP",
+            "setup": "node test/server/fixtures/repeat-script.js 2 SETUP >> stdout-setup.log",
             "bar": CLI_SLEEP
           }
         }, null, 2)
@@ -516,7 +516,7 @@ describe("bin/builder-core", function () {
       base.mockFs({
         "package.json": JSON.stringify({
           "scripts": {
-            "setup": "node test/server/fixtures/repeat-script.js 2 SETUP 1",
+            "setup": "node test/server/fixtures/repeat-script.js 2 SETUP 1 >> stdout-setup.log",
             "bar": CLI_SLEEP
           }
         }, null, 2)
@@ -827,8 +827,8 @@ describe("bin/builder-core", function () {
           expect(Task.prototype.run).to.be.calledOnce;
 
           readFile("stdout.log", function (data) {
-            expect(data).to.contain(
-              "EXPANDED " + path.join(process.cwd(), "node_modules/mock-archetype/A_FILE.txt")
+            expect(path.resolve(data)).to.contain(
+              "EXPANDED " + path.resolve(process.cwd(), "node_modules/mock-archetype/A_FILE.txt")
             );
           }, done);
         });
@@ -861,8 +861,9 @@ describe("bin/builder-core", function () {
           expect(Task.prototype.run).to.be.calledOnce;
 
           readFile("stdout.log", function (data) {
-            expect(data).to.contain(
-              "EXPANDED \"" + path.join(process.cwd(), "node_modules/mock-archetype/A_FILE.txt\"")
+            expect(path.resolve(data)).to.contain(
+              "EXPANDED \\\"" +
+              path.resolve(process.cwd(), "node_modules/mock-archetype/A_FILE.txt") + "\\\""
             );
           }, done);
         });
@@ -894,8 +895,8 @@ describe("bin/builder-core", function () {
           expect(Task.prototype.run).to.be.calledOnce;
 
           readFile("stdout.log", function (data) {
-            expect(data).to.contain(
-              "EXPANDED " + path.join(process.cwd(), "node_modules/mock-archetype/A_FILE.txt")
+            expect(path.resolve(data)).to.contain(
+              "EXPANDED " + path.resolve(process.cwd(), "node_modules/mock-archetype/A_FILE.txt")
             );
           }, done);
         });
