@@ -45,7 +45,7 @@ beforeEach(function () {
 afterEach(function (done) {
   base.mockFs.restore();
   base.sandbox.restore();
-  log._unsetLevel();
+  log._unsetLevel(process.env);
 
   // Remove logs, ignoring errors.
   async.parallel([
