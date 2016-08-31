@@ -1,4 +1,5 @@
 [![Travis Status][trav_img]][trav_site]
+[![Appveyor Status][av_img]][av_site]
 [![Coverage Status][cov_img]][cov_site]
 
 Builder
@@ -86,12 +87,11 @@ the rough goals and motivations behind the project.
     - [Example `builder` Archetype Project Structure](#example-builder-archetype-project-structure)
 - [Tips, Tricks, & Notes](#tips-tricks-&-notes)
   - [PATH, NODE_PATH Resolution](#path-node_path-resolution)
+  - [Environment Variables](#environment-variables)
   - [Alternative to `npm link`](#alternative-to-npm-link)
   - [Project Root](#project-root)
   - [Avoid npm Lifecycle Commands](#avoid-npm-lifecycle-commands)
   - [Other Process Execution](#other-process-execution)
-  - [Terminal Color](#terminal-color)
-  - [Why Exec?](#why-exec)
   - [I Give Up. How Do I Abandon Builder?](#i-give-up-how-do-i-abandon-builder)
   - [Versions v1, v2, v3](#versions-v1-v2-v3)
 
@@ -1257,6 +1257,19 @@ The order of resolution doesn't often come up, but can sometimes be a factor
 in diagnosing archetype issues and script / file paths, especially when using
 `npm` v3.
 
+### Environment Variables
+
+Builder clones the entire environment object before mutating it for further
+execution of tasks. On Mac/Linux, this has no real change of behavior of how
+the execution environment works. However, on Windows, there are some subtle
+issues with the fact that Windows has a case-insensitive environment variable
+model wherein you can set `PATH` in a node process, but internally this is
+transformed to set `Path`. Builder specifically handles `PATH` correctly across
+platforms for it's own specific mutation.
+
+However, if your tasks rely on the Windows coercion of case-insensitivity of
+environment variables, you may run into some idiosyncratic problems with tasks.
+
 ### Alternative to `npm link`
 
 In some cases, `npm link` can interfere with the order of resolution. If you
@@ -1326,22 +1339,6 @@ The execution of tasks generally must _originate_ from Builder, because of all
 of the environment enhancements it adds. So, for things that themselves exec
 or spawn processes, like `concurrently`, this can be a problem. Typically, you
 will need to have the actual command line processes invoked _by_ Builder.
-
-### Terminal Color
-
-Builder uses `exec` under the hood with piped `stdout` and `stderr`. Programs
-typically interpret the piped environment as "doesn't support color" and
-disable color. Consequently, you typically need to set a "**force color**"
-option on your executables in `scripts` commands if they exist.
-
-### Why Exec?
-
-So, why `exec` and not `spawn` or something similar that has a lot more process
-control and flexibility? The answer lies in the fact that most of what Builder
-consumes is shell strings to execute, like `script --foo --bar "Hi there"`.
-_Parsing_ these arguments into something easily consumable by `spawn` and always
-correct is quite challenging. `exec` works easily with straight strings, and
-since that is the target of `scripts` commands, that is what we use for Builder.
 
 ### I Give Up. How Do I Abandon Builder?
 
@@ -1418,6 +1415,8 @@ things settle down in `v3.x`-on.
 [builder-react-component]: https://github.com/FormidableLabs/builder-react-component
 [trav_img]: https://api.travis-ci.org/FormidableLabs/builder.svg
 [trav_site]: https://travis-ci.org/FormidableLabs/builder
+[av_img]: https://ci.appveyor.com/api/projects/status/oq3m2hay1tl82tsj?svg=true
+[av_site]: https://ci.appveyor.com/project/FormidableLabs/builder
 [cov]: https://coveralls.io
 [cov_img]: https://img.shields.io/coveralls/FormidableLabs/builder.svg
 [cov_site]: https://coveralls.io/r/FormidableLabs/builder

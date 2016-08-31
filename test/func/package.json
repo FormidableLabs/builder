@@ -1,0 +1,10 @@
+{
+  "name": "builder",
+  "version": "0.0.1",
+  "config": {
+    "msg": "hi"
+  },
+  "scripts": {
+    "echo": "echo ECHO MSG: ${npm_package_config_msg}"
+  }
+}
