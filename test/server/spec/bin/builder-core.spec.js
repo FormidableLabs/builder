@@ -860,10 +860,11 @@ describe("bin/builder-core", function () {
 
           expect(Task.prototype.run).to.be.calledOnce;
 
+          var quotes = /^win/.test(process.platform) ? "\\\"" : "\"";
           readFile("stdout.log", function (data) {
             expect(path.resolve(data)).to.contain(
-              "EXPANDED \\\"" +
-              path.resolve(process.cwd(), "node_modules/mock-archetype/A_FILE.txt") + "\\\""
+              "EXPANDED " + quotes +
+              path.resolve(process.cwd(), "node_modules/mock-archetype/A_FILE.txt") + quotes
             );
           }, done);
         });
