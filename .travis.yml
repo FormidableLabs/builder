@@ -30,8 +30,8 @@ script:
   - npm --version
   - npm run builder:check-ci
 
-  # Also use builder itself to run the check-ci command
-  - node bin/builder.js run builder:check-ci
+  # Do some primitive bash functional tests.
+  - bash test/func/test.sh
 
   # Manually send coverage reports to coveralls.
   # - Aggregate client results
