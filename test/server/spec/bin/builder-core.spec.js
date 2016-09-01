@@ -62,6 +62,25 @@ var readFile = function (filename, callback, done) {
   }, done);
 };
 
+// **Note**: It would be great to just stub stderr, stdout in beforeEach,
+// but then we don't get test output. So, we manually stub with this wrapper.
+var stdioWrap = function (fn) {
+  return function (done) {
+    base.sandbox.stub(process.stdout, "write");
+
+    var _done = function (err) {
+      process.stdout.write.restore();
+      done(err);
+    };
+
+    try {
+      return fn(_done);
+    } catch (err) {
+      return _done(err);
+    }
+  };
+};
+
 describe("bin/builder-core", function () {
   var logStubs;
 
@@ -142,8 +161,7 @@ describe("bin/builder-core", function () {
 
   describe("builder --version", function () {
 
-    it("runs version", function (done) {
-      base.sandbox.spy(process.stdout, "write");
+    it("runs version", stdioWrap(function (done) {
       base.sandbox.spy(Task.prototype, "version");
       base.mockFs({
         "package.json": "{}"
@@ -159,13 +177,13 @@ describe("bin/builder-core", function () {
 
         done();
       });
-    });
+    }));
 
   });
 
   describe("builder help", function () {
 
-    it("runs help with no arguments", function (done) {
+    it("runs help with no arguments", stdioWrap(function (done) {
       base.sandbox.spy(Task.prototype, "help");
       base.mockFs({
         "package.json": "{}"
@@ -177,13 +195,13 @@ describe("bin/builder-core", function () {
         if (err) { return done(err); }
 
         expect(Task.prototype.help).to.be.calledOnce;
-        expect(logStubs.info).to.be.calledWithMatch("builder <action> <task(s)>");
+        expect(process.stdout.write).to.be.calledWithMatch("builder <action> <task(s)>");
 
         done();
       });
-    });
+    }));
 
-    it("runs help with `builder run` alone", function (done) {
+    it("runs help with `builder run` alone", stdioWrap(function (done) {
       base.sandbox.spy(Task.prototype, "help");
       base.mockFs({
         "package.json": "{}"
@@ -195,13 +213,13 @@ describe("bin/builder-core", function () {
         if (err) { return done(err); }
 
         expect(Task.prototype.help).to.be.calledOnce;
-        expect(logStubs.info).to.be.calledWithMatch("builder <action> <task(s)>");
+        expect(process.stdout.write).to.be.calledWithMatch("builder <action> <task(s)>");
 
         done();
       });
-    });
+    }));
 
-    it("runs help with flags", function (done) {
+    it("runs help with flags", stdioWrap(function (done) {
       base.sandbox.spy(Task.prototype, "help");
       base.sandbox.spy(Task.prototype, "run");
       base.mockFs({
@@ -215,13 +233,13 @@ describe("bin/builder-core", function () {
 
         expect(Task.prototype.help).to.be.calledOnce;
         expect(Task.prototype.run).to.not.be.called;
-        expect(logStubs.info).to.be.calledWithMatch("builder <action> <task(s)>");
+        expect(process.stdout.write).to.be.calledWithMatch("builder <action> <task(s)>");
 
         done();
       });
-    });
+    }));
 
-    it("runs help for run command", function (done) {
+    it("runs help for run command", stdioWrap(function (done) {
       base.sandbox.spy(Task.prototype, "help");
       base.mockFs({
         "package.json": "{}"
@@ -233,14 +251,15 @@ describe("bin/builder-core", function () {
         if (err) { return done(err); }
 
         expect(Task.prototype.help).to.be.calledOnce;
-        expect(logStubs.info).to.be.calledWithMatch("builder " + chalk.red("run") + " <task(s)>");
+        expect(process.stdout.write)
+          .to.be.calledWithMatch("builder " + chalk.red("run") + " <task(s)>");
 
         done();
       });
-    });
+    }));
 
     // Regression test for: https://github.com/FormidableLabs/builder/issues/113
-    it("runs help with config in archetype", function (done) {
+    it("runs help with config in archetype", stdioWrap(function (done) {
       base.sandbox.spy(Task.prototype, "help");
       base.mockFs({
         ".builderrc": "---\narchetypes:\n  - mock-archetype",
@@ -262,13 +281,13 @@ describe("bin/builder-core", function () {
         if (err) { return done(err); }
 
         expect(Task.prototype.help).to.be.calledOnce;
-        expect(logStubs.info)
+        expect(process.stdout.write)
           .to.be.calledWithMatch("Task Configs").and
           .to.be.calledWithMatch("_test_message");
 
         done();
       });
-    });
+    }));
 
   });
 

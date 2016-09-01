@@ -3,8 +3,15 @@ History
 
 ## Unreleased
 
-* **BREAKING**: Remove `--unlimited-buffer` command line option. It is unneeded
-  with switch to `spawn`.
+**BREAKING**:
+
+* Remove `--unlimited-buffer` command line option. It is unneeded with switch to
+  `spawn`.
+
+Other:
+
+* Default log level to `none` for `help` and `version` commands.
+  [#127](https://github.com/FormidableLabs/builder/issues/127)
 * Switch from `exec` to `spawn` child process spawning for better stdio/stderr
   propagation. ( [@exogen][] )
   [#20](https://github.com/FormidableLabs/builder/issues/20)
