@@ -93,7 +93,6 @@ the rough goals and motivations behind the project.
   - [Avoid npm Lifecycle Commands](#avoid-npm-lifecycle-commands)
   - [Other Process Execution](#other-process-execution)
   - [I Give Up. How Do I Abandon Builder?](#i-give-up-how-do-i-abandon-builder)
-  - [Versions v1, v2, v3](#versions-v1-v2-v3)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -1398,19 +1397,6 @@ the archetype into your project and remove all Builder dependencies:
 
 ... and (with assuredly a few minor hiccups) that's about it! You are
 Builder-free and back to a normal `npm`-controlled project.
-
-### Versions v1, v2, v3
-
-The `builder` project effectively starts at `v2.x.x`. Prior to that Builder was
-a small DOM utility that fell into disuse, so we re-purposed it for a new
-wonderful destiny! But, because we follow semver, that means everything starts
-at `v2` and as a helpful tip / warning:
-
-> Treat `v2.x` as a `v0.x` release
-
-We'll try hard to keep it tight, but at our current velocity there are likely
-to be some bumps and API changes that won't adhere strictly to semver until
-things settle down in `v3.x`-on.
 
 [builder-react-component]: https://github.com/FormidableLabs/builder-react-component
 [trav_img]: https://api.travis-ci.org/FormidableLabs/builder.svg
