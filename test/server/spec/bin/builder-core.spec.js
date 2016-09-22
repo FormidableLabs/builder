@@ -557,6 +557,30 @@ describe("bin/builder-core", function () {
 
     });
 
+    // TODO: HERE
+    it.skip("runs with --env value", stdioWrap(function (done) {
+      base.sandbox.spy(Task.prototype, "run");
+      base.mockFs({
+        "package.json": JSON.stringify({
+          "scripts": {
+            "echo": "node test/server/fixtures/echo.js"
+          }
+        }, null, 2)
+      });
+
+      run({
+        argv: ["node", "builder", "run", "echo", "--env='{\"TEST_MESSAGE\":\"HI\"}'"]
+      }, function (err) {
+        if (err) { return done(err); }
+
+        expect(Task.prototype.run).to.have.callCount(1);
+        expect(process.stdout.write)
+          .to.be.calledWithMatch("string - from base config");
+
+        done();
+      });
+    }));
+
     it("runs with --tries=2", function (done) {
       base.sandbox.spy(Task.prototype, "run");
       base.mockFs({
@@ -1279,7 +1303,7 @@ describe("bin/builder-core", function () {
           .that.contains("Unexpected token");
 
         expect(logStubs.error)
-          .to.be.calledWithMatch("Failed to load JSON object");
+          .to.be.calledWithMatch("load environments string / path with error: SyntaxError");
 
         done();
       });
@@ -1303,7 +1327,7 @@ describe("bin/builder-core", function () {
           .that.contains("ENOENT");
 
         expect(logStubs.error)
-          .to.be.calledWithMatch("Failed to load JSON file");
+          .to.be.calledWithMatch("load environments string / path with error: Error: ENOENT");
 
         done();
       });

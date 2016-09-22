@@ -1,6 +1,11 @@
 History
 =======
 
+## Unreleased
+
+* Add `--env` environment variable flag.
+  [#45](https://github.com/FormidableLabs/builder/issues/45)
+
 ## 3.0.0
 
 **BREAKING**:
