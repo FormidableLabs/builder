@@ -563,7 +563,7 @@ describe("bin/builder-core", function () {
       base.mockFs({
         "package.json": JSON.stringify({
           "scripts": {
-            "echo": "node test/server/fixtures/echo.js"
+            "echo": "node test/server/fixtures/echo.js >> stdout.log"
           }
         }, null, 2)
       });
@@ -574,10 +574,10 @@ describe("bin/builder-core", function () {
         if (err) { return done(err); }
 
         expect(Task.prototype.run).to.have.callCount(1);
-        expect(process.stdout.write)
-          .to.be.calledWithMatch("string - from base config");
 
-        done();
+        readFile("stdout.log", function (data) {
+          expect(data).to.contain("string - HI");
+        }, done);
       });
     }));
 
