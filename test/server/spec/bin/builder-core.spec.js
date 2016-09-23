@@ -581,6 +581,30 @@ describe("bin/builder-core", function () {
       });
     }));
 
+    // TODO: IMPLEMENT
+    it.skip("runs with empty string --env value", stdioWrap(function (done) {
+      base.sandbox.spy(Task.prototype, "run");
+      base.mockFs({
+        "package.json": JSON.stringify({
+          "scripts": {
+            "echo": "node test/server/fixtures/echo.js >> stdout.log"
+          }
+        }, null, 2)
+      });
+
+      run({
+        argv: ["node", "builder", "run", "echo", "--env='{\"TEST_MESSAGE\":\"\"}'"]
+      }, function (err) {
+        if (err) { return done(err); }
+
+        expect(Task.prototype.run).to.have.callCount(1);
+
+        readFile("stdout.log", function (data) {
+          expect(data).to.contain("string - EMPTY");
+        }, done);
+      });
+    }));
+
     it("runs with --tries=2", function (done) {
       base.sandbox.spy(Task.prototype, "run");
       base.mockFs({
@@ -770,6 +794,44 @@ describe("bin/builder-core", function () {
 
       run({
         argv: ["node", "builder", "run", "echo"]
+      }, function (err) {
+        if (err) { return done(err); }
+
+        expect(Task.prototype.run).to.have.callCount(1);
+
+        readFile("stdout.log", function (data) {
+          expect(data).to.contain("string - from real env");
+        }, done);
+      });
+    });
+
+    // TODO: Implement
+    it.skip("runs with --env overriding base + archetype config values", function (done) {
+      base.sandbox.spy(Task.prototype, "run");
+      base.mockFs({
+        ".builderrc": "---\narchetypes:\n  - mock-archetype",
+        "package.json": JSON.stringify({
+          "config": {
+            "_test_message": "from base"
+          }
+        }, null, 2),
+        "node_modules": {
+          "mock-archetype": {
+            "package.json": JSON.stringify({
+              "config": {
+                "_test_message": "from archetype"
+              },
+              "scripts": {
+                "echo": "node test/server/fixtures/echo.js >> stdout.log"
+              }
+            }, null, 2)
+          }
+        }
+      });
+
+      run({
+        argv: ["node", "builder", "run", "echo",
+          "--env='{\"npm_package_config__test_message\":\"from real env\"}'"]
       }, function (err) {
         if (err) { return done(err); }
 
