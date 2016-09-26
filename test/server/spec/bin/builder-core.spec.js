@@ -1,4 +1,5 @@
 "use strict";
+/*eslint max-statements:[2,30]*/
 
 /**
  * These are _almost_ functional tests as we're basically invoking the entire
@@ -157,6 +158,13 @@ describe("bin/builder-core", function () {
       throw new Error("should have already thrown");
     });
 
+    // TODO: IMPLEMENT
+    it("errors on empty --env value");
+    it("errors on non-JSON --env value");
+    it("errors on non-Object --env value");
+    it("errors on empty --env-path value");
+    it("errors on non-JSON --env-path value");
+    it("errors on non-Object --env-path value");
   });
 
   describe("builder --version", function () {
@@ -557,8 +565,7 @@ describe("bin/builder-core", function () {
 
     });
 
-    // TODO: HERE
-    it.skip("runs with --env value", stdioWrap(function (done) {
+    it("runs with --env value", stdioWrap(function (done) {
       base.sandbox.spy(Task.prototype, "run");
       base.mockFs({
         "package.json": JSON.stringify({
@@ -569,7 +576,7 @@ describe("bin/builder-core", function () {
       });
 
       run({
-        argv: ["node", "builder", "run", "echo", "--env='{\"TEST_MESSAGE\":\"HI\"}'"]
+        argv: ["node", "builder", "run", "echo", "--env={\"TEST_MESSAGE\":\"HI\"}"]
       }, function (err) {
         if (err) { return done(err); }
 
@@ -580,6 +587,9 @@ describe("bin/builder-core", function () {
         }, done);
       });
     }));
+
+    // TODO: IMPLEMENT
+    it("TODO: runs with --env-path value");
 
     // TODO: IMPLEMENT
     it.skip("runs with empty string --env value", stdioWrap(function (done) {
@@ -604,6 +614,9 @@ describe("bin/builder-core", function () {
         }, done);
       });
     }));
+
+    // TODO: IMPLEMENT
+    it("TODO: runs with empty string --env-path value");
 
     it("runs with --tries=2", function (done) {
       base.sandbox.spy(Task.prototype, "run");
@@ -1497,6 +1510,10 @@ describe("bin/builder-core", function () {
         }, done);
       });
     });
+
+    // TODO: IMPLEMENT.
+    it("TODO: runs with envs overriding --env value");
+    it("TODO: runs with envs overriding --env-path value");
 
   });
 
