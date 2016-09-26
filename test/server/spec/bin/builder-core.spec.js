@@ -565,7 +565,7 @@ describe("bin/builder-core", function () {
 
     });
 
-    it("runs with --env value", stdioWrap(function (done) {
+    it("runs with --env value", function (done) {
       base.sandbox.spy(Task.prototype, "run");
       base.mockFs({
         "package.json": JSON.stringify({
@@ -586,13 +586,35 @@ describe("bin/builder-core", function () {
           expect(data).to.contain("string - HI");
         }, done);
       });
-    }));
+    });
 
-    // TODO: IMPLEMENT
-    it("TODO: runs with --env-path value");
+    it("runs with --env-path value", function (done) {
+      base.sandbox.spy(Task.prototype, "run");
+      base.mockFs({
+        "package.json": JSON.stringify({
+          "scripts": {
+            "echo": "node test/server/fixtures/echo.js >> stdout.log"
+          }
+        }, null, 2),
+        "env.json": JSON.stringify({
+          "TEST_MESSAGE": "FROM FILE"
+        }, null, 2)
+      });
 
-    // TODO: IMPLEMENT
-    it.skip("runs with empty string --env value", stdioWrap(function (done) {
+      run({
+        argv: ["node", "builder", "run", "echo", "--env-path=env.json"]
+      }, function (err) {
+        if (err) { return done(err); }
+
+        expect(Task.prototype.run).to.have.callCount(1);
+
+        readFile("stdout.log", function (data) {
+          expect(data).to.contain("string - FROM FILE");
+        }, done);
+      });
+    });
+
+    it("runs with empty string --env value", function (done) {
       base.sandbox.spy(Task.prototype, "run");
       base.mockFs({
         "package.json": JSON.stringify({
@@ -603,7 +625,7 @@ describe("bin/builder-core", function () {
       });
 
       run({
-        argv: ["node", "builder", "run", "echo", "--env='{\"TEST_MESSAGE\":\"\"}'"]
+        argv: ["node", "builder", "run", "echo", "--env={\"TEST_MESSAGE\":\"\"}"]
       }, function (err) {
         if (err) { return done(err); }
 
@@ -613,7 +635,7 @@ describe("bin/builder-core", function () {
           expect(data).to.contain("string - EMPTY");
         }, done);
       });
-    }));
+    });
 
     // TODO: IMPLEMENT
     it("TODO: runs with empty string --env-path value");
