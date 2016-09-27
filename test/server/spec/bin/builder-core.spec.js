@@ -689,7 +689,7 @@ describe("bin/builder-core", function () {
       });
     });
 
-    it("runs with empty string --env value", function (done) {
+    it.only("runs with empty string --env value", function (done) {
       base.sandbox.spy(Task.prototype, "run");
       base.mockFs({
         "package.json": JSON.stringify({
