@@ -1555,9 +1555,117 @@ describe("bin/builder-core", function () {
       });
     });
 
-    // TODO: IMPLEMENT.
-    it("TODO: runs with envs overriding --env value");
-    it("TODO: runs with envs overriding --env-path value");
+    it("runs with envs overriding --env value", function (done) {
+      base.sandbox.spy(Task.prototype, "envs");
+
+      base.mockFs({
+        ".builderrc": "---\narchetypes:\n  - mock-archetype",
+        "package.json": JSON.stringify({
+          "config": {
+            "_test_message": "from base"
+          }
+        }, null, 2),
+        "node_modules": {
+          "mock-archetype": {
+            "package.json": JSON.stringify({
+              "config": {
+                "_test_message": "from archetype"
+              },
+              "scripts": {
+                "echo": "node test/server/fixtures/echo.js >> stdout-" + ENV_PROC_NUM + ".log"
+              }
+            }, null, 2)
+          }
+        }
+      });
+
+      run({
+        argv: ["node", "builder", "envs", "echo",
+          "--env", JSON.stringify({
+            "npm_package_config__test_message": "from --env"
+          }),
+          JSON.stringify([
+            // Now, real env should override this one.
+            {
+              "PROC_NUM": 1
+            },
+            {
+              "npm_package_config__test_message": "from array2",
+              "PROC_NUM": 2
+            },
+            {
+              "npm_package_config__test_message": "from array3",
+              "PROC_NUM": 3
+            }
+          ])
+        ]
+      }, function (err) {
+        if (err) { return done(err); }
+
+        expect(Task.prototype.envs).to.have.callCount(1);
+
+        readFiles(["stdout-1.log", "stdout-2.log", "stdout-3.log"], function (obj) {
+          expect(obj["stdout-1.log"]).to.contain("from --env");
+          expect(obj["stdout-2.log"]).to.contain("from array2");
+          expect(obj["stdout-3.log"]).to.contain("from array3");
+        }, done);
+      });
+    });
+
+    it("runs with envs overriding --env-path value", function (done) {
+      base.sandbox.spy(Task.prototype, "envs");
+
+      base.mockFs({
+        ".builderrc": "---\narchetypes:\n  - mock-archetype",
+        "package.json": JSON.stringify({
+          "config": {
+            "_test_message": "from base"
+          }
+        }, null, 2),
+        "env.json": JSON.stringify({
+          "npm_package_config__test_message": "from --env-path"
+        }, null, 2),
+        "node_modules": {
+          "mock-archetype": {
+            "package.json": JSON.stringify({
+              "config": {
+                "_test_message": "from archetype"
+              },
+              "scripts": {
+                "echo": "node test/server/fixtures/echo.js >> stdout-" + ENV_PROC_NUM + ".log"
+              }
+            }, null, 2)
+          }
+        }
+      });
+
+      run({
+        argv: ["node", "builder", "envs", "echo", "--env-path=env.json", JSON.stringify([
+          // Now, real env should override this one.
+          {
+            "PROC_NUM": 1
+          },
+          {
+            "npm_package_config__test_message": "from array2",
+            "PROC_NUM": 2
+          },
+          {
+            "npm_package_config__test_message": "from array3",
+            "PROC_NUM": 3
+          }
+        ])]
+      }, function (err) {
+        if (err) { return done(err); }
+
+        expect(Task.prototype.envs).to.have.callCount(1);
+
+        readFiles(["stdout-1.log", "stdout-2.log", "stdout-3.log"], function (obj) {
+          expect(obj["stdout-1.log"]).to.contain("from --env-path");
+          expect(obj["stdout-2.log"]).to.contain("from array2");
+          expect(obj["stdout-3.log"]).to.contain("from array3");
+        }, done);
+      });
+    });
 
   });
 
