@@ -278,6 +278,8 @@ Flags:
 * `--setup`: Single task to run for the entirety of `<action>`
 * `--quiet`: Silence logging
 * `--log-level`: Level to log at (`info`, `warn`, `error`, `none`)
+* `--env`: JSON object of keys to add to environment.
+* `--env-path`: JSON file path of keys to add to environment.
 * `--expand-archetype`: Expand `node_modules/<archetype>` with full path (default: `false`)
 * `--builderrc`: Path to builder config file (default: `.builderrc`)
 
@@ -301,6 +303,8 @@ Flags:
 * `--[no-]bail`: End all processes after the first failure (default: `true`)
 * `--quiet`: Silence logging
 * `--log-level`: Level to log at (`info`, `warn`, `error`, `none`)
+* `--env`: JSON object of keys to add to environment.
+* `--env-path`: JSON file path of keys to add to environment.
 * `--expand-archetype`: Expand `node_modules/<archetype>` with full path (default: `false`)
 * `--builderrc`: Path to builder config file (default: `.builderrc`)
 
@@ -343,11 +347,14 @@ Flags:
 * `--envs-path`: Path to JSON env variable array file (default: `null`)
 * `--quiet`: Silence logging
 * `--log-level`: Level to log at (`info`, `warn`, `error`, `none`)
+* `--env`: JSON object of keys to add to environment.
+* `--env-path`: JSON file path of keys to add to environment.
 * `--expand-archetype`: Expand `node_modules/<archetype>` with full path (default: `false`)
 * `--builderrc`: Path to builder config file (default: `.builderrc`)
 
 _Note_: The environments JSON array will overwrite **existing** values in the
-environment.
+environment. This includes environment variables provided to / from `builder`
+from things such as `npm` `config` and the `--env`/`--env-path` flags.
 
 ###### Custom Flags
 

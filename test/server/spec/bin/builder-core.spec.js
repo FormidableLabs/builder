@@ -863,8 +863,7 @@ describe("bin/builder-core", function () {
       });
     });
 
-    // TODO: Implement
-    it.skip("runs with --env overriding base + archetype config values", function (done) {
+    it("runs with --env overriding base + archetype config values", function (done) {
       base.sandbox.spy(Task.prototype, "run");
       base.mockFs({
         ".builderrc": "---\narchetypes:\n  - mock-archetype",
@@ -889,7 +888,7 @@ describe("bin/builder-core", function () {
 
       run({
         argv: ["node", "builder", "run", "echo",
-          "--env='{\"npm_package_config__test_message\":\"from real env\"}'"]
+          "--env={\"npm_package_config__test_message\":\"from real env\"}"]
       }, function (err) {
         if (err) { return done(err); }
 
