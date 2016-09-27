@@ -158,13 +158,88 @@ describe("bin/builder-core", function () {
       throw new Error("should have already thrown");
     });
 
-    // TODO: IMPLEMENT
-    it("errors on empty --env value");
-    it("errors on non-JSON --env value");
-    it("errors on non-Object --env value");
-    it("errors on empty --env-path value");
-    it("errors on non-JSON --env-path value");
-    it("errors on non-Object --env-path value");
+    it("errors on non-JSON --env value", function () {
+      base.mockFs({
+        "package.json": "{}"
+      });
+
+      var callback = base.sandbox.spy();
+
+      try {
+        run({
+          argv: ["node", "builder", "help", "--env=bad_value"]
+        }, callback);
+      } catch (err) {
+        expect(err).to.have.property("message").that.contains("Unexpected token");
+        expect(callback).to.not.be.called;
+        return;
+      }
+
+      throw new Error("should have already thrown");
+    });
+
+    it("errors on non-Object --env value", function () {
+      base.mockFs({
+        "package.json": "{}"
+      });
+
+      var callback = base.sandbox.spy();
+
+      try {
+        run({
+          argv: ["node", "builder", "help", "--env=[{\"foo\":42}]"]
+        }, callback);
+      } catch (err) {
+        expect(err).to.have.property("message").that.contains("Non-object JSON environment");
+        expect(callback).to.not.be.called;
+        return;
+      }
+
+      throw new Error("should have already thrown");
+    });
+
+    it("errors on non-JSON --env-path value", function () {
+      base.mockFs({
+        "package.json": "{}",
+        "env.json": "NOT_JSON"
+      });
+
+      var callback = base.sandbox.spy();
+
+      try {
+        run({
+          argv: ["node", "builder", "help", "--env-path=env.json"]
+        }, callback);
+      } catch (err) {
+        expect(err).to.have.property("message").that.contains("Unexpected token");
+        expect(callback).to.not.be.called;
+        return;
+      }
+
+      throw new Error("should have already thrown");
+    });
+
+    it("errors on non-Object --env-path value", function () {
+      base.mockFs({
+        "package.json": "{}",
+        "env.json": JSON.stringify([{ "foo": 42 }], null, 2)
+      });
+
+      var callback = base.sandbox.spy();
+
+      try {
+        run({
+          argv: ["node", "builder", "help", "--env-path=env.json"]
+        }, callback);
+      } catch (err) {
+        expect(err).to.have.property("message").that.contains("Non-object JSON environmen");
+        expect(callback).to.not.be.called;
+        return;
+      }
+
+      throw new Error("should have already thrown");
+    });
+
   });
 
   describe("builder --version", function () {
