@@ -637,8 +637,31 @@ describe("bin/builder-core", function () {
       });
     });
 
-    // TODO: IMPLEMENT
-    it("TODO: runs with empty string --env-path value");
+    it("runs with empty string --env-path value", function (done) {
+      base.sandbox.spy(Task.prototype, "run");
+      base.mockFs({
+        "package.json": JSON.stringify({
+          "scripts": {
+            "echo": "node test/server/fixtures/echo.js >> stdout.log"
+          }
+        }, null, 2),
+        "env.json": JSON.stringify({
+          "TEST_MESSAGE": ""
+        }, null, 2)
+      });
+
+      run({
+        argv: ["node", "builder", "run", "echo", "--env-path=env.json"]
+      }, function (err) {
+        if (err) { return done(err); }
+
+        expect(Task.prototype.run).to.have.callCount(1);
+
+        readFile("stdout.log", function (data) {
+          expect(data).to.contain("string - EMPTY");
+        }, done);
+      });
+    });
 
     it("runs with --tries=2", function (done) {
       base.sandbox.spy(Task.prototype, "run");
