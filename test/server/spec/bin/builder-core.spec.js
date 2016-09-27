@@ -694,7 +694,7 @@ describe("bin/builder-core", function () {
       base.mockFs({
         "package.json": JSON.stringify({
           "scripts": {
-            "echo": "node test/server/fixtures/echo.js >> stdout.log"
+            "echo": "node test/server/fixtures/echo.js" // TODO RENABLE >> stdout.log"
           }
         }, null, 2)
       });

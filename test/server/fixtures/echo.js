@@ -28,6 +28,8 @@ if (typeof msg === "undefined") {
   msg = process.env.TEST_MESSAGE;
 }
 
+console.error("TODO HERE ECHO", JSON.stringify(process.env, null, 2));
+
 var extra = process.argv[2] || "";
 var out = typeof msg + " - " + (msg || "EMPTY") + (extra ? " - " + extra : "");
 
