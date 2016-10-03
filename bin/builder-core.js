@@ -28,7 +28,8 @@ module.exports = function (opts, callback) {
   // Set up environment
   var env = new Environment({
     config: config,
-    env: opts.env
+    env: opts.env,
+    argv: opts.argv
   });
 
   // Set up logger state.

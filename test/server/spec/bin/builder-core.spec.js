@@ -1,4 +1,5 @@
 "use strict";
+/*eslint max-statements:[2,30]*/
 
 /**
  * These are _almost_ functional tests as we're basically invoking the entire
@@ -150,6 +151,88 @@ describe("bin/builder-core", function () {
         }, callback);
       } catch (err) {
         expect(err).to.have.property("message").that.contains("Unknown log level: BAD");
+        expect(callback).to.not.be.called;
+        return;
+      }
+
+      throw new Error("should have already thrown");
+    });
+
+    it("errors on non-JSON --env value", function () {
+      base.mockFs({
+        "package.json": "{}"
+      });
+
+      var callback = base.sandbox.spy();
+
+      try {
+        run({
+          argv: ["node", "builder", "help", "--env=bad_value"]
+        }, callback);
+      } catch (err) {
+        expect(err).to.have.property("message").that.contains("Unexpected token");
+        expect(callback).to.not.be.called;
+        return;
+      }
+
+      throw new Error("should have already thrown");
+    });
+
+    it("errors on non-Object --env value", function () {
+      base.mockFs({
+        "package.json": "{}"
+      });
+
+      var callback = base.sandbox.spy();
+
+      try {
+        run({
+          argv: ["node", "builder", "help", "--env=[{\"foo\":42}]"]
+        }, callback);
+      } catch (err) {
+        expect(err).to.have.property("message").that.contains("Non-object JSON environment");
+        expect(callback).to.not.be.called;
+        return;
+      }
+
+      throw new Error("should have already thrown");
+    });
+
+    it("errors on non-JSON --env-path value", function () {
+      base.mockFs({
+        "package.json": "{}",
+        "env.json": "NOT_JSON"
+      });
+
+      var callback = base.sandbox.spy();
+
+      try {
+        run({
+          argv: ["node", "builder", "help", "--env-path=env.json"]
+        }, callback);
+      } catch (err) {
+        expect(err).to.have.property("message").that.contains("Unexpected token");
+        expect(callback).to.not.be.called;
+        return;
+      }
+
+      throw new Error("should have already thrown");
+    });
+
+    it("errors on non-Object --env-path value", function () {
+      base.mockFs({
+        "package.json": "{}",
+        "env.json": JSON.stringify([{ "foo": 42 }], null, 2)
+      });
+
+      var callback = base.sandbox.spy();
+
+      try {
+        run({
+          argv: ["node", "builder", "help", "--env-path=env.json"]
+        }, callback);
+      } catch (err) {
+        expect(err).to.have.property("message").that.contains("Non-object JSON environmen");
         expect(callback).to.not.be.called;
         return;
       }
@@ -557,6 +640,106 @@ describe("bin/builder-core", function () {
 
     });
 
+    it("runs with --env value", function (done) {
+      base.sandbox.spy(Task.prototype, "run");
+      base.mockFs({
+        "package.json": JSON.stringify({
+          "scripts": {
+            "echo": "node test/server/fixtures/echo.js >> stdout.log"
+          }
+        }, null, 2)
+      });
+
+      run({
+        argv: ["node", "builder", "run", "echo", "--env={\"TEST_MESSAGE\":\"HI\"}"]
+      }, function (err) {
+        if (err) { return done(err); }
+
+        expect(Task.prototype.run).to.have.callCount(1);
+
+        readFile("stdout.log", function (data) {
+          expect(data).to.contain("string - HI");
+        }, done);
+      });
+    });
+
+    it("runs with --env-path value", function (done) {
+      base.sandbox.spy(Task.prototype, "run");
+      base.mockFs({
+        "package.json": JSON.stringify({
+          "scripts": {
+            "echo": "node test/server/fixtures/echo.js >> stdout.log"
+          }
+        }, null, 2),
+        "env.json": JSON.stringify({
+          "TEST_MESSAGE": "FROM FILE"
+        }, null, 2)
+      });
+
+      run({
+        argv: ["node", "builder", "run", "echo", "--env-path=env.json"]
+      }, function (err) {
+        if (err) { return done(err); }
+
+        expect(Task.prototype.run).to.have.callCount(1);
+
+        readFile("stdout.log", function (data) {
+          expect(data).to.contain("string - FROM FILE");
+        }, done);
+      });
+    });
+
+    it("runs with empty string --env value", function (done) {
+      base.sandbox.spy(Task.prototype, "run");
+      base.mockFs({
+        "package.json": JSON.stringify({
+          "scripts": {
+            "echo": "node test/server/fixtures/echo.js >> stdout.log"
+          }
+        }, null, 2)
+      });
+
+      run({
+        argv: ["node", "builder", "run", "echo", "--env={\"TEST_MESSAGE\":\"\"}"]
+      }, function (err) {
+        if (err) { return done(err); }
+
+        expect(Task.prototype.run).to.have.callCount(1);
+
+        readFile("stdout.log", function (data) {
+          // Node v4+ w/ Windows has `undefined` vs. `string` for empty strings.
+          expect(data).to.contain("EMPTY");
+        }, done);
+      });
+    });
+
+    it("runs with empty string --env-path value", function (done) {
+      base.sandbox.spy(Task.prototype, "run");
+      base.mockFs({
+        "package.json": JSON.stringify({
+          "scripts": {
+            "echo": "node test/server/fixtures/echo.js >> stdout.log"
+          }
+        }, null, 2),
+        "env.json": JSON.stringify({
+          "TEST_MESSAGE": ""
+        }, null, 2)
+      });
+
+      run({
+        argv: ["node", "builder", "run", "echo", "--env-path=env.json"]
+      }, function (err) {
+        if (err) { return done(err); }
+
+        expect(Task.prototype.run).to.have.callCount(1);
+
+        readFile("stdout.log", function (data) {
+          // Node v4+ w/ Windows has `undefined` vs. `string` for empty strings.
+          expect(data).to.contain("EMPTY");
+        }, done);
+      });
+    });
+
     it("runs with --tries=2", function (done) {
       base.sandbox.spy(Task.prototype, "run");
       base.mockFs({
@@ -746,6 +929,43 @@ describe("bin/builder-core", function () {
 
       run({
         argv: ["node", "builder", "run", "echo"]
+      }, function (err) {
+        if (err) { return done(err); }
+
+        expect(Task.prototype.run).to.have.callCount(1);
+
+        readFile("stdout.log", function (data) {
+          expect(data).to.contain("string - from real env");
+        }, done);
+      });
+    });
+
+    it("runs with --env overriding base + archetype config values", function (done) {
+      base.sandbox.spy(Task.prototype, "run");
+      base.mockFs({
+        ".builderrc": "---\narchetypes:\n  - mock-archetype",
+        "package.json": JSON.stringify({
+          "config": {
+            "_test_message": "from base"
+          }
+        }, null, 2),
+        "node_modules": {
+          "mock-archetype": {
+            "package.json": JSON.stringify({
+              "config": {
+                "_test_message": "from archetype"
+              },
+              "scripts": {
+                "echo": "node test/server/fixtures/echo.js >> stdout.log"
+              }
+            }, null, 2)
+          }
+        }
+      });
+
+      run({
+        argv: ["node", "builder", "run", "echo",
+          "--env={\"npm_package_config__test_message\":\"from real env\"}"]
       }, function (err) {
         if (err) { return done(err); }
 
@@ -1279,7 +1499,7 @@ describe("bin/builder-core", function () {
           .that.contains("Unexpected token");
 
         expect(logStubs.error)
-          .to.be.calledWithMatch("Failed to load JSON object");
+          .to.be.calledWithMatch("load environments string / path with error: SyntaxError");
 
         done();
       });
@@ -1303,7 +1523,7 @@ describe("bin/builder-core", function () {
           .that.contains("ENOENT");
 
         expect(logStubs.error)
-          .to.be.calledWithMatch("Failed to load JSON file");
+          .to.be.calledWithMatch("load environments string / path with error: Error: ENOENT");
 
         done();
       });
@@ -1406,6 +1626,118 @@ describe("bin/builder-core", function () {
 
         readFiles(["stdout-1.log", "stdout-2.log", "stdout-3.log"], function (obj) {
           expect(obj["stdout-1.log"]).to.contain("from real env");
+          expect(obj["stdout-2.log"]).to.contain("from array2");
+          expect(obj["stdout-3.log"]).to.contain("from array3");
+        }, done);
+      });
+    });
+
+    it("runs with envs overriding --env value", function (done) {
+      base.sandbox.spy(Task.prototype, "envs");
+
+      base.mockFs({
+        ".builderrc": "---\narchetypes:\n  - mock-archetype",
+        "package.json": JSON.stringify({
+          "config": {
+            "_test_message": "from base"
+          }
+        }, null, 2),
+        "node_modules": {
+          "mock-archetype": {
+            "package.json": JSON.stringify({
+              "config": {
+                "_test_message": "from archetype"
+              },
+              "scripts": {
+                "echo": "node test/server/fixtures/echo.js >> stdout-" + ENV_PROC_NUM + ".log"
+              }
+            }, null, 2)
+          }
+        }
+      });
+
+      run({
+        argv: ["node", "builder", "envs", "echo",
+          "--env", JSON.stringify({
+            "npm_package_config__test_message": "from --env"
+          }),
+          JSON.stringify([
+            // Now, real env should override this one.
+            {
+              "PROC_NUM": 1
+            },
+            {
+              "npm_package_config__test_message": "from array2",
+              "PROC_NUM": 2
+            },
+            {
+              "npm_package_config__test_message": "from array3",
+              "PROC_NUM": 3
+            }
+          ])
+        ]
+      }, function (err) {
+        if (err) { return done(err); }
+
+        expect(Task.prototype.envs).to.have.callCount(1);
+
+        readFiles(["stdout-1.log", "stdout-2.log", "stdout-3.log"], function (obj) {
+          expect(obj["stdout-1.log"]).to.contain("from --env");
+          expect(obj["stdout-2.log"]).to.contain("from array2");
+          expect(obj["stdout-3.log"]).to.contain("from array3");
+        }, done);
+      });
+    });
+
+    it("runs with envs overriding --env-path value", function (done) {
+      base.sandbox.spy(Task.prototype, "envs");
+
+      base.mockFs({
+        ".builderrc": "---\narchetypes:\n  - mock-archetype",
+        "package.json": JSON.stringify({
+          "config": {
+            "_test_message": "from base"
+          }
+        }, null, 2),
+        "env.json": JSON.stringify({
+          "npm_package_config__test_message": "from --env-path"
+        }, null, 2),
+        "node_modules": {
+          "mock-archetype": {
+            "package.json": JSON.stringify({
+              "config": {
+                "_test_message": "from archetype"
+              },
+              "scripts": {
+                "echo": "node test/server/fixtures/echo.js >> stdout-" + ENV_PROC_NUM + ".log"
+              }
+            }, null, 2)
+          }
+        }
+      });
+
+      run({
+        argv: ["node", "builder", "envs", "echo", "--env-path=env.json", JSON.stringify([
+          // Now, real env should override this one.
+          {
+            "PROC_NUM": 1
+          },
+          {
+            "npm_package_config__test_message": "from array2",
+            "PROC_NUM": 2
+          },
+          {
+            "npm_package_config__test_message": "from array3",
+            "PROC_NUM": 3
+          }
+        ])]
+      }, function (err) {
+        if (err) { return done(err); }
+
+        expect(Task.prototype.envs).to.have.callCount(1);
+
+        readFiles(["stdout-1.log", "stdout-2.log", "stdout-3.log"], function (obj) {
+          expect(obj["stdout-1.log"]).to.contain("from --env-path");
           expect(obj["stdout-2.log"]).to.contain("from array2");
           expect(obj["stdout-3.log"]).to.contain("from array3");
         }, done);
