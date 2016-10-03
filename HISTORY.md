@@ -1,7 +1,7 @@
 History
 =======
 
-## Unreleased
+## 3.1.0
 
 * Add `--env` environment variable flag.
   [#45](https://github.com/FormidableLabs/builder/issues/45)
