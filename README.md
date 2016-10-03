@@ -356,6 +356,16 @@ _Note_: The environments JSON array will overwrite **existing** values in the
 environment. This includes environment variables provided to / from `builder`
 from things such as `npm` `config` and the `--env`/`--env-path` flags.
 
+So, for example, if you invoke `builder` with:
+
+```js
+$ builder envs <task> '[{"FOO": "ENVS"}]' --env='{"FOO": "FLAG"}'
+```
+
+The environment variable `FOO` will have a value of `"ENVS"` with the single
+environment object array item given to `builder envs` overriding the `--env`
+flag value.
+
 #### Custom Flags
 
 Just like [`npm run <task> [-- <args>...]`](https://docs.npmjs.com/cli/run-script),
