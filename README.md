@@ -59,8 +59,8 @@ the rough goals and motivations behind the project.
       - [builder run](#builder-run)
       - [builder concurrent](#builder-concurrent)
       - [builder envs](#builder-envs)
-        - [Custom Flags](#custom-flags)
-        - [Expanding the Archetype Path](#expanding-the-archetype-path)
+    - [Custom Flags](#custom-flags)
+    - [Expanding the Archetype Path](#expanding-the-archetype-path)
 - [Tasks](#tasks)
 - [npm Config](#npm-config)
   - [`npm` Config Overview](#npm-config-overview)
@@ -356,7 +356,7 @@ _Note_: The environments JSON array will overwrite **existing** values in the
 environment. This includes environment variables provided to / from `builder`
 from things such as `npm` `config` and the `--env`/`--env-path` flags.
 
-###### Custom Flags
+#### Custom Flags
 
 Just like [`npm run <task> [-- <args>...]`](https://docs.npmjs.com/cli/run-script),
 flags after a ` -- ` token in a builder task or from the command line are passed
@@ -398,7 +398,7 @@ The rough heuristic here is if we have custom arguments:
    environment variables. (Builder uses `_BUILDER_ARGS_CUSTOM_FLAGS`).
 2. If a non-`builder` command, then append without ` -- ` token.
 
-###### Expanding the Archetype Path
+#### Expanding the Archetype Path
 
 Builder tasks often refer to configuration files in the archetype itself like:
 
