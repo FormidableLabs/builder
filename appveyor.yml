@@ -21,11 +21,8 @@ test_script:
   # Output useful info for debugging.
   - node --version
   - node_modules\.bin\npm --version
-  # TODO REENABLE
-  # # run tests
-  # - node_modules\.bin\npm run builder:check
-  # TODO REMOVE
-  - node_modules\.bin\npm run builder:test
+  # run tests
+  - node_modules\.bin\npm run builder:check
 
 # Don't actually build.
 build: off
