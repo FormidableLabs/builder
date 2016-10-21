@@ -16,16 +16,17 @@ branches:
 
 env:
   matrix:
-    - NPM_3=true
-    - NPM_3=false
+    - TEST_NPM_VERSION=2
+    - TEST_NPM_VERSION=3
+    - TEST_NPM_VERSION=4
 
 before_install:
   # GUI for real browsers.
   - export DISPLAY=:99.0
   - sh -e /etc/init.d/xvfb start
 
-  # Potentially update to npm 3
-  - 'if [ "$NPM_3" = true ]; then npm install -g npm@3; else true; fi'
+  # Use the requested version of npm
+  - npm install -g "npm@$TEST_NPM_VERSION"
 
 script:
   - npm --version
