@@ -23,7 +23,7 @@ module.exports = function (opts, callback) {
   opts = (arguments.length === 2 ? opts : {}) || {};
 
   // TODO: Document extra effects of `--expand-archetype`
-  process.argv.push("--expand-archetype"); // TODO HACK REMOVE
+  //process.argv.push("--expand-archetype"); // TODO HACK REMOVE
 
   // Configuration
   var config = new Config({
