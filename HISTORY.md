@@ -7,6 +7,7 @@ History
   archetypes instead of guessed paths. This will better support `yarn`, which
   flattens `node_modules/.bin` in different ways than real `npm`. It is also
   likely more correct than before.
+  [#134](https://github.com/FormidableLabs/builder/issues/134)
 * Add extra higher level directory check when `LOCAL_DEV=true` and
   `--expand-archetype` specified.
 * Have `--expand-archetype` check for presence of local archetype _first_, then
