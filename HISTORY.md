@@ -1,6 +1,12 @@
 History
 =======
 
+## Unreleased
+
+* Have `--expand-archetype` check for presence of local archetype _first_, then
+  move up the tree...
+  [#45](https://github.com/FormidableLabs/builder/issues/45)
+
 ## 3.1.0
 
 * Add `--env` environment variable flag.

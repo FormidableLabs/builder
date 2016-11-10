@@ -22,8 +22,14 @@ module.exports = function (opts, callback) {
   callback = arguments.length === 2 ? callback : opts;
   opts = (arguments.length === 2 ? opts : {}) || {};
 
+  // TODO: Document extra effects of `--expand-archetype`
+  process.argv.push("--expand-archetype"); // TODO HACK REMOVE
+
   // Configuration
-  var config = new Config();
+  var config = new Config({
+    env: opts.env,
+    argv: opts.argv
+  });
 
   // Set up environment
   var env = new Environment({
