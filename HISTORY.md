@@ -11,9 +11,6 @@ History
 * Add extra higher level directory check when `LOCAL_DEV=true` and
   `--expand-archetype` specified.
 * Make config loading failure a simple `log.info` instead of `log.warn`.
-* Have `--expand-archetype` check for presence of local archetype _first_, then
-  move up the tree...
-  [#45](https://github.com/FormidableLabs/builder/issues/45)
 
 ## 3.1.0
 
