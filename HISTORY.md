@@ -1,7 +1,7 @@
 History
 =======
 
-## Unreleased
+## 3.2.0
 
 * Add in `NODE_PATH` and `PATH` from _actual resolved paths_ of prod and dev
   archetypes instead of guessed paths. This will better support `yarn`, which
