@@ -23,7 +23,10 @@ module.exports = function (opts, callback) {
   opts = (arguments.length === 2 ? opts : {}) || {};
 
   // Configuration
-  var config = new Config();
+  var config = new Config({
+    env: opts.env,
+    argv: opts.argv
+  });
 
   // Set up environment
   var env = new Environment({

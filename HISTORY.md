@@ -1,6 +1,17 @@
 History
 =======
 
+## Unreleased
+
+* Add in `NODE_PATH` and `PATH` from _actual resolved paths_ of prod and dev
+  archetypes instead of guessed paths. This will better support `yarn`, which
+  flattens `node_modules/.bin` in different ways than real `npm`. It is also
+  likely more correct than before.
+  [#134](https://github.com/FormidableLabs/builder/issues/134)
+* Add extra higher level directory check when `LOCAL_DEV=true` and
+  `--expand-archetype` specified.
+* Make config loading failure a simple `log.info` instead of `log.warn`.
+
 ## 3.1.0
 
 * Add `--env` environment variable flag.
