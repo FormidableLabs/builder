@@ -78,7 +78,7 @@ the rough goals and motivations behind the project.
     - [Node Require Resolution and Module Pattern](#node-require-resolution-and-module-pattern)
       - [The Module Pattern](#the-module-pattern)
         - [ES.next Imports and The Module Pattern](#esnext-imports-and-the-module-pattern)
-    - [Frontend Resolution and Module Pattern](#frontend-resolution-and-module-pattern)
+        - [Webpack and Module Pattern](#webpack-and-module-pattern)
     - [Application vs. Archetype Dependencies](#application-vs-archetype-dependencies)
     - [Moving `dependencies` and `scripts` to a New Archetype](#moving-dependencies-and-scripts-to-a-new-archetype)
       - [Moving `dependencies` and `devDependencies` from an Existing `package.json`](#moving-dependencies-and-devdependencies-from-an-existing-packagejson)
@@ -971,7 +971,7 @@ application dependencies and dev dependencies, which we discuss in the
 
 ###### ES.next Imports and The Module Pattern
 
-The module pattern works great for any `require()`-based CommoneJS code.
+The module pattern works great for any `require()`-based CommonJS code.
 Unfortunately, when using babel and ES.next imports like:
 
 ```js
@@ -982,64 +982,105 @@ The module pattern is _not_ available because the actual `require("lodash")`
 statement spit out during transpilation is not directly accessible to the
 developer.
 
-We have [ticket #111](https://github.com/FormidableLabs/builder/issues/111) out
-to write a babel plugin to make the module pattern semantics available during
-babel transpilation as well.
-
-#### Frontend Resolution and Module Pattern
-
-An analogous situation occurs for frontend JS code in the production archetype,
-but with a different solution. If frontend JS code has dependencies within a dev
-archetype, the build environment will need to be enhanced to search the
-dev archetype's `node_modules`. (This often occurs in frontend test suites).
-
-For Webpack, this means adding the dev archetype modules directory explicitly
-to the code (`resolve.root`) and loader (`resolveLoader.root`) configurations
-as appropriate. So, something like:
+Fortunately (and unsurprisingly) we have a babel plugin to enable the module
+pattern in ES.next code: [`babel-plugin-replace-require`][babel-plugin-replace-require].
+The plugin can easily be configured with tokens to insert dev archetypes in
+`require`s produced by babel transpilation. For example, say we wanted to get
+`lodash` from above from our dev archetype, we would configure a `.babelrc`
+like:
 
 ```js
-// <archetype>/config/webpack.config.test.js
+{
+  "plugins": [
+    ["replace-require", {
+      "DEV_ARCHETYPE": "require('<archetype-dev>/require')"
+    }]
+  ]
+}
+```
 
-// Stash the location of `<archetype-dev>/node_modules`
-//
-// A normal `require.resolve` looks at `package.json:main`. We instead want
-// just the _directory_ of the module. So use heuristic of finding dir of
-// package.json which **must** exist at a predictable location.
-var archetypeDevNodeModules = path.join(
-  path.dirname(require.resolve("<archetype-dev>/package.json")),
-  "node_modules"
-);
+Then prepend our custom token to the source ES.next code:
 
-// Webpack configuration.
+```js
+import _ from "DEV_ARCHETYPE/lodash";
+```
+
+When transpiled, the output would become:
+
+```js
+"use strict";
+
+var _lodash = require('<archetype-dev>/require')("lodash");
+
+var _lodash2 = _interopRequireDefault(_lodash);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+```
+
+giving us the correct module pattern.
+
+###### Webpack and Module Pattern
+
+An analogous situation occurs for frontend JS code in the production archetype,
+but with a different solution. The underlying issue is that Webpack cannot
+ingest:
+
+```js
+// src/foo.js
+var mod = require("<archetype-dev>/require")("lib-name");
+```
+
+like Node.js can, so we need a little help in the form of a loader.
+
+**Note**: Previous incarnations of this documentation suggested mutating
+Webpack code (`resolve.root`) and loader (`resolveLoader.root`) configurations.
+We no longer suggest this as the loader pattern in this section is much more
+precise and doesn't lead to potential prod-vs-dev ambiguities in module use.
+
+Turning to the above example, we can use the
+[`webpack-alternate-require-loader`][webpack-alternate-require-loader] to
+rewrite CommonJS forms of the module pattern into fully-resolved paths on disk
+that work for webpack.
+
+Let's start with our webpack configuration:
+
+```js
+// webpack.config.js
 module.exports = {
-  // ...
-  resolve: {
-    // ...
-    root: [archetypeNodeModules]
-  },
-  resolveLoader: {
-    // ...
-    root: [archetypeNodeModules]
+  module: {
+    loaders: [
+      {
+        test: /\.js$/,
+        loader: "webpack-alternate-require-loader",
+        query: JSON.stringify({
+          "<archetype-dev>/require": require.resolve("<archetype-dev>/require")
+        })
+      }
+    ]
   }
 };
 ```
 
-For other frontend loaders like Browserify, Rollup, etc., an analogous
-configuration would be required.
+With this configuration, Webpack will parse our above code sample and actually
+_perform_ the resolution of `lib-name` using the `require` provided in
+`<archetype-dev>/require` producing ultimate code like:
 
-Note that you should _only_ use this pattern for files that are used for dev
-workflows. For example, if `webpack.config.js` is part of the prod workflow
-(for maybe a `postinstall` build or something), then you can't do a
-`path.dirname(require.resolve("<archetype-dev>/package.json"))` because the dev
-archetype isn't installed. Instead, only add the dev archetype modules directory
-to code that can only be called from **dev** workflows.
+```js
+// lib/foo.js
+var mod = require("/RESOLVED/PATH/TO/lib-name");
+```
 
-**Shared Node / Frontend Code**: Unfortunately, the preferred Node and Webpack
-methods of importing dev archetype dependencies are _different_, which makes
-setup a little awkward for shared code that runs both on the frontend and in
-Node. While this situation won't often come up for dev dependencies, if it does
-one option is to do an environment detect and conditionally do different imports
-based on if in Node or frontend (Webpack).
+This essentially converts a runtime lookup of the `require` starting from
+the dev archetype to a build time lookup performed by webpack.
+
+Conveniently, this plugin _also_ works with code produced by
+`babel-plugin-replace-require` when configured as specified in the previous
+section.
+
+**Shared Node / Frontend Code**: The best part of this plugin is that if you
+have shared code between Node.js and the frontend, you can have the exact same
+code work in both places -- unparsed for Node.js and processed via Webpack for
+the frontend.
 
 #### Application vs. Archetype Dependencies
 
@@ -1415,7 +1456,9 @@ the archetype into your project and remove all Builder dependencies:
 ... and (with assuredly a few minor hiccups) that's about it! You are
 Builder-free and back to a normal `npm`-controlled project.
 
+[babel-plugin-replace-require]: https://github.com/FormidableLabs/babel-plugin-replace-require
 [builder-react-component]: https://github.com/FormidableLabs/builder-react-component
+[webpack-alternate-require-loader]: https://github.com/FormidableLabs/webpack-alternate-require-loader
 [trav_img]: https://api.travis-ci.org/FormidableLabs/builder.svg
 [trav_site]: https://travis-ci.org/FormidableLabs/builder
 [av_img]: https://ci.appveyor.com/api/projects/status/oq3m2hay1tl82tsj?svg=true
