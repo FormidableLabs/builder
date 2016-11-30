@@ -78,7 +78,7 @@ the rough goals and motivations behind the project.
     - [Node Require Resolution and Module Pattern](#node-require-resolution-and-module-pattern)
       - [The Module Pattern](#the-module-pattern)
         - [ES.next Imports and The Module Pattern](#esnext-imports-and-the-module-pattern)
-    - [Frontend Resolution and Module Pattern](#frontend-resolution-and-module-pattern)
+        - [Webpack and Module Pattern](#webpack-and-module-pattern)
     - [Application vs. Archetype Dependencies](#application-vs-archetype-dependencies)
     - [Moving `dependencies` and `scripts` to a New Archetype](#moving-dependencies-and-scripts-to-a-new-archetype)
       - [Moving `dependencies` and `devDependencies` from an Existing `package.json`](#moving-dependencies-and-devdependencies-from-an-existing-packagejson)
