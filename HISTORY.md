@@ -1,6 +1,10 @@
 History
 =======
 
+## 3.2.1
+
+* Update module pattern documentation.
+
 ## 3.2.0
 
 * Add in `NODE_PATH` and `PATH` from _actual resolved paths_ of prod and dev
