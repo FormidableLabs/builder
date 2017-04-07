@@ -15,10 +15,15 @@ branches:
     - master
 
 env:
+  - TEST_NPM_VERSION=2
+  - TEST_NPM_VERSION=3
+  - TEST_NPM_VERSION=4
   matrix:
-    - TEST_NPM_VERSION=2
-    - TEST_NPM_VERSION=3
-    - TEST_NPM_VERSION=4
+    exclude:
+      - node_js: "5"
+        env: TEST_NPM_VERSION=2
+      - node_js: "6"
+        env: TEST_NPM_VERSION=2
 
 before_install:
   # GUI for real browsers.
