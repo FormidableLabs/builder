@@ -36,6 +36,31 @@ before_install:
 
 script:
   - npm --version
+
+  # On Node6, we're hitting a weird error of:
+  #
+  # ```
+  # TypeError: Cannot read property 'isDirectory' of undefined
+  #     at Function.sync (/home/travis/build/FormidableLabs/builder/node_modules/mkdirp/index.js:92:26)
+  #     at process.<anonymous> (/home/travis/build/FormidableLabs/builder/node_modules/istanbul/lib/command/common/run-with-cover.js:237:28)
+  #     at process.g (events.js:291:16)
+  #     at emitOne (events.js:96:13)
+  #     at process.emit (events.js:188:7)
+  #     at process.exit (internal/process.js:164:15)
+  #     at done (/home/travis/build/FormidableLabs/builder/node_modules/mocha/bin/_mocha:417:32)
+  #     at afterWrite (_stream_writable.js:388:3)
+  #     at _combinedTickCallback (internal/process/next_tick.js:86:20)
+  #     at process._tickCallback (internal/process/next_tick.js:104:9)
+  # ```
+  #
+  # ```js
+  # mkdirp.sync(reportingDir);
+  # ```
+  #
+  # Possibly related to: https://github.com/substack/node-mkdirp/pull/110
+  - mkdir -p coverage/server
+
+  # CI run
   - npm run builder:check-ci
 
   # Do some primitive bash functional tests.
