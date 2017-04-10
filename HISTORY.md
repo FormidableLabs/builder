@@ -1,6 +1,11 @@
 History
 =======
 
+## Unreleased
+
+* Correctly infer if a builder passthrough task on Windows. ( [@GEMI][] )
+  [#138](https://github.com/FormidableLabs/builder/issues/138)
+
 ## 3.2.1
 
 * Update module pattern documentation.
@@ -171,4 +176,5 @@ Other:
 * Initial release.
 
 [@exogen]: https://github.com/exogen
+[@GEMI]: https://github.com/GEMI
 [@ryan-roemer]: https://github.com/ryan-roemer
