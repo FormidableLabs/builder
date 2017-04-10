@@ -5,7 +5,11 @@ node_js:
   - "0.12"
   - "4"
   - "5"
-  - "6"
+  # By `v6.10.2` we hit this error:
+  # - https://github.com/FormidableLabs/builder/issues/141
+  # - https://github.com/substack/node-mkdirp/pull/110
+  # so pin for now.
+  - "6.9.5"
 
 # Use container-based Travis infrastructure.
 sudo: false
