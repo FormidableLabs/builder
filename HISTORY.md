@@ -1,7 +1,7 @@
 History
 =======
 
-## Unreleased
+## 3.2.2
 
 * Correctly infer if a builder passthrough task on Windows. ( [@GEMI][] )
   [#138](https://github.com/FormidableLabs/builder/issues/138)

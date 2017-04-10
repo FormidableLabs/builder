@@ -85,7 +85,7 @@ the rough goals and motivations behind the project.
       - [Moving `scripts` and Config Files](#moving-scripts-and-config-files)
       - [Updating Path and Module References in Config Files](#updating-path-and-module-references-in-config-files)
     - [Example `builder` Archetype Project Structure](#example-builder-archetype-project-structure)
-- [Tips, Tricks, & Notes](#tips-tricks-&-notes)
+- [Tips, Tricks, & Notes](#tips-tricks--notes)
   - [PATH, NODE_PATH Resolution](#path-node_path-resolution)
   - [Environment Variables](#environment-variables)
   - [Alternative to `npm link`](#alternative-to-npm-link)
