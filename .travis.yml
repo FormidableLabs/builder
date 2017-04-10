@@ -27,7 +27,7 @@ matrix:
   exclude:
     - node_js: "5"
       env: TEST_NPM_VERSION=2
-    - node_js: "6"
+    - node_js: "6.9.5"
       env: TEST_NPM_VERSION=2
 
 before_install:
