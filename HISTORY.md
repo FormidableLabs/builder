@@ -1,7 +1,7 @@
 History
 =======
 
-## Unreleased
+## 3.2.3
 
 * Account for `PATH` vs. `Path` env var differences in MinGW vs. cmd on
   Windows.
