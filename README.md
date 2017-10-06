@@ -332,9 +332,18 @@ $ builder envs <task> --envs-path=<path-to-json-file>
 
 Examples:
 
+**Mac / Linux**
+
 ```sh
 $ builder envs <task> '[{ "FOO": "VAL1" }, { "FOO": "VAL2" }, { "FOO": "VAL3" }]'
 $ builder envs <task> '[{ "FOO": "VAL1", "BAR": "VAL2" }, { "FOO": "VAL3" }]'
+```
+
+**Mac / Linux / Windows**
+
+```sh
+$ builder envs <task> "[{ \"FOO\": \"VAL1\" }, { \"FOO\": \"VAL2\" }, { \"FOO\": \"VAL3\" }]"
+$ builder envs <task> "[{ \"FOO\": \"VAL1\", \"BAR\": \"VAL2\" }, { \"FOO\": \"VAL3\" }]"
 ```
 
 Flags:

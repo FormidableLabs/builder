@@ -1,11 +1,11 @@
-\.git
-\.hg
+.git
 
-\.DS_Store
-\.project
+.DS_Store
+.project
 bower_components
 node_modules
-npm-debug\.log*
+npm-debug.log*
+yarn-error.log*
 phantomjsdriver\.log
 
 # Build

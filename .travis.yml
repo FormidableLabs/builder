@@ -4,12 +4,8 @@ node_js:
   - "0.10"
   - "0.12"
   - "4"
-  - "5"
-  # By `v6.10.2` we hit this error:
-  # - https://github.com/FormidableLabs/builder/issues/141
-  # - https://github.com/substack/node-mkdirp/pull/110
-  # so pin for now.
-  - "6.9.5"
+  - "6"
+  - "8"
 
 # Use container-based Travis infrastructure.
 sudo: false
@@ -18,25 +14,10 @@ branches:
   only:
     - master
 
-env:
-  - TEST_NPM_VERSION=2
-  - TEST_NPM_VERSION=3
-  - TEST_NPM_VERSION=4
-
-matrix:
-  exclude:
-    - node_js: "5"
-      env: TEST_NPM_VERSION=2
-    - node_js: "6.9.5"
-      env: TEST_NPM_VERSION=2
-
 before_install:
   # GUI for real browsers.
   - export DISPLAY=:99.0
   - sh -e /etc/init.d/xvfb start
-
-  # Use the requested version of npm
-  - npm install -g "npm@$TEST_NPM_VERSION"
 
 script:
   - npm --version
