@@ -1,6 +1,12 @@
 History
 =======
 
+## Unreleased
+
+* Account for `PATH` vs. `Path` env var differences in MinGW vs. cmd on
+  Windows.
+  [#142](https://github.com/FormidableLabs/builder/issues/142)
+
 ## 3.2.2
 
 * Correctly infer if a builder passthrough task on Windows. ( [@GEMI][] )
