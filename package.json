@@ -29,6 +29,7 @@
   "dependencies": {
     "async": "^1.4.2",
     "chalk": "^1.1.1",
+    "find-node-modules": "^1.0.4",
     "js-yaml": "^3.4.3",
     "lodash": "^3.10.1",
     "nopt": "^3.0.6",
