@@ -28,7 +28,7 @@ if (builderPath !== localPath) {
     });
   } catch (err) {
     msgs.push({
-      level: "warn", type: "local-detect",
+      level: "info", type: "local-detect",
       msg: "Error importing local builder: " + err.message
     });
     msgs.push({

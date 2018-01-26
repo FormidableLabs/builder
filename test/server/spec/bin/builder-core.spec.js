@@ -1175,6 +1175,20 @@ describe("bin/builder-core", function () {
 
     });
 
+
+    describe("pre/post lifecycle commands", function () {
+
+      it("runs pre task"); // TODO
+      it("runs post task"); // TODO
+      it("runs pre+post tasks"); // TODO
+
+      it("skips prepre tasks"); // TODO: DECIDE (NPM?)
+      it("skips prepost tasks"); // TODO: DECIDE (NPM?)
+      it("skips postpre tasks"); // TODO: DECIDE (NPM?)
+      it("skips postpost tasks"); // TODO: DECIDE (NPM?)
+
+    });
+
   });
 
   describe("builder concurrent", function () {
@@ -1290,6 +1304,13 @@ describe("bin/builder-core", function () {
           expect(obj["stdout-2.log"]).to.contain("string - from base - TWO");
         }, done);
       });
+    });
+
+    describe("pre/post lifecycle commands", function () {
+
+      it("runs internal pre+post tasks"); // TODO
+      it("runs multiple mixed pre+post tasks"); // TODO
+
     });
 
   });
@@ -1742,6 +1763,13 @@ describe("bin/builder-core", function () {
           expect(obj["stdout-3.log"]).to.contain("from array3");
         }, done);
       });
+    });
+
+    describe("pre/post lifecycle commands", function () {
+
+      it("runs internal pre+post tasks"); // TODO
+      it("runs multiple pre+post tasks"); // TODO
+
     });
 
   });
