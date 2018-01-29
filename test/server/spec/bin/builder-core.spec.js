@@ -1178,14 +1178,14 @@ describe("bin/builder-core", function () {
 
     describe("pre/post lifecycle commands", function () {
 
-      it("runs pre task"); // TODO
-      it("runs post task"); // TODO
-      it("runs pre+post tasks"); // TODO
+      it("runs pre task"); // TODO(PRE)
+      it("runs post task"); // TODO(PRE)
+      it("runs pre+post tasks"); // TODO(PRE)
 
-      it("skips prepre tasks"); // TODO: DECIDE (NPM?)
-      it("skips prepost tasks"); // TODO: DECIDE (NPM?)
-      it("skips postpre tasks"); // TODO: DECIDE (NPM?)
-      it("skips postpost tasks"); // TODO: DECIDE (NPM?)
+      it("skips prepre tasks"); // TODO(PRE): DECIDE (NPM?)
+      it("skips prepost tasks"); // TODO(PRE): DECIDE (NPM?)
+      it("skips postpre tasks"); // TODO(PRE): DECIDE (NPM?)
+      it("skips postpost tasks"); // TODO(PRE): DECIDE (NPM?)
 
     });
 
@@ -1308,8 +1308,8 @@ describe("bin/builder-core", function () {
 
     describe("pre/post lifecycle commands", function () {
 
-      it("runs internal pre+post tasks"); // TODO
-      it("runs multiple mixed pre+post tasks"); // TODO
+      it("runs internal pre+post tasks"); // TODO(PRE)
+      it("runs multiple mixed pre+post tasks"); // TODO(PRE)
 
     });
 
@@ -1767,8 +1767,8 @@ describe("bin/builder-core", function () {
 
     describe("pre/post lifecycle commands", function () {
 
-      it("runs internal pre+post tasks"); // TODO
-      it("runs multiple pre+post tasks"); // TODO
+      it("runs internal pre+post tasks"); // TODO(PRE)
+      it("runs multiple pre+post tasks"); // TODO(PRE)
 
     });
 
