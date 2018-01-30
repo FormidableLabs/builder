@@ -1181,6 +1181,8 @@ describe("bin/builder-core", function () {
       it("runs pre task"); // TODO(PRE)
       it("runs post task"); // TODO(PRE)
       it("runs pre+post tasks"); // TODO(PRE)
+      it("only passes custom flags to main task"); // TODO(PRE)
+      it("only passes --env flags to main task"); // TODO(PRE)
 
       it("skips prepre tasks"); // TODO(PRE): DECIDE (NPM?)
       it("skips prepost tasks"); // TODO(PRE): DECIDE (NPM?)
