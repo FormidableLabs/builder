@@ -59,6 +59,11 @@ the rough goals and motivations behind the project.
       - [builder run](#builder-run)
       - [builder concurrent](#builder-concurrent)
       - [builder envs](#builder-envs)
+    - [Task Lifecycle](#task-lifecycle)
+      - [The Basics](#the-basics)
+      - [Other Builder Actions](#other-builder-actions)
+      - [Builder Flags](#builder-flags)
+      - [Task Prefix Complexities](#task-prefix-complexities)
     - [Custom Flags](#custom-flags)
     - [Expanding the Archetype Path](#expanding-the-archetype-path)
 - [Tasks](#tasks)
@@ -374,6 +379,75 @@ $ builder envs <task> '[{"FOO": "ENVS"}]' --env='{"FOO": "FLAG"}'
 The environment variable `FOO` will have a value of `"ENVS"` with the single
 environment object array item given to `builder envs` overriding the `--env`
 flag value.
+
+#### Task Lifecycle
+
+Builder executes `pre<task>` and `post<task>` tasks the same as `npm` does,
+with some perhaps not completely obvious corner cases.
+
+##### The Basics
+
+If you have:
+
+```js
+"scripts": {
+  "prefoo": "echo PRE",
+  "foo": "echo TEMP",
+  "postfoo": "echo POST"
+}
+```
+
+And run `builder run foo`, then just like `npm`, builder will run in order:
+
+1. `prefoo`
+2. `foo`
+3. `postfoo`
+
+assuming each task succeeds, otherwise execution is terminated.
+
+##### Other Builder Actions
+
+`builder run` works essentially the same as `npm run`. Things get a little
+messy with Builder's other execution options:
+
+`builder envs` runs `pre|post` tasks exactly **once** regardless of how many
+concurrent executions of the underlying task (with different environment
+variables) occur.
+
+`builder concurrent` runs appropriate `pre|post` tasks for each independent
+task. So, for something like:
+
+```js
+"scripts": {
+  "prefoo": "echo PRE FOO",
+  "foo": "echo TEMP FOO",
+  "postfoo": "echo POST FOO",
+  "prebar": "echo PRE BAR",
+  "bar": "echo TEMP BAR",
+  "postbar": "echo POST BAR"
+}
+```
+
+running `builder concurrent foo bar` would run **all** of the above tasks at
+the appropriate lifecycle moment.
+
+##### Builder Flags
+
+The special `--` flag with any subsequent custom flags to the underlying task
+are only passed to the the main `<task>` and not `pre<task>` or `post<task>`.
+
+Similarly, the various other Builder-specific flags that can be applied to a
+task like `--tries`, `--env`, etc., do **not** apply to `pre|post` tasks. If
+desired, the `pre|post` tasks can be scripted to execute `builder` with any
+setup.
+
+##### Task Prefix Complexities
+
+For the above example, if you have a task named `preprefoo`, then running
+`foo` **or** even `prefoo` directly will **not** run `preprefoo`. Builder
+follows `npm`'s current implementation which is roughly "add `pre|post` tasks
+to current execution as long as the task itself is not prefixed with
+`pre|post`". (_Note_ that `yarn` does not follow this logic in task execution).
 
 #### Custom Flags
 

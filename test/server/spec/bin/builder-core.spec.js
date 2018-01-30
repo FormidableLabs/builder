@@ -1767,8 +1767,9 @@ describe("bin/builder-core", function () {
 
     describe("pre/post lifecycle commands", function () {
 
-      it("runs internal pre+post tasks"); // TODO(PRE)
-      it("runs multiple pre+post tasks"); // TODO(PRE)
+      it("runs pre+post tasks"); // TODO(PRE)
+      it("runs pre+post tasks once for empty array"); // TODO(PRE)
+      it("runs pre+post tasks once for multiple env vars"); // TODO(PRE)
 
     });
 
