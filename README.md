@@ -405,6 +405,9 @@ And run `builder run foo`, then just like `npm`, builder will run in order:
 
 assuming each task succeeds, otherwise execution is terminated.
 
+`pre` and `post` tasks can be provided in an archetype and overridden in a root
+`package.json` in the exact same manner as normal Builder tasks.
+
 ##### Other Builder Actions
 
 `builder run` works essentially the same as `npm run`. Things get a little
