@@ -1181,12 +1181,15 @@ describe("bin/builder-core", function () {
       it("runs pre task only in archetype"); // TODO(PRE)
       it("runs pre task only in root"); // TODO(PRE)
       it("runs pre task that overrides archetype"); // TODO(PRE)
-      it("runs pre task before setup task"); // TODO(PRE)
+      it("runs pre task before --setup task"); // TODO(PRE)
 
       it("runs post task"); // TODO(PRE)
       it("runs pre+post tasks"); // TODO(PRE)
       it("only passes custom flags to main task"); // TODO(PRE)
       it("only passes --env flags to main task"); // TODO(PRE)
+
+      it("skips pre tasks for a --setup task"); // TODO(PRE)
+      it("skips post tasks for a --setup task"); // TODO(PRE)
 
       it("skips prepre tasks"); // TODO(PRE): DECIDE (NPM?)
       it("skips prepost tasks"); // TODO(PRE): DECIDE (NPM?)

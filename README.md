@@ -444,6 +444,8 @@ task like `--tries`, `--env`, etc., do **not** apply to `pre|post` tasks. If
 desired, the `pre|post` tasks can be scripted to execute `builder` with any
 setup.
 
+A task specified in `--setup <task>` will not have `pre|post` tasks apply.
+
 ##### Task Prefix Complexities
 
 For the above example, if you have a task named `preprefoo`, then running
