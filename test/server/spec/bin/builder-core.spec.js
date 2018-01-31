@@ -1181,6 +1181,7 @@ describe("bin/builder-core", function () {
       it("runs pre task only in archetype"); // TODO(PRE)
       it("runs pre task only in root"); // TODO(PRE)
       it("runs pre task that overrides archetype"); // TODO(PRE)
+      it("runs pre task before setup task"); // TODO(PRE)
 
       it("runs post task"); // TODO(PRE)
       it("runs pre+post tasks"); // TODO(PRE)
