@@ -573,7 +573,7 @@ describe("bin/builder-core", function () {
       }, function (err) {
         if (err) { return done(err); }
 
-        expect(Task.prototype.run).to.have.callCount(2);
+        expect(Task.prototype.run).to.have.callCount(1);
 
         readFiles(["stdout-setup.log", "stdout.log"], function (obj) {
           expect(obj["stdout-setup.log"])
@@ -603,7 +603,7 @@ describe("bin/builder-core", function () {
         expect(err).to.have.property("message")
           .that.contains("Setup exited with code: 0");
 
-        expect(Task.prototype.run).to.have.callCount(2);
+        expect(Task.prototype.run).to.have.callCount(1);
         expect(logStubs.error)
           .to.be.calledWithMatch("run bar").and
           .to.be.calledWithMatch("Setup exited with code: 0");
@@ -630,7 +630,7 @@ describe("bin/builder-core", function () {
         expect(err).to.have.property("message")
           .that.contains("Setup exited with code: 1");
 
-        expect(Task.prototype.run).to.have.callCount(2);
+        expect(Task.prototype.run).to.have.callCount(1);
         expect(logStubs.error)
           .to.be.calledWithMatch("run bar").and
           .to.be.calledWithMatch("Setup exited with code: 1");
