@@ -59,6 +59,7 @@ the rough goals and motivations behind the project.
       - [builder run](#builder-run)
       - [builder concurrent](#builder-concurrent)
       - [builder envs](#builder-envs)
+    - [Setup Task](#setup-task)
     - [Task Lifecycle](#task-lifecycle)
       - [The Basics](#the-basics)
       - [Other Builder Actions](#other-builder-actions)
@@ -379,6 +380,25 @@ $ builder envs <task> '[{"FOO": "ENVS"}]' --env='{"FOO": "FLAG"}'
 The environment variable `FOO` will have a value of `"ENVS"` with the single
 environment object array item given to `builder envs` overriding the `--env`
 flag value.
+
+#### Setup Task
+
+A task specified in `--setup <task>` will not have any special `--` flags
+applied. Nor will any of the other builder-specific flags like `--env`,
+`--tries`, etc. be applied when running them. The tasks will be executed
+mostly in isolation.
+
+That said, if you need things like `--tries`, etc., these can be always coded
+into a wrapped task like:
+
+```js
+"scripts": {
+  "setup-alone": "while sleep 1; do echo SETUP; done",
+  "setup": "builder run --tries=5 setup-alone",
+  "test": "mocha",
+  "test-full": "builder run --setup=setup test"
+}
+```
 
 #### Task Lifecycle
 
