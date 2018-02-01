@@ -436,15 +436,59 @@ the appropriate lifecycle moment.
 
 ##### Builder Flags
 
-The special `--` flag with any subsequent custom flags to the underlying task
-are only passed to the the main `<task>` and not `pre<task>` or `post<task>`.
-
-Similarly, the various other Builder-specific flags that can be applied to a
-task like `--tries`, `--env`, etc., do **not** apply to `pre|post` tasks. If
-desired, the `pre|post` tasks can be scripted to execute `builder` with any
-setup.
+*Setup Tasks*
 
 A task specified in `--setup <task>` will not have `pre|post` tasks apply.
+
+*Special Flags*
+
+The special `--` flag with any subsequent custom flags to the underlying task
+are only passed to the the main `<task>` and not `pre<task>` or `post<task>`.
+The rationale here is that custom command line flags most likely just apply to
+a single shell command (the main one).
+
+So, for example
+
+```js
+"scripts": {
+  "prefoo": "echo PRE",
+  "foo": "echo TEMP",
+  "postfoo": "echo POST"
+}
+```
+
+running `builder run foo -- --hi` would produce:
+
+```
+PRE
+TEMP --hi
+POST
+```
+
+*Other Flags*
+
+By contrast, the various other Builder-specific flags that can be applied to a
+task like `--tries`, `--env`, etc., **will** apply to `pre|post` tasks, under
+the assumption that control flags + environment variables will most likely
+want to be used for the execution of all commands in the workflow.
+
+So, for example:
+
+```js
+"scripts": {
+  "prefoo": "echo PRE $VAR",
+  "foo": "echo TEMP $VAR",
+  "postfoo": "echo POST $VAR"
+}
+```
+
+running `builder run foo --env '{"VAR":"HI"}'` would produce:
+
+```
+PRE HI
+TEMP HI
+POST HI
+```
 
 ##### Task Prefix Complexities
 

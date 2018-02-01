@@ -1186,7 +1186,9 @@ describe("bin/builder-core", function () {
       it("runs post task"); // TODO(PRE)
       it("runs pre+post tasks"); // TODO(PRE)
       it("only passes custom flags to main task"); // TODO(PRE)
-      it("only passes --env flags to main task"); // TODO(PRE)
+      it("passes --env flags to pre+post tasks"); // TODO(PRE)
+      it("passes --tries flags to pre+post tasks"); // TODO(PRE)
+      it("passes --expand-archetype flags to pre+post tasks"); // TODO(PRE)
 
       it("skips pre tasks for a --setup task"); // TODO(PRE)
       it("skips post tasks for a --setup task"); // TODO(PRE)
