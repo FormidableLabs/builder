@@ -591,83 +591,80 @@ describe("bin/builder-core", function () {
     it("runs --setup without flags --expand-archetype", function (done) {
       base.sandbox.spy(Task.prototype, "run");
       base.mockFs({
-          ".builderrc": "---\narchetypes:\n  - mock-archetype",
-          "package.json": JSON.stringify({}, null, 2),
-          "node_modules": {
-            "mock-archetype": {
-              "package.json": JSON.stringify({
-                "scripts": {
-                  "foo": REPEAT + " 1 " +
-                    "node_modules/mock-archetype/FOO.txt >> stdout.log",
-                  "setup": REPEAT + " 0 " +
-                    "node_modules/mock-archetype/SETUP.txt >> stdout-setup.log"
-                }
-              }, null, 2)
-            }
+        ".builderrc": "---\narchetypes:\n  - mock-archetype",
+        "package.json": JSON.stringify({}, null, 2),
+        "node_modules": {
+          "mock-archetype": {
+            "package.json": JSON.stringify({
+              "scripts": {
+                "foo": REPEAT + " 1  node_modules/mock-archetype/FOO.txt >> stdout.log",
+                "setup": REPEAT + " 0  node_modules/mock-archetype/SETUP.txt >> stdout-setup.log"
+              }
+            }, null, 2)
           }
-        });
+        }
+      });
 
       run({
-          argv: ["node", "builder", "--expand-archetype", "--setup=setup", "run", "foo"]
-        }, function (err) {
-          if (err) { return done(err); }
+        argv: ["node", "builder", "--expand-archetype", "--setup=setup", "run", "foo"]
+      }, function (err) {
+        if (err) { return done(err); }
 
-          expect(Task.prototype.run).to.be.calledOnce;
+        expect(Task.prototype.run).to.be.calledOnce;
 
-          readFiles(["stdout.log", "stdout-setup.log"], function (obj) {
+        readFiles(["stdout.log", "stdout-setup.log"], function (obj) {
             // Expands foo
-            expect(obj["stdout.log"]).to.contain(
+          expect(obj["stdout.log"]).to.contain(
               path.resolve(process.cwd(), "node_modules/mock-archetype/FOO.txt")
             );
             // Doesn't expand setup
-            expect(obj["stdout-setup.log"])
+          expect(obj["stdout-setup.log"])
               .to.contain("node_modules/mock-archetype/SETUP.txt").and
               .to.not.contain(
                 path.resolve(process.cwd(), "node_modules/mock-archetype/SETUP.txt")
               );
-          }, done);
-        });
+        }, done);
+      });
     });
 
     // TODO HERE
     it.skip("runs --setup without flags --env", function (done) {
       base.sandbox.spy(Task.prototype, "run");
       base.mockFs({
-          ".builderrc": "---\narchetypes:\n  - mock-archetype",
-          "package.json": JSON.stringify({}, null, 2),
-          "node_modules": {
-            "mock-archetype": {
-              "package.json": JSON.stringify({
-                "scripts": {
-                  "foo": REPEAT + " 1 FOO >> stdout.log",
-                  "setup": REPEAT + " 0 " +
-                    "node_modules/mock-archetype/SETUP.txt >> stdout-setup.log"
-                }
-              }, null, 2)
-            }
+        ".builderrc": "---\narchetypes:\n  - mock-archetype",
+        "package.json": JSON.stringify({}, null, 2),
+        "node_modules": {
+          "mock-archetype": {
+            "package.json": JSON.stringify({
+              "scripts": {
+                "foo": REPEAT + " 1 FOO >> stdout.log",
+                "setup": REPEAT + " 0 node_modules/mock-archetype/SETUP.txt >> stdout-setup.log"
+              }
+            }, null, 2)
           }
-        });
+        }
+      });
 
       run({
-          argv: ["node", "builder", "--expand-archetype", "--setup=setup", "run", "foo"]
-        }, function (err) {
-          if (err) { return done(err); }
+        argv: ["node", "builder", "--expand-archetype", "--setup=setup", "run", "foo"]
+      }, function (err) {
+        if (err) { return done(err); }
 
-          expect(Task.prototype.run).to.be.calledOnce;
+        expect(Task.prototype.run).to.be.calledOnce;
 
-          readFiles(["stdout.log", "stdout-setup.log"], function (obj) {
+        readFiles(["stdout.log", "stdout-setup.log"], function (obj) {
             // Expands foo
-            expect(obj["stdout.log"]).to.contain(
+          expect(obj["stdout.log"]).to.contain(
               path.resolve(process.cwd(), "node_modules/mock-archetype/FOO.txt")
             );
             // Doesn't expand setup
-            expect(obj["stdout-setup.log"])
+          expect(obj["stdout-setup.log"])
               .to.contain("node_modules/mock-archetype/SETUP.txt").and
               .to.not.contain(
                 path.resolve(process.cwd(), "node_modules/mock-archetype/SETUP.txt")
               );
-          }, done);
-        });
+        }, done);
+      });
     });
 
     it("runs --setup without custom flags"); // TODO(PRE)
