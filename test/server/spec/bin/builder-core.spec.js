@@ -28,7 +28,8 @@ var base = require("../base.spec");
 var CLI_SLEEP = "node -e \"setTimeout(function () {}, 10000);\"";
 var ENV_MY_VAR = /^win/.test(process.platform) ? "%MY_VAR%" : "$MY_VAR";
 var ENV_PROC_NUM = /^win/.test(process.platform) ? "%PROC_NUM%" : "$PROC_NUM";
-
+var ECHO = "node test/server/fixtures/echo.js";
+var REPEAT = "node test/server/fixtures/repeat-script.js";
 
 // Read files, do assert callbacks, and trap everything, calling `done` at the
 // end. A little limited in use as it's the *last* thing you can call in a
@@ -563,8 +564,8 @@ describe("bin/builder-core", function () {
         "package.json": JSON.stringify({
           "scripts": {
             // *real* fs for script references. (`0` runs forever).
-            "setup": "node test/server/fixtures/repeat-script.js 0 SETUP >> stdout-setup.log",
-            "bar": "node test/server/fixtures/repeat-script.js 5 BAR_TASK >> stdout.log"
+            "setup": REPEAT + " 0 SETUP >> stdout-setup.log",
+            "bar": REPEAT + " 5 BAR_TASK >> stdout.log"
           }
         }, null, 2)
       });
@@ -596,9 +597,9 @@ describe("bin/builder-core", function () {
             "mock-archetype": {
               "package.json": JSON.stringify({
                 "scripts": {
-                  "foo": "node test/server/fixtures/repeat-script.js 1 " +
+                  "foo": REPEAT + " 1 " +
                     "node_modules/mock-archetype/FOO.txt >> stdout.log",
-                  "setup": "node test/server/fixtures/repeat-script.js 0 " +
+                  "setup": REPEAT + " 0 " +
                     "node_modules/mock-archetype/SETUP.txt >> stdout-setup.log"
                 }
               }, null, 2)
@@ -628,7 +629,47 @@ describe("bin/builder-core", function () {
         });
     });
 
-    it("runs --setup without flags --env"); // TODO(PRE)
+    // TODO HERE
+    it.skip("runs --setup without flags --env", function (done) {
+      base.sandbox.spy(Task.prototype, "run");
+      base.mockFs({
+          ".builderrc": "---\narchetypes:\n  - mock-archetype",
+          "package.json": JSON.stringify({}, null, 2),
+          "node_modules": {
+            "mock-archetype": {
+              "package.json": JSON.stringify({
+                "scripts": {
+                  "foo": REPEAT + " 1 FOO >> stdout.log",
+                  "setup": REPEAT + " 0 " +
+                    "node_modules/mock-archetype/SETUP.txt >> stdout-setup.log"
+                }
+              }, null, 2)
+            }
+          }
+        });
+
+      run({
+          argv: ["node", "builder", "--expand-archetype", "--setup=setup", "run", "foo"]
+        }, function (err) {
+          if (err) { return done(err); }
+
+          expect(Task.prototype.run).to.be.calledOnce;
+
+          readFiles(["stdout.log", "stdout-setup.log"], function (obj) {
+            // Expands foo
+            expect(obj["stdout.log"]).to.contain(
+              path.resolve(process.cwd(), "node_modules/mock-archetype/FOO.txt")
+            );
+            // Doesn't expand setup
+            expect(obj["stdout-setup.log"])
+              .to.contain("node_modules/mock-archetype/SETUP.txt").and
+              .to.not.contain(
+                path.resolve(process.cwd(), "node_modules/mock-archetype/SETUP.txt")
+              );
+          }, done);
+        });
+    });
+
     it("runs --setup without custom flags"); // TODO(PRE)
 
     it("handles --setup early 0 exit", function (done) {
@@ -636,7 +677,7 @@ describe("bin/builder-core", function () {
       base.mockFs({
         "package.json": JSON.stringify({
           "scripts": {
-            "setup": "node test/server/fixtures/repeat-script.js 2 SETUP >> stdout-setup.log",
+            "setup": REPEAT + " 2 SETUP >> stdout-setup.log",
             "bar": CLI_SLEEP
           }
         }, null, 2)
@@ -663,7 +704,7 @@ describe("bin/builder-core", function () {
       base.mockFs({
         "package.json": JSON.stringify({
           "scripts": {
-            "setup": "node test/server/fixtures/repeat-script.js 2 SETUP 1 >> stdout-setup.log",
+            "setup": REPEAT + " 2 SETUP 1 >> stdout-setup.log",
             "bar": CLI_SLEEP
           }
         }, null, 2)
@@ -690,7 +731,7 @@ describe("bin/builder-core", function () {
       base.mockFs({
         "package.json": JSON.stringify({
           "scripts": {
-            "echo": "node test/server/fixtures/echo.js >> stdout.log"
+            "echo": ECHO + " >> stdout.log"
           }
         }, null, 2)
       });
@@ -713,7 +754,7 @@ describe("bin/builder-core", function () {
       base.mockFs({
         "package.json": JSON.stringify({
           "scripts": {
-            "echo": "node test/server/fixtures/echo.js >> stdout.log"
+            "echo": ECHO + " >> stdout.log"
           }
         }, null, 2),
         "env.json": JSON.stringify({
@@ -739,7 +780,7 @@ describe("bin/builder-core", function () {
       base.mockFs({
         "package.json": JSON.stringify({
           "scripts": {
-            "echo": "node test/server/fixtures/echo.js >> stdout.log"
+            "echo": ECHO + " >> stdout.log"
           }
         }, null, 2)
       });
@@ -763,7 +804,7 @@ describe("bin/builder-core", function () {
       base.mockFs({
         "package.json": JSON.stringify({
           "scripts": {
-            "echo": "node test/server/fixtures/echo.js >> stdout.log"
+            "echo": ECHO + " >> stdout.log"
           }
         }, null, 2),
         "env.json": JSON.stringify({
@@ -823,7 +864,7 @@ describe("bin/builder-core", function () {
             "_test_message": "from base config"
           },
           "scripts": {
-            "echo": "node test/server/fixtures/echo.js >> stdout.log"
+            "echo": ECHO + " >> stdout.log"
           }
         }, null, 2)
       });
@@ -853,7 +894,7 @@ describe("bin/builder-core", function () {
                 "_test_message": "from archetype"
               },
               "scripts": {
-                "echo": "node test/server/fixtures/echo.js >> stdout.log"
+                "echo": ECHO + " >> stdout.log"
               }
             }, null, 2)
           }
@@ -889,7 +930,7 @@ describe("bin/builder-core", function () {
                 "_test_message": "from archetype"
               },
               "scripts": {
-                "echo": "node test/server/fixtures/echo.js >> stdout.log"
+                "echo": ECHO + " >> stdout.log"
               }
             }, null, 2)
           }
@@ -921,7 +962,7 @@ describe("bin/builder-core", function () {
                 "_test_message": "from archetype"
               },
               "scripts": {
-                "echo": "node test/server/fixtures/echo.js >> stdout.log"
+                "echo": ECHO + " >> stdout.log"
               }
             }, null, 2)
           }
@@ -961,7 +1002,7 @@ describe("bin/builder-core", function () {
                 "_test_message": "from archetype"
               },
               "scripts": {
-                "echo": "node test/server/fixtures/echo.js >> stdout.log"
+                "echo": ECHO + " >> stdout.log"
               }
             }, null, 2)
           }
@@ -1001,7 +1042,7 @@ describe("bin/builder-core", function () {
                 "_test_message": "from archetype"
               },
               "scripts": {
-                "echo": "node test/server/fixtures/echo.js >> stdout.log"
+                "echo": ECHO + " >> stdout.log"
               }
             }, null, 2)
           }
@@ -1332,7 +1373,7 @@ describe("bin/builder-core", function () {
             "_test_message": "from base"
           },
           "scripts": {
-            "echo2": "node test/server/fixtures/echo.js TWO >> stdout-2.log"
+            "echo2": ECHO + " TWO >> stdout-2.log"
           }
         }, null, 2),
         "node_modules": {
@@ -1342,7 +1383,7 @@ describe("bin/builder-core", function () {
                 "_test_message": "from archetype"
               },
               "scripts": {
-                "echo1": "node test/server/fixtures/echo.js ONE >> stdout-1.log"
+                "echo1": ECHO + " ONE >> stdout-1.log"
               }
             }, null, 2)
           }
@@ -1622,7 +1663,7 @@ describe("bin/builder-core", function () {
             "_test_message": "from base"
           },
           "scripts": {
-            "echo": "node test/server/fixtures/echo.js >> stdout-" + ENV_PROC_NUM + ".log"
+            "echo": ECHO + " >> stdout-" + ENV_PROC_NUM + ".log"
           }
         }, null, 2)
       });
@@ -1671,7 +1712,7 @@ describe("bin/builder-core", function () {
                 "_test_message": "from archetype"
               },
               "scripts": {
-                "echo": "node test/server/fixtures/echo.js >> stdout-" + ENV_PROC_NUM + ".log"
+                "echo": ECHO + " >> stdout-" + ENV_PROC_NUM + ".log"
               }
             }, null, 2)
           }
@@ -1727,7 +1768,7 @@ describe("bin/builder-core", function () {
                 "_test_message": "from archetype"
               },
               "scripts": {
-                "echo": "node test/server/fixtures/echo.js >> stdout-" + ENV_PROC_NUM + ".log"
+                "echo": ECHO + " >> stdout-" + ENV_PROC_NUM + ".log"
               }
             }, null, 2)
           }
@@ -1787,7 +1828,7 @@ describe("bin/builder-core", function () {
                 "_test_message": "from archetype"
               },
               "scripts": {
-                "echo": "node test/server/fixtures/echo.js >> stdout-" + ENV_PROC_NUM + ".log"
+                "echo": ECHO + " >> stdout-" + ENV_PROC_NUM + ".log"
               }
             }, null, 2)
           }
