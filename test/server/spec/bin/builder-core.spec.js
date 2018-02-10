@@ -21,7 +21,6 @@ var Config = require("../../../../lib/config");
 var Task = require("../../../../lib/task");
 var log = require("../../../../lib/log");
 var run = require("../../../../bin/builder-core");
-var builderCli = require.resolve("../../../../bin/builder");
 
 var base = require("../base.spec");
 
@@ -590,7 +589,7 @@ describe("bin/builder-core", function () {
 
     it("runs --setup without flags --expand-archetype", function (done) {
       base.sandbox.spy(Task.prototype, "run");
-        base.mockFs({
+      base.mockFs({
           ".builderrc": "---\narchetypes:\n  - mock-archetype",
           "package.json": JSON.stringify({}, null, 2),
           "node_modules": {
@@ -607,7 +606,7 @@ describe("bin/builder-core", function () {
           }
         });
 
-        run({
+      run({
           argv: ["node", "builder", "--expand-archetype", "--setup=setup", "run", "foo"]
         }, function (err) {
           if (err) { return done(err); }
@@ -625,7 +624,7 @@ describe("bin/builder-core", function () {
               .to.not.contain(
                 path.resolve(process.cwd(), "node_modules/mock-archetype/SETUP.txt")
               );
-      }, done);
+          }, done);
         });
     });
 
