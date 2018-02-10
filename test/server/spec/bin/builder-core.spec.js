@@ -21,6 +21,7 @@ var Config = require("../../../../lib/config");
 var Task = require("../../../../lib/task");
 var log = require("../../../../lib/log");
 var run = require("../../../../bin/builder-core");
+var builderCli = require.resolve("../../../../bin/builder");
 
 var base = require("../base.spec");
 
@@ -28,6 +29,7 @@ var base = require("../base.spec");
 var CLI_SLEEP = "node -e \"setTimeout(function () {}, 10000);\"";
 var ENV_MY_VAR = /^win/.test(process.platform) ? "%MY_VAR%" : "$MY_VAR";
 var ENV_PROC_NUM = /^win/.test(process.platform) ? "%PROC_NUM%" : "$PROC_NUM";
+
 
 // Read files, do assert callbacks, and trap everything, calling `done` at the
 // end. A little limited in use as it's the *last* thing you can call in a
@@ -586,8 +588,49 @@ describe("bin/builder-core", function () {
 
     });
 
-    it("runs --setup with flags --expand-archetype"); // TODO(PRE) (OPPOSITE???)
-    it("runs --setup with flags --env"); // TODO(PRE) (OPPOSITE???)
+    it("runs --setup without flags --expand-archetype", function (done) {
+      base.sandbox.spy(Task.prototype, "run");
+        base.mockFs({
+          ".builderrc": "---\narchetypes:\n  - mock-archetype",
+          "package.json": JSON.stringify({}, null, 2),
+          "node_modules": {
+            "mock-archetype": {
+              "package.json": JSON.stringify({
+                "scripts": {
+                  "foo": "node test/server/fixtures/repeat-script.js 1 " +
+                    "node_modules/mock-archetype/FOO.txt >> stdout.log",
+                  "setup": "node test/server/fixtures/repeat-script.js 0 " +
+                    "node_modules/mock-archetype/SETUP.txt >> stdout-setup.log"
+                }
+              }, null, 2)
+            }
+          }
+        });
+
+        run({
+          argv: ["node", "builder", "--expand-archetype", "--setup=setup", "run", "foo"]
+        }, function (err) {
+          if (err) { return done(err); }
+
+          expect(Task.prototype.run).to.be.calledOnce;
+
+          readFiles(["stdout.log", "stdout-setup.log"], function (obj) {
+            // Expands foo
+            expect(obj["stdout.log"]).to.contain(
+              path.resolve(process.cwd(), "node_modules/mock-archetype/FOO.txt")
+            );
+            // Doesn't expand setup
+            expect(obj["stdout-setup.log"])
+              .to.contain("node_modules/mock-archetype/SETUP.txt").and
+              .to.not.contain(
+                path.resolve(process.cwd(), "node_modules/mock-archetype/SETUP.txt")
+              );
+      }, done);
+        });
+    });
+
+    it("runs --setup without flags --env"); // TODO(PRE)
+    it("runs --setup without custom flags"); // TODO(PRE)
 
     it("handles --setup early 0 exit", function (done) {
       base.sandbox.spy(Task.prototype, "run");
@@ -982,7 +1025,7 @@ describe("bin/builder-core", function () {
 
     describe("expands paths with --expand-archetype", function () {
 
-      it("Skips `../node_modules/<archetype>`", function (done) {
+      it("skips `../node_modules/<archetype>`", function (done) {
         base.sandbox.spy(Task.prototype, "run");
         base.mockFs({
           ".builderrc": "---\narchetypes:\n  - mock-archetype",
@@ -1013,7 +1056,7 @@ describe("bin/builder-core", function () {
         });
       });
 
-      it("Skips `other/node_modules/<archetype>`", function (done) {
+      it("skips `other/node_modules/<archetype>`", function (done) {
         base.sandbox.spy(Task.prototype, "run");
         base.mockFs({
           ".builderrc": "---\narchetypes:\n  - mock-archetype",
@@ -1045,7 +1088,7 @@ describe("bin/builder-core", function () {
         });
       });
 
-      it("Replaces `node_modules/<archetype>`", function (done) {
+      it("replaces `node_modules/<archetype>`", function (done) {
         base.sandbox.spy(Task.prototype, "run");
         base.mockFs({
           ".builderrc": "---\narchetypes:\n  - mock-archetype",
@@ -1076,7 +1119,7 @@ describe("bin/builder-core", function () {
         });
       });
 
-      it("Replaces `\"node_modules/<archetype>`", function (done) {
+      it("replaces `\"node_modules/<archetype>`", function (done) {
         base.sandbox.spy(Task.prototype, "run");
         base.mockFs({
           ".builderrc": "---\narchetypes:\n  - mock-archetype",
@@ -1112,7 +1155,7 @@ describe("bin/builder-core", function () {
         });
       });
 
-      it("Propagates flag to sub-task", function (done) {
+      it("propagates flag to sub-task", function (done) {
         base.sandbox.spy(Task.prototype, "run");
         base.mockFs({
           ".builderrc": "---\narchetypes:\n  - mock-archetype",
@@ -1145,7 +1188,7 @@ describe("bin/builder-core", function () {
         });
       });
 
-      it("Skips replacing root project tasks", function (done) {
+      it("skips replacing root project tasks", function (done) {
         base.sandbox.spy(Task.prototype, "run");
         base.mockFs({
           ".builderrc": "---\narchetypes:\n  - mock-archetype",
