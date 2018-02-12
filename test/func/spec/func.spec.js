@@ -85,13 +85,43 @@ describe("functional", function () {
 
   describe("--setup", function () {
 
-    it("runs setup with --env values", function () {
+    it("runs setup with --env values applied", function () {
       return exec(
         "node \"" + builder + "\" run sleep -q --setup=repeat " +
         "--env=\"{\\\"TEST_MESSAGE\\\":\\\"FROM_ENV\\\"}\""
       )
         .then(function (stdio) {
           expect(stdio.stdout).to.contain("REPEAT DONE - FROM_ENV");
+          expect(stdio.stderr).to.equal("");
+        });
+    });
+
+    it("runs setup with --quiet flag applied", function () {
+      return exec(
+        "node \"" + builder + "\" run sleep -q --setup=echo:builder"
+      )
+        .then(function (stdio) {
+          expect(stdio.stdout).to.not.contain("[builder");
+          expect(stdio.stderr).to.equal("");
+        });
+    });
+
+    it("runs setup with --log-level=info flag applied", function () {
+      return exec(
+        "node \"" + builder + "\" run sleep --log-level=info --setup=echo:builder"
+      )
+        .then(function (stdio) {
+          expect(stdio.stdout).to.contain("[builder:proc:start");
+          expect(stdio.stderr).to.contain("[builder:proc:end");
+        });
+    });
+
+    it("runs setup with --log-level=none flag applied", function () {
+      return exec(
+        "node \"" + builder + "\" run sleep --log-level=none --setup=echo:builder"
+      )
+        .then(function (stdio) {
+          expect(stdio.stdout).to.not.contain("[builder");
           expect(stdio.stderr).to.equal("");
         });
     });

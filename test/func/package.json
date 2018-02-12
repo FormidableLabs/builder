@@ -7,6 +7,7 @@
   "scripts": {
     "repeat": "node ../fixtures/repeat-script.js",
     "echo": "echo ECHO MSG: ${npm_package_config_msg}",
+    "echo:builder": "builder run echo",
     "sleep": "node ../fixtures/sleep.js"
   }
 }

@@ -388,10 +388,13 @@ the setup task as apply to the main task:
 
 * `--env`
 * `--env-path`
+* `--quiet`
+* `--log-level`
 
 The following flags do _not_ apply to a setup task:
 
 * `--` custom flags
+* `--expand-archetype`
 
 
 ```
@@ -401,18 +404,7 @@ TODO: Add tests / update tests
 
   --builderrc: Path to builder config file (default: `.builderrc`)
 
-
-  --quiet: Silence logging
-
-  --log-level: Level to log at (`info`, `warn`, `error`, `none`)
-
-  --env: JSON string of environment variables to add to process
-
-  --env-path: JSON file path of environment variables to add to process
-
 Flags: run
-
-  --expand-archetype: Expand occurences of `node_modules/<archetype>` with full path (default: `false`)
 
   --tries: Number of times to attempt a task (default: `1`)
 
