@@ -28,8 +28,8 @@ var base = require("../base.spec");
 var CLI_SLEEP = "node -e \"setTimeout(function () {}, 10000);\"";
 var ENV_MY_VAR = /^win/.test(process.platform) ? "%MY_VAR%" : "$MY_VAR";
 var ENV_PROC_NUM = /^win/.test(process.platform) ? "%PROC_NUM%" : "$PROC_NUM";
-var ECHO = "node test/server/fixtures/echo.js";
-var REPEAT = "node test/server/fixtures/repeat-script.js";
+var ECHO = "node test/fixtures/echo.js";
+var REPEAT = "node test/fixtures/repeat-script.js";
 
 // Read files, do assert callbacks, and trap everything, calling `done` at the
 // end. A little limited in use as it's the *last* thing you can call in a
@@ -627,7 +627,8 @@ describe("bin/builder-core", function () {
       });
     });
 
-    // TODO HERE
+    // TODO: HERE
+    // TODO: NOTE -- probably doing OPPOSITE
     it.skip("runs --setup without flags --env", function (done) {
       base.sandbox.spy(Task.prototype, "run");
       base.mockFs({
@@ -637,8 +638,8 @@ describe("bin/builder-core", function () {
           "mock-archetype": {
             "package.json": JSON.stringify({
               "scripts": {
-                "foo": REPEAT + " 1 FOO >> stdout.log",
-                "setup": REPEAT + " 0 node_modules/mock-archetype/SETUP.txt >> stdout-setup.log"
+                "echo": ECHO + " >> stdout.log",
+                "setup": REPEAT + " 0 >> stdout-setup.log"
               }
             }, null, 2)
           }
@@ -646,23 +647,18 @@ describe("bin/builder-core", function () {
       });
 
       run({
-        argv: ["node", "builder", "--expand-archetype", "--setup=setup", "run", "foo"]
+        argv: [
+          "node", "builder", "run", "echo",
+          "--env={\"TEST_MESSAGE\":\"HI\"}", "--setup=setup"
+        ]
       }, function (err) {
         if (err) { return done(err); }
 
         expect(Task.prototype.run).to.be.calledOnce;
 
         readFiles(["stdout.log", "stdout-setup.log"], function (obj) {
-            // Expands foo
-          expect(obj["stdout.log"]).to.contain(
-              path.resolve(process.cwd(), "node_modules/mock-archetype/FOO.txt")
-            );
-            // Doesn't expand setup
-          expect(obj["stdout-setup.log"])
-              .to.contain("node_modules/mock-archetype/SETUP.txt").and
-              .to.not.contain(
-                path.resolve(process.cwd(), "node_modules/mock-archetype/SETUP.txt")
-              );
+          expect(obj["stdout.log"]).to.contain("string - HI");
+          expect(obj["stdout-setup.log"]).to.not.contain("HI");
         }, done);
       });
     });

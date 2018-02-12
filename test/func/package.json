@@ -5,6 +5,7 @@
     "msg": "hi"
   },
   "scripts": {
+    "repeat": "node ../fixtures/repeat-script.js",
     "echo": "echo ECHO MSG: ${npm_package_config_msg}"
   }
 }

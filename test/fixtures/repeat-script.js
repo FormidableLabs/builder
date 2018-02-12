@@ -18,7 +18,7 @@
  * It runs continuously echoing input args every `INTERVAL` ms.
  */
 var NUM_TIMES = parseInt(process.argv[2] || "5", 10);
-var MSG = process.argv[3] || "EMPTY";
+var MSG = process.argv[3] || process.env.TEST_MESSAGE || "EMPTY";
 var EXIT_CODE = parseInt(process.argv[4] || "0", 10);
 var INTERVAL = 5;
 

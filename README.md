@@ -383,10 +383,44 @@ flag value.
 
 #### Setup Task
 
-A task specified in `--setup <task>` will not have any special `--` flags
-applied. Nor will any of the other builder-specific flags like `--env`,
-`--tries`, etc. be applied when running them. The tasks will be executed
-mostly in isolation.
+A task specified in `--setup <task>` will have the following flags apply to
+the setup task as apply to the main task:
+
+* `--env`
+* `--env-path`
+
+The following flags do _not_ apply to a setup task:
+
+* `--` custom flags
+
+```
+TODO_HERE
+TODO: Decide these (??)
+TODO: Add tests / update tests
+
+  --builderrc: Path to builder config file (default: `.builderrc`)
+
+
+  --quiet: Silence logging
+
+  --log-level: Level to log at (`info`, `warn`, `error`, `none`)
+
+  --env: JSON string of environment variables to add to process
+
+  --env-path: JSON file path of environment variables to add to process
+
+Flags: run
+
+  --expand-archetype: Expand occurences of `node_modules/<archetype>` with full path (default: `false`)
+
+  --tries: Number of times to attempt a task (default: `1`)
+
+  --setup: Single task to run for the entirety of <action>.
+
+
+
+TODO: Old stuff -- review...
+```
 
 That said, if you need things like `--tries`, etc., these can be always coded
 into a wrapped task like:
