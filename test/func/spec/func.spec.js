@@ -128,6 +128,16 @@ describe("functional", function () {
         });
     });
 
+    it("runs setup without --tries flag applied", function (done) {
+      return exec(
+        "node \"" + builder + "\" run sleep --log-level=none --setup=fail --tries=2",
+        function (err, stdout, stderr) {
+          expect(err).to.have.property("code", 1);
+          expect(stdout.match(/FAIL/g)).to.have.length(1); // Only one try.
+          done();
+        });
+    });
+
   });
 
 });

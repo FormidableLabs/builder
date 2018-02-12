@@ -393,27 +393,9 @@ the setup task as apply to the main task:
 
 The following flags do _not_ apply to a setup task:
 
-* `--` custom flags
+* `--` custom flags TODO_TEST
+* `--tries`
 * `--expand-archetype`
-
-
-```
-TODO_HERE
-TODO: Decide these (??)
-TODO: Add tests / update tests
-
-  --builderrc: Path to builder config file (default: `.builderrc`)
-
-Flags: run
-
-  --tries: Number of times to attempt a task (default: `1`)
-
-  --setup: Single task to run for the entirety of <action>.
-
-
-
-TODO: Old stuff -- review...
-```
 
 That said, if you need things like `--tries`, etc., these can be always coded
 into a wrapped task like:
@@ -481,13 +463,29 @@ task. So, for something like:
 running `builder concurrent foo bar` would run **all** of the above tasks at
 the appropriate lifecycle moment.
 
-##### Builder Flags
+##### Builder Flags During Pre and Post
 
-*Setup Tasks*
+*Applicable Flags*
 
-A task specified in `--setup <task>` will not have `pre|post` tasks apply.
+When executing a `<task>` that has `pre<task>` and/or `post<task>` entries, the
+following execution flags **do** apply to the `pre|post` tasks.
 
-*Special Flags*
+* `--env` TODO_TEST
+* `--env-path` TODO_TEST
+* `--quiet` TODO_TEST
+* `--log-level` TODO_TEST
+
+The following flags do _not_ apply to a setup task:
+
+* `--` custom flags TODO_TEST
+* `--tries` TODO_TEST
+* `--expand-archetype` TODO_TEST
+* `--setup`: A task specified in `--setup <task>` will not have `pre|post`
+  tasks apply. TODO_TEST
+
+We will explain a few of these situations in a bit more depth:
+
+*Custom Flags*
 
 The special `--` flag with any subsequent custom flags to the underlying task
 are only passed to the the main `<task>` and not `pre<task>` or `post<task>`.
