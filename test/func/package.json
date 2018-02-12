@@ -5,6 +5,7 @@
     "msg": "hi"
   },
   "scripts": {
+    "fail": "echo FAIL && false",
     "repeat": "node ../fixtures/repeat-script.js",
     "echo": "echo ECHO MSG: ${npm_package_config_msg}",
     "echo:builder": "builder run echo",

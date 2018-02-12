@@ -5,5 +5,5 @@ var timeMs = parseInt(process.argv[2] || "5", 10);
 
 setTimeout(function () {
   process.stdout.write("SLEEP DONE - " + timeMs + " ms\n");
-  process.exit(0);
+  process.exit(0); // eslint-disable-line no-process-exit
 }, timeMs);
