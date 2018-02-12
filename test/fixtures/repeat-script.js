@@ -34,5 +34,5 @@ var log = function () {
 setInterval(log, INTERVAL);
 
 process.on("exit", function (code) {
-  process.stdout.write("EXIT - " + MSG + " - " + code);
+  process.stdout.write("REPEAT DONE - " + MSG + " - " + code);
 });

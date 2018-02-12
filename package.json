@@ -21,8 +21,8 @@
     "builder:test": "mocha --opts test/server/mocha.opts test/server/spec",
     "builder:test-cov": "istanbul cover --config .istanbul.server.yml _mocha -- --opts test/server/mocha.opts test/server/spec",
     "builder:test-func": "mocha --opts test/func/mocha.opts test/func/spec",
-    "builder:check": "npm run builder:lint && npm run builder:test && npm run builder:test-func",
-    "builder:check-ci": "npm run builder:lint && npm run builder:test-cov && npm run builder:test-func"
+    "builder:check": "npm run builder:lint && npm run builder:test",
+    "builder:check-ci": "npm run builder:lint && npm run builder:test-cov"
   },
   "bin": {
     "builder": "bin/builder.js"

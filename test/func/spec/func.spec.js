@@ -5,12 +5,12 @@
  *
  * These tests are **real** process / fs executions. Use sparingly as these
  * take about 0.5 seconds each.
+ *
+ * **Note**: Mac/Linux/Unix compatible.
  */
-// TODO: REMOVE OR RE-ENABLE
-// TODO: ` **Note**: Mac/Linux/Unix compatible.`
-// if (/^win/.test(process.platform)) {
-//   throw new Error("Functional tests are not Windows compatible");
-// }
+if (/^win/.test(process.platform)) {
+  throw new Error("Functional tests are not Windows compatible");
+}
 
 var path = require("path");
 var cp = require("child_process");
@@ -82,5 +82,20 @@ describe("functional", function () {
     });
 
   });
+
+  describe("--setup", function () {
+
+    it("runs setup with --env values", function () {
+      return exec(
+        "node \"" + builder + "\" run sleep -q --setup=repeat " +
+        "--env=\"{\\\"TEST_MESSAGE\\\":\\\"FROM_ENV\\\"}\""
+      )
+        .then(function (stdio) {
+          expect(stdio.stdout).to.contain("REPEAT DONE - FROM_ENV");
+          expect(stdio.stderr).to.equal("");
+        });
+    });
+
+  })
 
 });

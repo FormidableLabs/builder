@@ -629,7 +629,7 @@ describe("bin/builder-core", function () {
 
     // TODO: HERE
     // TODO: NOTE -- probably doing OPPOSITE
-    it.skip("runs --setup without flags --env", function (done) {
+    it("runs --setup with flags --env", function (done) {
       base.sandbox.spy(Task.prototype, "run");
       base.mockFs({
         ".builderrc": "---\narchetypes:\n  - mock-archetype",
@@ -663,7 +663,7 @@ describe("bin/builder-core", function () {
       });
     });
 
-    it("runs --setup without custom flags"); // TODO(PRE)
+    it("runs --setup without custom flags"); // TODO(PRE_SETUP)
 
     it("handles --setup early 0 exit", function (done) {
       base.sandbox.spy(Task.prototype, "run");

@@ -22,6 +22,7 @@ before_install:
 script:
   - npm --version
   - npm run builder:check-ci
+  - npm run builder:test-func
 
   # Manually send coverage reports to coveralls.
   # - Aggregate client results
