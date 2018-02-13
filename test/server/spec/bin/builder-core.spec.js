@@ -612,16 +612,15 @@ describe("bin/builder-core", function () {
         expect(Task.prototype.run).to.be.calledOnce;
 
         readFiles(["stdout.log", "stdout-setup.log"], function (obj) {
-            // Expands foo
+          // Expands foo
           expect(obj["stdout.log"]).to.contain(
               path.resolve("node_modules/mock-archetype/FOO.txt")
             );
-            // Doesn't expand setup
+
+          // Doesn't expand setup
           expect(obj["stdout-setup.log"])
               .to.contain("node_modules/mock-archetype/SETUP.txt").and
-              .to.not.contain(
-                path.resolve("node_modules/mock-archetype/SETUP.txt")
-              );
+              .to.not.contain(process.cwd());
         }, done);
       });
     });
