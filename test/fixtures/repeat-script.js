@@ -29,6 +29,8 @@ var MSG = argv[3] || process.env.TEST_MESSAGE || "EMPTY";
 var EXIT_CODE = parseInt(argv[4] || "0", 10);
 var INTERVAL = 5;
 
+process.stdout.write("REPEAT START - " + MSG + " - ");
+
 var i = 0;
 var log = function () {
   if (NUM_TIMES !== 0 && i++ > NUM_TIMES) {

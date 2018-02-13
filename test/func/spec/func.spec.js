@@ -83,7 +83,7 @@ describe("functional", function () {
         "--env=\"{\\\"TEST_MESSAGE\\\":\\\"FROM_ENV\\\"}\"", function (err, stdout, stderr) {
         if (err) { return done(err); }
 
-        expect(stdout).to.contain("REPEAT DONE - FROM_ENV");
+        expect(stdout).to.contain("REPEAT START - FROM_ENV");
         expect(stderr).to.equal("");
         done();
       });
