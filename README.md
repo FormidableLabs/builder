@@ -63,7 +63,7 @@ the rough goals and motivations behind the project.
     - [Task Lifecycle](#task-lifecycle)
       - [The Basics](#the-basics)
       - [Other Builder Actions](#other-builder-actions)
-      - [Builder Flags](#builder-flags)
+      - [Builder Flags During Pre and Post](#builder-flags-during-pre-and-post)
       - [Task Prefix Complexities](#task-prefix-complexities)
     - [Custom Flags](#custom-flags)
     - [Expanding the Archetype Path](#expanding-the-archetype-path)

@@ -690,7 +690,7 @@ describe("bin/builder-core", function () {
 
         readFiles(["stdout.log", "stdout-setup.log"], function (obj) {
           expect(obj["stdout.log"]).to.contain("ECHO EXTRA FLAGS - --foo");
-          expect(obj["stdout-setup.log"]).to.not.contain("REPEAT EXTRA FLAGS")
+          expect(obj["stdout-setup.log"]).to.not.contain("REPEAT EXTRA FLAGS");
         }, done);
       });
     });
