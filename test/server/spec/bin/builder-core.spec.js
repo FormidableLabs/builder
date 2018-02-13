@@ -582,7 +582,7 @@ describe("bin/builder-core", function () {
             .to.contain("SETUP");
           expect(obj["stdout.log"])
             .to.contain("BAR_TASK").and
-            .to.contain("EXIT - BAR_TASK - 0");
+            .to.contain("REPEAT DONE - BAR_TASK - 0");
         }, done);
       });
 
@@ -627,8 +627,6 @@ describe("bin/builder-core", function () {
       });
     });
 
-    // TODO: HERE
-    // TODO: NOTE -- probably doing OPPOSITE
     it("runs --setup with flags --env", function (done) {
       base.sandbox.spy(Task.prototype, "run");
       base.mockFs({
@@ -658,7 +656,7 @@ describe("bin/builder-core", function () {
 
         readFiles(["stdout.log", "stdout-setup.log"], function (obj) {
           expect(obj["stdout.log"]).to.contain("string - HI");
-          expect(obj["stdout-setup.log"]).to.not.contain("HI");
+          expect(obj["stdout-setup.log"]).to.contain("HI");
         }, done);
       });
     });

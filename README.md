@@ -393,7 +393,7 @@ the setup task as apply to the main task:
 
 The following flags do _not_ apply to a setup task:
 
-* `--` custom flags TODO_TEST
+* `--` custom flags
 * `--tries`
 * `--expand-archetype`
 

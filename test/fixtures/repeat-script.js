@@ -17,9 +17,16 @@
  *
  * It runs continuously echoing input args every `INTERVAL` ms.
  */
-var NUM_TIMES = parseInt(process.argv[2] || "5", 10);
-var MSG = process.argv[3] || process.env.TEST_MESSAGE || "EMPTY";
-var EXIT_CODE = parseInt(process.argv[4] || "0", 10);
+// Separate `--*` flags
+var argv = process.argv.filter(function (a) { return a.indexOf("--") === -1; });
+var extra = process.argv.filter(function (a) { return a.indexOf("--") > -1; });
+if (extra.length) {
+  process.stdout.write("REPEAT EXTRA FLAGS - " + extra.join(",") + "\n");
+}
+
+var NUM_TIMES = parseInt(argv[2] || "5", 10);
+var MSG = argv[3] || process.env.TEST_MESSAGE || "EMPTY";
+var EXIT_CODE = parseInt(argv[4] || "0", 10);
 var INTERVAL = 5;
 
 var i = 0;

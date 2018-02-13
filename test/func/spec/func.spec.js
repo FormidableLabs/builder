@@ -130,10 +130,24 @@ describe("functional", function () {
 
     it("runs setup without --tries flag applied", function (done) {
       return exec(
-        "node \"" + builder + "\" run sleep --log-level=none --setup=fail --tries=2",
-        function (err, stdout, stderr) {
+        "node \"" + builder + "\" run sleep -q --setup=fail --tries=2",
+        function (err, stdout) {
           expect(err).to.have.property("code", 1);
           expect(stdout.match(/FAIL/g)).to.have.length(1); // Only one try.
+          done();
+        });
+    });
+
+    it("runs setup without -- custom flags", function (done) {
+      return exec(
+        "node \"" + builder + "\" run sleep -q --setup=repeat -- --foo",
+        function (err, stdout, stderr) {
+          if (err) { return done(err); }
+
+          expect(stdout)
+            .to.contain("SLEEP EXTRA FLAGS - --foo").and
+            .to.not.contain("REPEAT EXTRA FLAGS");
+          expect(stderr).to.equal("");
           done();
         });
     });

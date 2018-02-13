@@ -27,8 +27,14 @@ var msg = process.env.npm_package_config__test_message;
 if (typeof msg === "undefined") {
   msg = process.env.TEST_MESSAGE;
 }
+// Separate `--*` flags
+var argv = process.argv.filter(function (a) { return a.indexOf("--") === -1; });
+var extra = process.argv.filter(function (a) { return a.indexOf("--") > -1; });
+if (extra.length) {
+  process.stdout.write("ECHO EXTRA FLAGS - " + extra.join(",") + "\n");
+}
 
-var extra = process.argv[2] || "";
-var out = typeof msg + " - " + (msg || "EMPTY") + (extra ? " - " + extra : "");
+var addl = argv[2] || "";
+var out = typeof msg + " - " + (msg || "EMPTY") + (addl ? " - " + addl : "");
 
 process.stdout.write(out + "\n");
