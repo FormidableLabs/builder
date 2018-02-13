@@ -50,6 +50,8 @@ afterEach(function (done) {
   // Remove logs, ignoring errors.
   async.parallel([
     function (cb) { fs.unlink("stdout.log", function () { cb(); }); },
+    function (cb) { fs.unlink("stdout-pre.log", function () { cb(); }); },
+    function (cb) { fs.unlink("stdout-post.log", function () { cb(); }); },
     function (cb) { fs.unlink("stdout-setup.log", function () { cb(); }); },
     function (cb) { fs.unlink("stdout-1.log", function () { cb(); }); },
     function (cb) { fs.unlink("stdout-2.log", function () { cb(); }); },

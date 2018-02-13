@@ -399,7 +399,6 @@ describe("bin/builder-core", function () {
           expect(data).to.contain("BAR_TASK");
         }, done);
       });
-
     });
 
     it("runs with quiet log output", function (done) {
@@ -1284,9 +1283,33 @@ describe("bin/builder-core", function () {
 
     });
 
-    describe("pre/post lifecycle commands", function () {
+    describe.only("pre/post lifecycle commands", function () {
 
-      it("runs pre task only in archetype"); // TODO(PRE)
+      it("runs pre task only in archetype", function (done) {
+        base.sandbox.spy(Task.prototype, "run");
+        base.mockFs({
+          "package.json": JSON.stringify({
+            "scripts": {
+              "prebar": "echo PREBAR_TASK >> stdout-bar.log",
+              "bar": "echo BAR_TASK >> stdout.log"
+            }
+          }, null, 2)
+        });
+
+        run({
+          argv: ["node", "builder", "run", "bar", "--setup=prebar", "--log-level=info", "-q", "--", "--foo"]
+        }, function (err) {
+          if (err) { return done(err); }
+
+          expect(Task.prototype.run).to.be.calledOnce;
+
+          readFiles(["stdout-bar.log", "stdout.log"], function (obj) {
+            expect(obj["stdout-bar.log"]).to.contain("PREBAR_TASK");
+            expect(obj["stdout.log"]).to.contain("BAR_TASK");
+          }, done);
+        });
+      });
+
       it("runs pre task only in root"); // TODO(PRE)
       it("runs pre task that overrides archetype"); // TODO(PRE)
       it("runs pre task before --setup task"); // TODO(PRE)
