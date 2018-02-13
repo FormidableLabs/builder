@@ -637,7 +637,7 @@ describe("bin/builder-core", function () {
             "package.json": JSON.stringify({
               "scripts": {
                 "echo": ECHO + " >> stdout.log",
-                "setup": REPEAT + " 0 >> stdout-setup.log"
+                "setup": REPEAT + " 20 >> stdout-setup.log"
               }
             }, null, 2)
           }
