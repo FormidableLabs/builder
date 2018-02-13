@@ -16,7 +16,7 @@ var msgs = [];
 
 // Infer if we are global and there is a local version available.
 var builderPath = require.resolve("./builder-core");
-var localPath = path.resolve(process.cwd(), "node_modules/builder/bin/builder-core.js");
+var localPath = path.resolve("node_modules/builder/bin/builder-core.js");
 
 // Swap to local path if different.
 if (builderPath !== localPath) {

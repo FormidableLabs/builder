@@ -614,13 +614,13 @@ describe("bin/builder-core", function () {
         readFiles(["stdout.log", "stdout-setup.log"], function (obj) {
             // Expands foo
           expect(obj["stdout.log"]).to.contain(
-              path.resolve(process.cwd(), "node_modules/mock-archetype/FOO.txt")
+              path.resolve("node_modules/mock-archetype/FOO.txt")
             );
             // Doesn't expand setup
           expect(obj["stdout-setup.log"])
               .to.contain("node_modules/mock-archetype/SETUP.txt").and
               .to.not.contain(
-                path.resolve(process.cwd(), "node_modules/mock-archetype/SETUP.txt")
+                path.resolve("node_modules/mock-archetype/SETUP.txt")
               );
         }, done);
       });
@@ -1175,7 +1175,7 @@ describe("bin/builder-core", function () {
 
           readFile("stdout.log", function (data) {
             expect(path.resolve(data)).to.contain(
-              "EXPANDED " + path.resolve(process.cwd(), "node_modules/mock-archetype/A_FILE.txt")
+              "EXPANDED " + path.resolve("node_modules/mock-archetype/A_FILE.txt")
             );
           }, done);
         });
@@ -1211,7 +1211,7 @@ describe("bin/builder-core", function () {
           readFile("stdout.log", function (data) {
             expect(path.resolve(data)).to.contain(
               "EXPANDED " + quotes +
-              path.resolve(process.cwd(), "node_modules/mock-archetype/A_FILE.txt") + quotes
+              path.resolve("node_modules/mock-archetype/A_FILE.txt") + quotes
             );
           }, done);
         });
@@ -1244,7 +1244,7 @@ describe("bin/builder-core", function () {
 
           readFile("stdout.log", function (data) {
             expect(path.resolve(data)).to.contain(
-              "EXPANDED " + path.resolve(process.cwd(), "node_modules/mock-archetype/A_FILE.txt")
+              "EXPANDED " + path.resolve("node_modules/mock-archetype/A_FILE.txt")
             );
           }, done);
         });
