@@ -128,6 +128,10 @@ describe("functional", function () {
       return exec(
         "node \"" + builder + "\" run sleep -q --setup=fail --tries=2",
         function (err, stdout) {
+          console.log("TEMP TODO", { // eslint-disable-line no-console
+            code: err.code,
+            err: err
+          });
           expect(err).to.have.property("code", 1);
           expect(stdout.match(/FAIL/g)).to.have.length(1); // Only one try.
           done();
