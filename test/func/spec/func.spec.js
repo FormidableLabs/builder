@@ -8,10 +8,6 @@
  *
  * **Note**: Mac/Linux/Unix compatible.
  */
-if (/^win/.test(process.platform)) {
-  throw new Error("Functional tests are not Windows compatible");
-}
-
 var path = require("path");
 var cp = require("child_process");
 
@@ -39,7 +35,7 @@ describe("functional", function () {
         if (err) { return done(err); }
 
         expect(stdout)
-          .to.contain("ECHO MSG: hi").and
+          .to.contain("string - hi").and
           .to.contain("builder-core:start");
         expect(stderr).to.equal("");
 
@@ -50,12 +46,12 @@ describe("functional", function () {
     it("overrides package.json:config from environment", function (done) {
       exec("node \"" + builder + "\" run echo", {
         env: _.merge(clone(process.env), {
-          npm_package_config_msg: "over" // eslint-disable-line camelcase
+          npm_package_config__test_message: "over" // eslint-disable-line camelcase
         })
       }, function (err, stdout, stderr) {
         if (err) { return done(err); }
 
-        expect(stdout).to.contain("ECHO MSG: over");
+        expect(stdout).to.contain("string - over");
         expect(stderr).to.equal("");
         done();
       });
@@ -70,7 +66,7 @@ describe("functional", function () {
         if (err) { return done(err); }
 
         expect(stdout)
-          .to.contain("ECHO MSG: hi").and
+          .to.contain("string - hi").and
           .to.not.contain("builder-core:start");
         expect(stderr).to.equal("");
         done();

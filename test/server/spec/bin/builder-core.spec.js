@@ -1283,28 +1283,33 @@ describe("bin/builder-core", function () {
 
     });
 
-    describe.only("pre/post lifecycle commands", function () {
+    describe.skip("pre/post lifecycle commands", function () {
 
+      // TODO: Normalize all args, incorporating args.general to args.<action>
+      // TODO: Disallow, error on any non-recognized flags.
+      // TODO: refactor tests, etc.
+      // TODO: Make func-tests pass travis.
       it("runs pre task only in archetype", function (done) {
         base.sandbox.spy(Task.prototype, "run");
         base.mockFs({
           "package.json": JSON.stringify({
             "scripts": {
-              "prebar": "echo PREBAR_TASK >> stdout-bar.log",
+              "prebar": "echo PREBAR_TASK >> stdout-pre.log",
               "bar": "echo BAR_TASK >> stdout.log"
             }
           }, null, 2)
         });
 
         run({
-          argv: ["node", "builder", "run", "bar", "--setup=prebar", "--log-level=info", "-q", "--", "--foo"]
+          argv: ["node", "builder", "run", "bar", "--setup=prebar",
+            "--log-level=info", "-q", "--", "--foo"]
         }, function (err) {
           if (err) { return done(err); }
 
           expect(Task.prototype.run).to.be.calledOnce;
 
-          readFiles(["stdout-bar.log", "stdout.log"], function (obj) {
-            expect(obj["stdout-bar.log"]).to.contain("PREBAR_TASK");
+          readFiles(["stdout-pre.log", "stdout.log"], function (obj) {
+            expect(obj["stdout-pre.log"]).to.contain("PREBAR_TASK");
             expect(obj["stdout.log"]).to.contain("BAR_TASK");
           }, done);
         });

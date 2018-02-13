@@ -2,12 +2,12 @@
   "name": "builder",
   "version": "0.0.1",
   "config": {
-    "msg": "hi"
+    "_test_message": "hi"
   },
   "scripts": {
     "fail": "echo FAIL && false",
     "repeat": "node ../fixtures/repeat-script.js",
-    "echo": "echo ECHO MSG: ${npm_package_config_msg}",
+    "echo": "node ../fixtures/echo.js",
     "echo:builder": "builder run echo",
     "sleep": "node ../fixtures/sleep.js"
   }
