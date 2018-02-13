@@ -125,8 +125,10 @@ describe("functional", function () {
     });
 
     it("runs setup without --tries flag applied", function (done) {
+      var sleepMs = 1000; // Give the sleep a little while to let failures happen.
+
       return exec(
-        "node \"" + builder + "\" run sleep -q --setup=fail --tries=2",
+        "node \"" + builder + "\" run sleep -q --setup=fail --tries=2 -- " + sleepMs,
         function (err, stdout, stderr) {
           if (!err) {
             console.log("TEMP TODO NO ERROR", { // eslint-disable-line no-console
