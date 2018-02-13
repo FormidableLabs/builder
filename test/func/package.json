@@ -8,7 +8,7 @@
     "fail": "echo FAIL && false",
     "repeat": "node ../fixtures/repeat-script.js",
     "echo": "node ../fixtures/echo.js",
-    "echo:builder": "builder run echo",
+    "echo:builder": "node ../../bin/builder.js run echo",
     "sleep": "node ../fixtures/sleep.js"
   }
 }
