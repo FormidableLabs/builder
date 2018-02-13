@@ -612,15 +612,17 @@ describe("bin/builder-core", function () {
         expect(Task.prototype.run).to.be.calledOnce;
 
         readFiles(["stdout.log", "stdout-setup.log"], function (obj) {
-          // Expands foo
+          // Expands foo.
+          // Note: Expect `/FOO.txt` suffix in win and mac cases.
           expect(obj["stdout.log"]).to.contain(
-              path.resolve("node_modules/mock-archetype/FOO.txt")
-            );
+            path.resolve("node_modules/mock-archetype") + "/FOO.txt"
+          );
 
           // Doesn't expand setup
           expect(obj["stdout-setup.log"])
-              .to.contain("node_modules/mock-archetype/SETUP.txt").and
-              .to.not.contain(process.cwd());
+            .to.contain("node_modules/mock-archetype/SETUP.txt").and
+            .to.not.contain(process.cwd());
+
         }, done);
       });
     });
@@ -1173,8 +1175,8 @@ describe("bin/builder-core", function () {
           expect(Task.prototype.run).to.be.calledOnce;
 
           readFile("stdout.log", function (data) {
-            expect(path.resolve(data)).to.contain(
-              "EXPANDED " + path.resolve("node_modules/mock-archetype/A_FILE.txt")
+            expect(data).to.contain(
+              "EXPANDED " + path.resolve("node_modules/mock-archetype") + "/A_FILE.txt"
             );
           }, done);
         });
@@ -1208,9 +1210,9 @@ describe("bin/builder-core", function () {
 
           var quotes = /^win/.test(process.platform) ? "\\\"" : "\"";
           readFile("stdout.log", function (data) {
-            expect(path.resolve(data)).to.contain(
+            expect(data).to.contain(
               "EXPANDED " + quotes +
-              path.resolve("node_modules/mock-archetype/A_FILE.txt") + quotes
+              path.resolve("node_modules/mock-archetype") + "/A_FILE.txt" + quotes
             );
           }, done);
         });
@@ -1242,8 +1244,8 @@ describe("bin/builder-core", function () {
           expect(Task.prototype.run).to.be.calledOnce;
 
           readFile("stdout.log", function (data) {
-            expect(path.resolve(data)).to.contain(
-              "EXPANDED " + path.resolve("node_modules/mock-archetype/A_FILE.txt")
+            expect(data).to.contain(
+              "EXPANDED " + path.resolve("node_modules/mock-archetype") + "/A_FILE.txt"
             );
           }, done);
         });
