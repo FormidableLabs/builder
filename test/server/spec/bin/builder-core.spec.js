@@ -661,7 +661,39 @@ describe("bin/builder-core", function () {
       });
     });
 
-    it("runs --setup without custom flags"); // TODO(PRE_SETUP)
+    it("runs --setup without custom flags", function (done) {
+      base.sandbox.spy(Task.prototype, "run");
+      base.mockFs({
+        ".builderrc": "---\narchetypes:\n  - mock-archetype",
+        "package.json": JSON.stringify({}, null, 2),
+        "node_modules": {
+          "mock-archetype": {
+            "package.json": JSON.stringify({
+              "scripts": {
+                "echo": ECHO + " >> stdout.log",
+                "setup": REPEAT + " 0 >> stdout-setup.log"
+              }
+            }, null, 2)
+          }
+        }
+      });
+
+      run({
+        argv: [
+          "node", "builder", "run", "echo",
+          "--setup=setup", "--", "--foo"
+        ]
+      }, function (err) {
+        if (err) { return done(err); }
+
+        expect(Task.prototype.run).to.be.calledOnce;
+
+        readFiles(["stdout.log", "stdout-setup.log"], function (obj) {
+          expect(obj["stdout.log"]).to.contain("ECHO EXTRA FLAGS - --foo");
+          expect(obj["stdout-setup.log"]).to.not.contain("REPEAT EXTRA FLAGS")
+        }, done);
+      });
+    });
 
     it("handles --setup early 0 exit", function (done) {
       base.sandbox.spy(Task.prototype, "run");
@@ -1251,7 +1283,6 @@ describe("bin/builder-core", function () {
       });
 
     });
-
 
     describe("pre/post lifecycle commands", function () {
 
