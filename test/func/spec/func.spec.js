@@ -127,11 +127,19 @@ describe("functional", function () {
     it("runs setup without --tries flag applied", function (done) {
       return exec(
         "node \"" + builder + "\" run sleep -q --setup=fail --tries=2",
-        function (err, stdout) {
-          console.log("TEMP TODO", { // eslint-disable-line no-console
-            code: err.code,
-            err: err
-          });
+        function (err, stdout, stderr) {
+          if (!err) {
+            console.log("TEMP TODO NO ERROR", { // eslint-disable-line no-console
+              stdout: stdout,
+              stderr: stderr
+            });
+          } else {
+            console.log("TEMP TODO ERR", { // eslint-disable-line no-console
+              code: err.code,
+              err: err
+            });
+          }
+
           expect(err).to.have.property("code", 1);
           expect(stdout.match(/FAIL/g)).to.have.length(1); // Only one try.
           done();
