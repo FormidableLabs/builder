@@ -68,10 +68,17 @@ describe("lib/args", function () {
     });
 
     it("errors on conflicting shorthand arguments", function () {
-      argv = argv.concat(["-q"]); // Conflicts: queue vs quiet in concurrent
+      // Conflicts: queue vs quiet in concurrent
+      argv = origArgv.concat(["-q"]);
       expect(function () {
         _flags(args.concurrent(argv));
       }).to.throw("invalid/conflicting keys: q");
+
+      // Conflicts: buffer vs bail in concurrent
+      argv = origArgv.concat(["--b"]);
+      expect(function () {
+        _flags(args.concurrent(argv));
+      }).to.throw("invalid/conflicting keys: b");
     });
 
     it("normalizes shorthand arguments", function () {
@@ -173,13 +180,6 @@ describe("lib/args", function () {
         .to.deep.equal(_.extend({}, _DEFAULTS.concurrent, _HELP, {
           buffer: true
         }));
-
-      // TODO(PRE): Make sure trimmed
-      // argv = origArgv.concat(["--b"]);
-      // expect(_flags(args.concurrent(argv)))
-      //   .to.deep.equal(_.extend({}, _DEFAULTS.concurrent, _HELP, {
-      //     buffer: false
-      //   }));
     });
 
     it("handles valid --bail", function () {
