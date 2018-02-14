@@ -5,7 +5,7 @@
     "_test_message": "hi"
   },
   "scripts": {
-    "fail": "echo FAIL && false",
+    "fail": "node ../fixtures/fail.js",
     "repeat": "node ../fixtures/repeat.js",
     "echo": "node ../fixtures/echo.js",
     "echo-forever": "node ../fixtures/echo-forever.js",
