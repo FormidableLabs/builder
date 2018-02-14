@@ -63,14 +63,14 @@ describe("lib/args", function () {
     it("errors on invalid flags", function () {
       argv = argv.concat(["--bad"]);
       expect(function () {
-        _flags(args.general(argv))
+        _flags(args.general(argv));
       }).to.throw("invalid/conflicting keys: bad");
     });
 
     it("errors on conflicting shorthand arguments", function () {
       argv = argv.concat(["-q"]); // Conflicts: queue vs quiet in concurrent
       expect(function () {
-        _flags(args.concurrent(argv))
+        _flags(args.concurrent(argv));
       }).to.throw("invalid/conflicting keys: q");
     });
 
