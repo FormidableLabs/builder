@@ -24,7 +24,7 @@ if (extra.length) {
   process.stdout.write("REPEAT EXTRA FLAGS - " + extra.join(",") + "\n");
 }
 
-var NUM_TIMES = parseInt(argv[2] || "5", 10);
+var NUM_TIMES = parseInt(argv[2] || "100", 10);
 var MSG = argv[3] || process.env.TEST_MESSAGE || "EMPTY";
 var EXIT_CODE = parseInt(argv[4] || "0", 10);
 var INTERVAL = 5;

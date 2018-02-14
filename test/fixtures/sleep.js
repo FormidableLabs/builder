@@ -8,7 +8,7 @@ if (extra.length) {
 }
 
 // Sleep defaults to 5 ms.
-var timeMs = parseInt(argv[2] || "20", 10);
+var timeMs = parseInt(argv[2] || "200", 10);
 
 setTimeout(function () {
   process.stdout.write("SLEEP DONE - " + timeMs + " ms\n");

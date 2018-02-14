@@ -80,13 +80,14 @@ describe("functional", function () {
     it("runs setup with --env values applied", function (done) {
       exec(
         "node \"" + builder + "\" run sleep -q --setup=repeat " +
-        "--env=\"{\\\"TEST_MESSAGE\\\":\\\"FROM_ENV\\\"}\"", function (err, stdout, stderr) {
-        if (err) { return done(err); }
+        "--env=\"{\\\"TEST_MESSAGE\\\":\\\"FROM_ENV\\\"}\" ",
+        function (err, stdout, stderr) {
+          if (err) { return done(err); }
 
-        expect(stdout).to.contain("REPEAT START - FROM_ENV");
-        expect(stderr).to.equal("");
-        done();
-      });
+          expect(stdout).to.contain("REPEAT START - FROM_ENV");
+          expect(stderr).to.equal("");
+          done();
+        });
     });
 
     it("runs setup with --quiet flag applied", function (done) {
