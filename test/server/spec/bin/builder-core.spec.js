@@ -29,6 +29,7 @@ var CLI_SLEEP = "node -e \"setTimeout(function () {}, 10000);\"";
 var ENV_MY_VAR = /^win/.test(process.platform) ? "%MY_VAR%" : "$MY_VAR";
 var ENV_PROC_NUM = /^win/.test(process.platform) ? "%PROC_NUM%" : "$PROC_NUM";
 var ECHO = "node test/fixtures/echo.js";
+var ECHO_FOREVER = "node test/fixtures/echo-forever.js";
 var REPEAT = "node test/fixtures/repeat.js";
 
 // Read files, do assert callbacks, and trap everything, calling `done` at the
@@ -563,7 +564,7 @@ describe("bin/builder-core", function () {
         "package.json": JSON.stringify({
           "scripts": {
             // *real* fs for script references. (`0` runs forever).
-            "setup": REPEAT + " 0 SETUP >> stdout-setup.log",
+            "setup": ECHO_FOREVER + " SETUP >> stdout-setup.log",
             "bar": REPEAT + " 5 BAR_TASK >> stdout.log"
           }
         }, null, 2)
@@ -1424,7 +1425,7 @@ describe("bin/builder-core", function () {
             "_test_message": "from base"
           },
           "scripts": {
-            "echo2": ECHO + " TWO >> stdout-2.log"
+            "echo2": ECHO + " >> stdout-2.log"
           }
         }, null, 2),
         "node_modules": {
@@ -1434,7 +1435,7 @@ describe("bin/builder-core", function () {
                 "_test_message": "from archetype"
               },
               "scripts": {
-                "echo1": ECHO + " ONE >> stdout-1.log"
+                "echo1": ECHO + " >> stdout-1.log"
               }
             }, null, 2)
           }
@@ -1449,8 +1450,8 @@ describe("bin/builder-core", function () {
         expect(Task.prototype.concurrent).to.have.callCount(1);
 
         readFiles(["stdout-1.log", "stdout-2.log"], function (obj) {
-          expect(obj["stdout-1.log"]).to.contain("string - from base - ONE");
-          expect(obj["stdout-2.log"]).to.contain("string - from base - TWO");
+          expect(obj["stdout-1.log"]).to.contain("string - from base");
+          expect(obj["stdout-2.log"]).to.contain("string - from base");
         }, done);
       });
     });

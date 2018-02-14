@@ -6,7 +6,7 @@
  * Usage:
  *
  * ```
- * $ node echo.js <optional extra message>
+ * $ node echo.js <optional message>
  * ```
  *
  * Uses environment variable `npm_package_config_message`, typically set
@@ -23,7 +23,12 @@
  * Secondarily falls back on real environment variable `TEST_MESSAGE` if above
  * is not set.
  */
-var msg;
+// Separate `--*` flags
+var argv = process.argv.filter(function (a) { return a.indexOf("--") === -1; });
+var extra = process.argv.filter(function (a) { return a.indexOf("--") > -1; });
+
+// Get message.
+var msg = argv[2];
 if (typeof msg === "undefined") {
   msg = process.env.TEST_MESSAGE;
 }
@@ -31,11 +36,7 @@ if (typeof msg === "undefined") {
   msg = process.env.npm_package_config__test_message;
 }
 
-// Separate `--*` flags
-var argv = process.argv.filter(function (a) { return a.indexOf("--") === -1; });
-var extra = process.argv.filter(function (a) { return a.indexOf("--") > -1; });
-var addl = argv[2] || "";
-var out = typeof msg + " - " + (msg || "EMPTY") + (addl ? " - " + addl : "");
+var out = typeof msg + " - " + (msg || "EMPTY");
 
 var create = module.exports = function (prefix) {
   return {
