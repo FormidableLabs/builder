@@ -23,18 +23,34 @@
  * Secondarily falls back on real environment variable `TEST_MESSAGE` if above
  * is not set.
  */
-var msg = process.env.npm_package_config__test_message;
+var msg;
 if (typeof msg === "undefined") {
   msg = process.env.TEST_MESSAGE;
 }
+if (typeof msg === "undefined") {
+  msg = process.env.npm_package_config__test_message;
+}
+
 // Separate `--*` flags
 var argv = process.argv.filter(function (a) { return a.indexOf("--") === -1; });
 var extra = process.argv.filter(function (a) { return a.indexOf("--") > -1; });
-if (extra.length) {
-  process.stdout.write("ECHO EXTRA FLAGS - " + extra.join(",") + "\n");
-}
-
 var addl = argv[2] || "";
 var out = typeof msg + " - " + (msg || "EMPTY") + (addl ? " - " + addl : "");
 
-process.stdout.write(out + "\n");
+var create = module.exports = function (prefix) {
+  return {
+    extra: function () {
+      if (!extra.length) { return; }
+      process.stdout.write(prefix + " EXTRA FLAGS - " + extra.join(",") + "\n");
+    },
+    log: function () {
+      process.stdout.write(prefix + " - " + out + "\n");
+    }
+  };
+};
+
+if (require.main === module) {
+  var echo = create("ECHO");
+  echo.extra();
+  echo.log();
+}

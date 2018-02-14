@@ -6,13 +6,13 @@
  * Usage:
  *
  * ```
- * $ node test/server/repeat-script.js NUM_TIMES MSG EXIT_CODE
+ * $ node test/server/repeat.js NUM_TIMES MSG EXIT_CODE
  *
  * # Zero times = "forever".
- * $ node test/server/repeat-script.js 0 "Forever"
+ * $ node test/server/repeat.js 0 "Forever"
  *
  * # Zero times = "forever".
- * $ node test/server/repeat-script.js 5 "Bad Exit" 1
+ * $ node test/server/repeat.js 5 "Bad Exit" 1
  * ```
  *
  * It runs continuously echoing input args every `INTERVAL` ms.

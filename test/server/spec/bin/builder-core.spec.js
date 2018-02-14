@@ -29,7 +29,7 @@ var CLI_SLEEP = "node -e \"setTimeout(function () {}, 10000);\"";
 var ENV_MY_VAR = /^win/.test(process.platform) ? "%MY_VAR%" : "$MY_VAR";
 var ENV_PROC_NUM = /^win/.test(process.platform) ? "%PROC_NUM%" : "$PROC_NUM";
 var ECHO = "node test/fixtures/echo.js";
-var REPEAT = "node test/fixtures/repeat-script.js";
+var REPEAT = "node test/fixtures/repeat.js";
 
 // Read files, do assert callbacks, and trap everything, calling `done` at the
 // end. A little limited in use as it's the *last* thing you can call in a

@@ -6,9 +6,10 @@
   },
   "scripts": {
     "fail": "echo FAIL && false",
-    "repeat": "node ../fixtures/repeat-script.js",
+    "repeat": "node ../fixtures/repeat.js",
     "echo": "node ../fixtures/echo.js",
-    "echo:builder": "node ../../bin/builder.js run echo",
+    "echo-forever": "node ../fixtures/echo-forever.js",
+    "echo-forever:builder": "node ../../bin/builder.js run echo-forever",
     "sleep": "node ../fixtures/sleep.js"
   }
 }

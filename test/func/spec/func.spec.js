@@ -79,19 +79,19 @@ describe("functional", function () {
 
     it("runs setup with --env values applied", function (done) {
       exec(
-        "node \"" + builder + "\" run sleep -q --setup=repeat " +
+        "node \"" + builder + "\" run sleep -q --setup=echo-forever " +
         "--env=\"{\\\"TEST_MESSAGE\\\":\\\"FROM_ENV\\\"}\" ",
         function (err, stdout, stderr) {
           if (err) { return done(err); }
 
-          expect(stdout).to.contain("REPEAT START - FROM_ENV");
+          expect(stdout).to.contain("ECHO FOREVER - string - FROM_ENV");
           expect(stderr).to.equal("");
           done();
         });
     });
 
     it("runs setup with --quiet flag applied", function (done) {
-      exec("node \"" + builder + "\" run sleep -q --setup=echo:builder",
+      exec("node \"" + builder + "\" run sleep -q --setup=echo-forever:builder",
         function (err, stdout, stderr) {
           if (err) { return done(err); }
 
@@ -103,7 +103,7 @@ describe("functional", function () {
 
     it("runs setup with --log-level=info flag applied", function (done) {
       return exec(
-        "node \"" + builder + "\" run sleep --log-level=info --setup=echo:builder",
+        "node \"" + builder + "\" run sleep --log-level=info --setup=echo-forever:builder",
         function (err, stdout, stderr) {
           if (err) { return done(err); }
 
@@ -115,7 +115,7 @@ describe("functional", function () {
 
     it("runs setup with --log-level=none flag applied", function (done) {
       return exec(
-        "node \"" + builder + "\" run sleep --log-level=none --setup=echo:builder",
+        "node \"" + builder + "\" run sleep --log-level=none --setup=echo-forever:builder",
         function (err, stdout, stderr) {
           if (err) { return done(err); }
 
@@ -139,13 +139,13 @@ describe("functional", function () {
 
     it("runs setup without -- custom flags", function (done) {
       return exec(
-        "node \"" + builder + "\" run sleep -q --setup=repeat -- --foo",
+        "node \"" + builder + "\" run sleep -q --setup=echo-forever -- --foo",
         function (err, stdout, stderr) {
           if (err) { return done(err); }
 
           expect(stdout)
             .to.contain("SLEEP EXTRA FLAGS - --foo").and
-            .to.not.contain("REPEAT EXTRA FLAGS");
+            .to.not.contain("ECHO FOREVER EXTRA FLAGS");
           expect(stderr).to.equal("");
           done();
         });
