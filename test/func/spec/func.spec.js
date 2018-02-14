@@ -155,4 +155,9 @@ describe("functional", function () {
 
   });
 
+
+  describe("pre/post lifecycle", function () {
+    it("runs all of pre/post lifecycle"); // TODO(PRE): skip stuff too!
+  });
+
 });

@@ -10,6 +10,13 @@
     "echo": "node ../fixtures/echo.js",
     "echo-forever": "node ../fixtures/echo-forever.js",
     "echo-forever:builder": "node ../../bin/builder.js run echo-forever",
-    "sleep": "node ../fixtures/sleep.js"
+    "sleep": "node ../fixtures/sleep.js",
+    "prepretask": "echo PRE_PRE_TASK",
+    "preposttask": "echo PRE_POST_TASK",
+    "pretask": "echo PRE_TASK",
+    "task": "echo MAIN_TASK",
+    "posttask": "echo POST_TASK",
+    "postpretask": "echo POST_PRE_TASK",
+    "postposttask": "echo POST_POST_TASK"
   }
 }

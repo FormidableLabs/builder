@@ -479,7 +479,7 @@ The following flags do _not_ apply to a setup task:
 
 * `--` custom flags TODO_TEST
 * `--tries` TODO_TEST
-* `--expand-archetype` TODO_TEST
+* `--expand-archetype` TODO_TEST/DECIDE ?
 * `--setup`: A task specified in `--setup <task>` will not have `pre|post`
   tasks apply. TODO_TEST
 

@@ -1290,34 +1290,42 @@ describe("bin/builder-core", function () {
 
     });
 
-    describe.skip("pre/post lifecycle commands", function () {
+    describe("pre/post lifecycle", function () {
 
-      // TODO: Normalize all args, incorporating args.general to args.<action>
-      // TODO: Disallow, error on any non-recognized flags.
-      // TODO: refactor tests, etc.
-      // TODO: Make func-tests pass travis.
-      it("runs pre task only in archetype", function (done) {
+      it("runs pre archetype task and post root task", function (done) {
         base.sandbox.spy(Task.prototype, "run");
         base.mockFs({
+          ".builderrc": "---\narchetypes:\n  - mock-archetype",
           "package.json": JSON.stringify({
             "scripts": {
-              "prebar": ECHO_FOREVER + " PREBAR_TASK >> stdout-pre.log",
-              "bar": ECHO + " BAR_TASK >> stdout.log"
+              "bar": "echo MAIN_ROOT_TASK >> stdout.log",
+              "postbar": "echo POST_ROOT_TASK >> stdout-post.log"
             }
-          }, null, 2)
+          }, null, 2),
+          "node_modules": {
+            "mock-archetype": {
+              "package.json": JSON.stringify({
+                "scripts": {
+                  "prebar": "echo PRE_ARCH_TASK >> stdout-pre.log",
+                  "postbar": "echo POST_ARCH_TASK >> stdout-post.log"
+                }
+              }, null, 2)
+            }
+          }
         });
-
         run({
-          argv: ["node", "builder", "run", "bar", "--setup=prebar",
-            "--log-level=info", "-q", "--", "--foo"]
+          argv: ["node", "builder", "run", "bar"]
         }, function (err) {
           if (err) { return done(err); }
 
           expect(Task.prototype.run).to.be.calledOnce;
 
-          readFiles(["stdout-pre.log", "stdout.log"], function (obj) {
-            expect(obj["stdout-pre.log"]).to.contain("PREBAR_TASK");
-            expect(obj["stdout.log"]).to.contain("BAR_TASK");
+          readFiles(["stdout-pre.log", "stdout.log", "stdout-post.log"], function (obj) {
+            expect(obj["stdout-pre.log"]).to.contain("PRE_ARCH_TASK");
+            expect(obj["stdout.log"]).to.contain("MAIN_ROOT_TASK");
+            expect(obj["stdout-post.log"])
+              .to.contain("POST_ROOT_TASK").and
+              .to.not.contain("POST_ARCH_TASK");
           }, done);
         });
       });
