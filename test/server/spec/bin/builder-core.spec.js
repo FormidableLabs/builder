@@ -1297,7 +1297,7 @@ describe("bin/builder-core", function () {
           "package.json": JSON.stringify({
             "scripts": {
               "prebar": ECHO_FOREVER + " PREBAR_TASK >> stdout-pre.log",
-              "bar": ECHO + "echo BAR_TASK >> stdout.log"
+              "bar": ECHO + " BAR_TASK >> stdout.log"
             }
           }, null, 2)
         });

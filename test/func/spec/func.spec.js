@@ -26,6 +26,8 @@ var exec = function () {
   return cp.exec(cmd, opts, callback);
 };
 
+var STDERR_SETUP_END_RE = /^(|Terminated\s*)$/i;
+
 describe("functional", function () {
 
   describe("environment variables", function () {
@@ -85,7 +87,7 @@ describe("functional", function () {
           if (err) { return done(err); }
 
           expect(stdout).to.contain("ECHO FOREVER - string - FROM_ENV");
-          expect(stderr).to.equal("");
+          expect(stderr).to.match(STDERR_SETUP_END_RE);
           done();
         });
     });
@@ -96,7 +98,7 @@ describe("functional", function () {
           if (err) { return done(err); }
 
           expect(stdout).to.not.contain("[builder");
-          expect(stderr).to.equal("");
+          expect(stderr).to.match(STDERR_SETUP_END_RE);
           done();
         });
     });
@@ -120,7 +122,7 @@ describe("functional", function () {
           if (err) { return done(err); }
 
           expect(stdout).to.not.contain("[builder");
-          expect(stderr).to.equal("");
+          expect(stderr).to.match(STDERR_SETUP_END_RE);
           done();
         });
     });
@@ -146,7 +148,7 @@ describe("functional", function () {
           expect(stdout)
             .to.contain("SLEEP EXTRA FLAGS - --foo").and
             .to.not.contain("ECHO FOREVER EXTRA FLAGS");
-          expect(stderr).to.equal("");
+          expect(stderr).to.match(STDERR_SETUP_END_RE);
           done();
         });
     });
