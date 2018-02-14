@@ -51,7 +51,11 @@ var create = module.exports = function (prefix) {
 };
 
 if (require.main === module) {
-  var echo = create("ECHO");
-  echo.extra();
-  echo.log();
+  // Add slight delay so things like setup can get started, etc.
+  var DELAY = 10;
+  setTimeout(function () {
+    var echo = create("ECHO");
+    echo.extra();
+    echo.log();
+  }, DELAY);
 }
