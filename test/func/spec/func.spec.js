@@ -129,19 +129,7 @@ describe("functional", function () {
 
       return exec(
         "node \"" + builder + "\" run sleep -q --setup=fail --tries=2 -- " + sleepMs,
-        function (err, stdout, stderr) {
-          if (!err) {
-            console.log("TEMP TODO NO ERROR", { // eslint-disable-line no-console
-              stdout: stdout,
-              stderr: stderr
-            });
-          } else {
-            console.log("TEMP TODO ERR", { // eslint-disable-line no-console
-              code: err.code,
-              err: err
-            });
-          }
-
+        function (err, stdout) {
           expect(err).to.have.property("code", 1);
           expect(stdout.match(/FAIL/g)).to.have.length(1); // Only one try.
           done();
