@@ -60,13 +60,26 @@ describe("lib/args", function () {
       }));
     });
 
-    // TODO(PRE): ADD TEST
-    it.skip("errors on invalid arguments", function () {
+    it("errors on invalid flags", function () {
       argv = argv.concat(["--bad"]);
-      expect(_flags(args.general(argv))).to.deep.equal(_.extend({}, _DEFAULTS.general, _HELP));
+      expect(function () {
+        _flags(args.general(argv))
+      }).to.throw("invalid/conflicting keys: bad");
     });
 
-    it("normalizes shorthand arguments"); // TODO(PRE): -q for --quiet
+    it("errors on conflicting shorthand arguments", function () {
+      argv = argv.concat(["-q"]); // Conflicts: queue vs quiet in concurrent
+      expect(function () {
+        _flags(args.concurrent(argv))
+      }).to.throw("invalid/conflicting keys: q");
+    });
+
+    it("normalizes shorthand arguments", function () {
+      argv = argv.concat(["--qui"]);
+      expect(_flags(args.general(argv))).to.deep.equal(_.extend({}, _DEFAULTS.general, _HELP, {
+        quiet: true
+      }));
+    });
 
     // TODO: Potential future functionality.
     // https://github.com/FormidableLabs/builder/issues/42
