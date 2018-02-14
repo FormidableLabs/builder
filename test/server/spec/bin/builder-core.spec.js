@@ -597,8 +597,8 @@ describe("bin/builder-core", function () {
           "mock-archetype": {
             "package.json": JSON.stringify({
               "scripts": {
-                "foo": REPEAT + " 1  node_modules/mock-archetype/FOO.txt >> stdout.log",
-                "setup": REPEAT + " 0  node_modules/mock-archetype/SETUP.txt >> stdout-setup.log"
+                "foo": REPEAT + " 1 node_modules/mock-archetype/FOO.txt >> stdout.log",
+                "setup": ECHO_FOREVER + " node_modules/mock-archetype/SETUP.txt >> stdout-setup.log"
               }
             }, null, 2)
           }
@@ -638,7 +638,7 @@ describe("bin/builder-core", function () {
             "package.json": JSON.stringify({
               "scripts": {
                 "echo": ECHO + " >> stdout.log",
-                "setup": REPEAT + " 20 >> stdout-setup.log"
+                "setup": ECHO_FOREVER + " >> stdout-setup.log"
               }
             }, null, 2)
           }
@@ -672,7 +672,7 @@ describe("bin/builder-core", function () {
             "package.json": JSON.stringify({
               "scripts": {
                 "echo": ECHO + " >> stdout.log",
-                "setup": REPEAT + " 0 >> stdout-setup.log"
+                "setup": ECHO_FOREVER + " >> stdout-setup.log"
               }
             }, null, 2)
           }
@@ -1296,8 +1296,8 @@ describe("bin/builder-core", function () {
         base.mockFs({
           "package.json": JSON.stringify({
             "scripts": {
-              "prebar": "echo PREBAR_TASK >> stdout-pre.log",
-              "bar": "echo BAR_TASK >> stdout.log"
+              "prebar": ECHO_FOREVER + " PREBAR_TASK >> stdout-pre.log",
+              "bar": ECHO + "echo BAR_TASK >> stdout.log"
             }
           }, null, 2)
         });
