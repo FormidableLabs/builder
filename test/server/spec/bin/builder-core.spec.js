@@ -32,6 +32,9 @@ var ECHO = "node test/fixtures/echo.js";
 var ECHO_FOREVER = "node test/fixtures/echo-forever.js";
 var REPEAT = "node test/fixtures/repeat.js";
 
+// Custom test runners.
+var itSkipWin = (/^win/.test(process.platform) ? it.skip : it).bind(it);
+
 // Read files, do assert callbacks, and trap everything, calling `done` at the
 // end. A little limited in use as it's the *last* thing you can call in a
 // given test, but we can abstract more later if needed.
@@ -938,7 +941,9 @@ describe("bin/builder-core", function () {
       });
     });
 
-    it("runs with empty base + non-empty archetype config value", function (done) {
+    // TODO: Re-enable on Windows / CI
+    // https://github.com/FormidableLabs/builder/issues/159
+    itSkipWin("runs with empty base + non-empty archetype config value", function (done) {
       base.sandbox.spy(Task.prototype, "run");
       base.mockFs({
         ".builderrc": "---\narchetypes:\n  - mock-archetype",
