@@ -20,6 +20,7 @@ var pkg = require("../../../../package.json");
 var Config = require("../../../../lib/config");
 var Task = require("../../../../lib/task");
 var log = require("../../../../lib/log");
+var runner = require("../../../../lib/runner");
 var run = require("../../../../bin/builder-core");
 
 var base = require("../base.spec");
@@ -1426,8 +1427,51 @@ describe("bin/builder-core", function () {
     // TODO: Finish outlined tests.
     // https://github.com/FormidableLabs/builder/issues/9
     it("runs with --tries=2");
-    it("runs with --setup");
     it("runs with --queue=1, --bail=false");
+
+    it("runs with --setup, --queue", function (done) {
+      base.sandbox.spy(runner, "addSetup");
+      base.mockFs({
+        "package.json": JSON.stringify({
+          "scripts": {
+            "setup": ECHO_FOREVER + " SETUP >> stdout-setup.log",
+            "one": ECHO + " ONE_ROOT_TASK >> stdout-1.log",
+            "two": ECHO + " TWO_ROOT_TASK >> stdout-2.log",
+            "three": ECHO + " THREE_ROOT_TASK >> stdout-3.log"
+          }
+        }, null, 2)
+      });
+
+      run({
+        argv: [
+          "node", "builder", "concurrent",
+          "one", "two", "three",
+          "--setup=setup", "--queue=2", "--buffer"
+        ]
+      }, function (err) {
+        if (err) { return done(err); }
+
+        // Only one setup task runs.
+        // Verify through logs.
+        var setupTaskStarts = logStubs.info.args.filter(function (arg) {
+          return (arg[0] || "").indexOf("Starting setup task") > -1;
+        });
+        expect(setupTaskStarts).to.have.length(1);
+
+        // ... and addSetup calls.
+        expect(runner.addSetup).to.have.callCount(1);
+        expect(runner.addSetup.firstCall.args[1]).to.have.keys("env");
+
+        readFiles([
+          "stdout-setup.log", "stdout-1.log", "stdout-2.log", "stdout-3.log"
+        ], function (obj) {
+          expect(obj["stdout-setup.log"]).to.contain("SETUP");
+          expect(obj["stdout-1.log"]).to.contain("ONE_ROOT_TASK");
+          expect(obj["stdout-2.log"]).to.contain("TWO_ROOT_TASK");
+          expect(obj["stdout-3.log"]).to.contain("THREE_ROOT_TASK");
+        }, done);
+      });
+    });
 
     it("runs with base overriding archetype config value", function (done) {
       base.sandbox.spy(Task.prototype, "concurrent");
@@ -1469,9 +1513,68 @@ describe("bin/builder-core", function () {
       });
     });
 
-    describe("pre/post lifecycle commands", function () {
+    describe("pre/post lifecycle", function () {
 
-      it("runs internal pre+post tasks"); // TODO(PRE)
+      // TODO(PRE): HERE -- Total copy and paste gibberish.
+      it.skip("runs mixed pre and post tasks", function (done) {
+
+        base.mockFs({
+          ".builderrc": "---\narchetypes:\n  - mock-archetype",
+          "package.json": JSON.stringify({
+            "scripts": {
+              "two": "echo TWO_ROOT_TASK >> stdout-2.log",
+              "three": "echo THREE_ROOT_TASK >> stdout-3.log"
+            }
+          }, null, 2),
+          "node_modules": {
+            "mock-archetype": {
+              "package.json": JSON.stringify({
+                "scripts": {
+                  "one": "echo ONE_TASK >> stdout-1.log",
+                  "two": "echo TWO_TASK >> stdout-2.log",
+                  "three": "echo THREE_TASK >> stdout-3.log"
+                }
+              }, null, 2)
+            }
+          }
+        });
+
+        base.sandbox.spy(Task.prototype, "run");
+        base.mockFs({
+          ".builderrc": "---\narchetypes:\n  - mock-archetype",
+          "package.json": JSON.stringify({
+            "scripts": {
+              "bar": "echo MAIN_ROOT_TASK >> stdout.log"
+            }
+          }, null, 2),
+          "node_modules": {
+            "mock-archetype": {
+              "package.json": JSON.stringify({
+                "scripts": {
+                  "prebar": "echo PRE_ARCH_TASK >> stdout-pre.log",
+                  "postbar": "echo POST_ARCH_TASK >> stdout-post.log"
+                }
+              }, null, 2)
+            }
+          }
+        });
+        run({
+          argv: ["node", "builder", "run", "bar"]
+        }, function (err) {
+          if (err) { return done(err); }
+
+          expect(Task.prototype.run).to.be.calledOnce;
+
+          readFiles(["stdout-pre.log", "stdout.log", "stdout-post.log"], function (obj) {
+            expect(obj["stdout-pre.log"]).to.contain("PRE_ARCH_TASK");
+            expect(obj["stdout.log"]).to.contain("MAIN_ROOT_TASK");
+            expect(obj["stdout-post.log"])
+              .to.contain("POST_ROOT_TASK").and
+              .to.not.contain("POST_ARCH_TASK");
+          }, done);
+        });
+      });
+
       it("runs multiple mixed pre+post tasks"); // TODO(PRE)
 
     });
@@ -1928,7 +2031,7 @@ describe("bin/builder-core", function () {
       });
     });
 
-    describe("pre/post lifecycle commands", function () {
+    describe("pre/post lifecycle", function () {
 
       it("runs pre+post tasks"); // TODO(PRE)
       it("runs pre+post tasks once for empty array"); // TODO(PRE)

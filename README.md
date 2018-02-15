@@ -396,6 +396,8 @@ The following flags do _not_ apply to a setup task:
 * `--` custom flags
 * `--tries`
 * `--expand-archetype`
+* `--queue`
+* `--buffer`
 
 That said, if you need things like `--tries`, etc., these can be always coded
 into a wrapped task like:
@@ -475,13 +477,15 @@ following execution flags **do** apply to the `pre|post` tasks.
 * `--quiet` TODO_TEST
 * `--log-level` TODO_TEST
 
-The following flags do _not_ apply to a setup task:
+The following flags do _not_ apply to pre/post tasks:
 
 * `--` custom flags TODO_TEST
 * `--tries` TODO_TEST
 * `--expand-archetype` TODO_TEST/DECIDE ?
 * `--setup`: A task specified in `--setup <task>` will not have `pre|post`
   tasks apply. TODO_TEST
+* `--queue`: Applies for `concurrent`, but not `run` or `envs`. TODO_TEST
+* `--buffer` Applies for `concurrent`, but not `run` or `envs`. TODO_TEST
 
 We will explain a few of these situations in a bit more depth:
 

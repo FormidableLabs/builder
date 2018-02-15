@@ -13,6 +13,7 @@ var mockFs = require("mock-fs");
 var fs = require("fs");
 var sinon = require("sinon");
 var log = require("../../../lib/log");
+var clone = require("../../../lib/utils/clone");
 
 var base = module.exports = {
   // Generic test helpers.
@@ -29,9 +30,14 @@ var base = module.exports = {
   }
 };
 
+var origEnv;
+
 before(function () {
   // Set test environment
   process.env.NODE_ENV = process.env.NODE_ENV || "test";
+
+  // Stash the pristine environment.
+  origEnv = clone(process.env);
 });
 
 beforeEach(function () {
@@ -40,6 +46,8 @@ beforeEach(function () {
   base.sandbox = sinon.sandbox.create({
     useFakeTimers: true
   });
+
+  process.env = clone(origEnv);
 });
 
 afterEach(function (done) {
