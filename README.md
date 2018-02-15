@@ -528,9 +528,9 @@ POST
 *Other Flags*
 
 By contrast, the various other Builder-specific flags that can be applied to a
-task like `--tries`, `--env`, etc., **will** apply to `pre|post` tasks, under
-the assumption that control flags + environment variables will most likely
-want to be used for the execution of all commands in the workflow.
+task like `--env`, etc., **will** apply to `pre|post` tasks, under the
+assumption that control flags + environment variables will most likely want to
+be used for the execution of all commands in the workflow.
 
 So, for example:
 
