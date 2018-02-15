@@ -465,6 +465,13 @@ task. So, for something like:
 running `builder concurrent foo bar` would run **all** of the above tasks at
 the appropriate lifecycle moment.
 
+Note that things like a `--queue=NUM` limit on a concurrent task will have
+*all* of the `pre`, main, and `post` task need to finish serial execution before
+the next spot is freed up.
+
+The `--bail` flag applies to all of a single tasks `pre`, main, and `post`
+group. So if any of those fail, it's as if the main task failed.
+
 ##### Builder Flags During Pre and Post
 
 *Applicable Flags*
@@ -477,15 +484,19 @@ following execution flags **do** apply to the `pre|post` tasks.
 * `--quiet` TODO_TEST
 * `--log-level` TODO_TEST
 
+These flags have mixed application:
+
+* `--queue`: Applies for `concurrent`, but not `run` or `envs`. TODO_TEST
+* `--buffer`: Applies for `concurrent`, but not `run` or `envs`. TODO_TEST
+* `--bail`: Applies for `concurrent`, but not `run` or `envs`. TODO_TEST
+
 The following flags do _not_ apply to pre/post tasks:
 
 * `--` custom flags TODO_TEST
 * `--tries` TODO_TEST
-* `--expand-archetype` TODO_TEST/DECIDE ?
+* `--expand-archetype` TODO_TEST/DECIDE ? (Might be better to **apply**)
 * `--setup`: A task specified in `--setup <task>` will not have `pre|post`
   tasks apply. TODO_TEST
-* `--queue`: Applies for `concurrent`, but not `run` or `envs`. TODO_TEST
-* `--buffer` Applies for `concurrent`, but not `run` or `envs`. TODO_TEST
 
 We will explain a few of these situations in a bit more depth:
 

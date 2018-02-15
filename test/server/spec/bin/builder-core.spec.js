@@ -1513,10 +1513,10 @@ describe("bin/builder-core", function () {
       });
     });
 
-    describe("pre/post lifecycle", function () {
+    describe.skip("pre/post lifecycle", function () {
 
       // TODO(PRE): HERE -- Total copy and paste gibberish.
-      it.skip("runs mixed pre and post tasks", function (done) {
+      it("runs mixed pre and post tasks", function (done) {
 
         base.mockFs({
           ".builderrc": "---\narchetypes:\n  - mock-archetype",
@@ -1576,6 +1576,7 @@ describe("bin/builder-core", function () {
       });
 
       it("runs multiple mixed pre+post tasks"); // TODO(PRE)
+      it("completes non-error tasks with --bail=false when pre task fails"); // TODO(PRE)
 
     });
 
