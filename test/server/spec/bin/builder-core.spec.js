@@ -1355,8 +1355,7 @@ describe("bin/builder-core", function () {
 
   });
 
-  // TODO REIMPLEMENT
-  describe.skip("builder concurrent", function () {
+  describe("builder concurrent", function () {
 
     it("runs <root>/package.json concurrent commands", function (done) {
       base.sandbox.spy(Task.prototype, "concurrent");
@@ -1431,7 +1430,7 @@ describe("bin/builder-core", function () {
     it("runs with --queue=1, --bail=false");
 
     it("runs with --setup, --queue", function (done) {
-      base.sandbox.spy(setup, "addSetup");
+      base.sandbox.spy(setup, "create");
       base.mockFs({
         "package.json": JSON.stringify({
           "scripts": {
@@ -1459,9 +1458,9 @@ describe("bin/builder-core", function () {
         });
         expect(setupTaskStarts).to.have.length(1);
 
-        // ... and addSetup calls.
-        expect(setup.addSetup).to.have.callCount(1);
-        expect(setup.addSetup.firstCall.args[1]).to.have.keys("env");
+        // ... and setup calls.
+        expect(setup.create).to.have.callCount(1);
+        expect(setup.create.firstCall.args[1]).to.have.keys("env");
 
         readFiles([
           "stdout-setup.log", "stdout-1.log", "stdout-2.log", "stdout-3.log"

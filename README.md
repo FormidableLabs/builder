@@ -303,7 +303,10 @@ $ builder concurrent <task1> <task2> <task3>
 Flags:
 
 * `--tries`: Number of times to attempt a task (default: `1`)
-* `--setup`: Single task to run for the entirety of `<action>`
+* `--setup`: Single task to run for the entirety of `<action>`.
+    * **Note**: The `--setup` task is run at the start of the first main task
+      to actually run. This may _not_ be the first specified task however,
+      as `pre` tasks could end up with main tasks starting out of order.
 * `--queue`: Number of concurrent processes to run (default: unlimited - `0|null`)
 * `--[no-]buffer`: Buffer output until process end (default: `false`)
 * `--[no-]bail`: End all processes after the first failure (default: `true`)
@@ -356,6 +359,10 @@ Flags:
 
 * `--tries`: Number of times to attempt a task (default: `1`)
 * `--setup`: Single task to run for the entirety of `<action>`
+    * **Note**: The `--setup` task is run at the start of the first main task
+      to actually run. This may _not_ be the first specified task however,
+      as `pre` tasks could end up with main tasks per environment object
+      starting out of order.
 * `--queue`: Number of concurrent processes to run (default: unlimited - `0|null`)
 * `--[no-]buffer`: Buffer output until process end (default: `false`)
 * `--[no-]bail`: End all processes after the first failure (default: `true`)
