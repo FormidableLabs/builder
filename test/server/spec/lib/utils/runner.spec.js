@@ -1,8 +1,8 @@
 "use strict";
 
-var runner = require("../../../../lib/runner");
+var runner = require("../../../../../lib/utils/runner");
 
-require("../base.spec");
+require("../../base.spec");
 
 describe("lib/runner", function () {
 

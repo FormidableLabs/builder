@@ -3,9 +3,9 @@
 var childProcess = require("child_process");
 var EventEmitter = require("events").EventEmitter;
 
-var spawn = require("../../../../lib/spawn");
+var spawn = require("../../../../../lib/utils/spawn");
 
-var base = require("../base.spec");
+var base = require("../../base.spec");
 
 describe("lib/spawn", function () {
   beforeEach(function () {
