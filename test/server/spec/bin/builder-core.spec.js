@@ -1582,8 +1582,7 @@ describe("bin/builder-core", function () {
 
   });
 
-  // TODO REIMPLEMENT
-  describe.skip("builder envs", function () {
+  describe("builder envs", function () {
 
     it("runs <root>/package.json multiple env commands", function (done) {
       base.sandbox.spy(Task.prototype, "envs");
