@@ -56,14 +56,12 @@ afterEach(function (done) {
   log._unsetLevel();
 
   // Remove logs, ignoring errors.
-  async.parallel([
-    function (cb) { fs.unlink("stdout.log", function () { cb(); }); },
-    function (cb) { fs.unlink("stdout-pre.log", function () { cb(); }); },
-    function (cb) { fs.unlink("stdout-post.log", function () { cb(); }); },
-    function (cb) { fs.unlink("stdout-setup.log", function () { cb(); }); },
-    function (cb) { fs.unlink("stdout-1.log", function () { cb(); }); },
-    function (cb) { fs.unlink("stdout-2.log", function () { cb(); }); },
-    function (cb) { fs.unlink("stdout-3.log", function () { cb(); }); },
-    function (cb) { fs.unlink("stderr.log", function () { cb(); }); }
-  ], done);
+  fs.readdir(process.cwd(), function (err, files) {
+    if (err) { return done(err); }
+
+    var outs = files.filter(function (name) { return /^std(out|err).*/.test(name); });
+    async.map(outs, function (file, cb) {
+      fs.unlink(file, function () { cb(); });
+    }, done);
+  });
 });

@@ -16,3 +16,5 @@ build
 */build
 coverage
 Procfile
+stdout*.log
+stderr*.log
