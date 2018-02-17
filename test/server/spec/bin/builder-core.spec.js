@@ -1515,64 +1515,59 @@ describe("bin/builder-core", function () {
       });
     });
 
-    describe.skip("pre/post lifecycle", function () {
+    describe("pre/post lifecycle", function () {
 
-      // TODO(PRE): HERE -- Total copy and paste gibberish.
       it("runs mixed pre and post tasks", function (done) {
-
         base.mockFs({
           ".builderrc": "---\narchetypes:\n  - mock-archetype",
           "package.json": JSON.stringify({
             "scripts": {
+              "preone": "echo PRE_ONE_ROOT_TASK >> stdout-1-pre.log",
               "two": "echo TWO_ROOT_TASK >> stdout-2.log",
-              "three": "echo THREE_ROOT_TASK >> stdout-3.log"
+              "three": "echo THREE_ROOT_TASK >> stdout-3.log",
+              "postpostthree": "echo POST_POST_THREE_ROOT_TASK >> stdout-3-post.log"
             }
           }, null, 2),
           "node_modules": {
             "mock-archetype": {
               "package.json": JSON.stringify({
                 "scripts": {
+                  "preone": "echo PRE_ONE_TASK >> stdout-1-pre.log",
                   "one": "echo ONE_TASK >> stdout-1.log",
                   "two": "echo TWO_TASK >> stdout-2.log",
-                  "three": "echo THREE_TASK >> stdout-3.log"
+                  "posttwo": "echo POST_TWO_TASK >> stdout-2-post.log",
+                  "postthree": "echo POST_THREE_TASK >> stdout-3-post.log"
                 }
               }, null, 2)
             }
           }
         });
 
-        base.sandbox.spy(Task.prototype, "run");
-        base.mockFs({
-          ".builderrc": "---\narchetypes:\n  - mock-archetype",
-          "package.json": JSON.stringify({
-            "scripts": {
-              "bar": "echo MAIN_ROOT_TASK >> stdout.log"
-            }
-          }, null, 2),
-          "node_modules": {
-            "mock-archetype": {
-              "package.json": JSON.stringify({
-                "scripts": {
-                  "prebar": "echo PRE_ARCH_TASK >> stdout-pre.log",
-                  "postbar": "echo POST_ARCH_TASK >> stdout-post.log"
-                }
-              }, null, 2)
-            }
-          }
-        });
         run({
-          argv: ["node", "builder", "run", "bar"]
+          argv: ["node", "builder", "concurrent", "one", "two", "three"]
         }, function (err) {
           if (err) { return done(err); }
 
-          expect(Task.prototype.run).to.be.calledOnce;
-
           readFiles(function (obj) {
-            expect(obj["stdout-pre.log"]).to.contain("PRE_ARCH_TASK");
-            expect(obj["stdout.log"]).to.contain("MAIN_ROOT_TASK");
-            expect(obj["stdout-post.log"])
-              .to.contain("POST_ROOT_TASK").and
-              .to.not.contain("POST_ARCH_TASK");
+            expect(obj["stdout-1-pre.log"])
+              .to.contain("PRE_ONE_ROOT_TASK").and
+              .to.not.contain("PRE_ONE_TASK");
+            expect(obj["stdout-1.log"]).to.contain("ONE_TASK");
+
+            expect(obj["stdout-2-post.log"]).to.contain("POST_TWO_TASK");
+            expect(obj["stdout-2.log"])
+              .to.contain("TWO_ROOT_TASK").and
+              .to.not.contain("TWO_TASK");
+
+            expect(obj["stdout-2-post.log"]).to.contain("POST_TWO_TASK");
+            expect(obj["stdout-2.log"])
+              .to.contain("TWO_ROOT_TASK").and
+              .to.not.contain("TWO_TASK");
+
+              expect(obj["stdout-3-post.log"])
+                .to.contain("POST_THREE_TASK").and
+                .to.not.contain("POST_POST_THREE_ROOT_TASK");
+              expect(obj["stdout-3.log"]).to.contain("THREE_ROOT_TASK");
           }, done);
         });
       });
