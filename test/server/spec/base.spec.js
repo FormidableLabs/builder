@@ -15,6 +15,11 @@ var sinon = require("sinon");
 var log = require("../../../lib/log");
 var clone = require("../../../lib/utils/clone");
 
+// Is a test output file?
+var isTestOuts = function (name) {
+  return /^std(out|err).*/.test(name);
+};
+
 var base = module.exports = {
   // Generic test helpers.
   sandbox: null,
@@ -27,7 +32,8 @@ var base = module.exports = {
   },
   fileExists: function (filePath) {
     return fs.existsSync(filePath);
-  }
+  },
+  isTestOuts: isTestOuts
 };
 
 var origEnv;
@@ -59,7 +65,7 @@ afterEach(function (done) {
   fs.readdir(process.cwd(), function (err, files) {
     if (err) { return done(err); }
 
-    var outs = files.filter(function (name) { return /^std(out|err).*/.test(name); });
+    var outs = files.filter(isTestOuts);
     async.map(outs, function (file, cb) {
       fs.unlink(file, function () { cb(); });
     }, done);

@@ -39,33 +39,37 @@ var itSkipWin = (/^win/.test(process.platform) ? it.skip : it).bind(it);
 // Read files, do assert callbacks, and trap everything, calling `done` at the
 // end. A little limited in use as it's the *last* thing you can call in a
 // given test, but we can abstract more later if needed.
-var readFiles = function (files, callback, done) {
+var readFiles = function (callback, done) {
   base.mockFs.restore();
 
-  var obj = {};
+  fs.readdir(process.cwd(), function (readdirErr, files) {
+    if (readdirErr) { return done(readdirErr); }
 
-  async.map(files, function (filename, cb) {
-    fs.readFile(filename, { encoding: "utf8" }, function (err, data) {
-      if (err) { return cb(err); }
-      obj[filename] = data;
-      cb();
-    });
-  }, function (err) {
-    try {
-      if (!err) {
-        callback(obj); // eslint-disable-line callback-return
+    var obj = {};
+    var outs = files.filter(base.isTestOuts);
+    async.map(outs, function (file, cb) {
+      fs.readFile(file, { encoding: "utf8" }, function (err, data) {
+        if (err) { return cb(err); }
+        obj[file] = data.toString();
+        cb();
+      });
+    }, function (err) {
+      try {
+        if (!err) {
+          callback(obj); // eslint-disable-line callback-return
+        }
+      } catch (assertErr) {
+        err = assertErr;
       }
-    } catch (assertErr) {
-      err = assertErr;
-    }
 
-    done(err);
+      done(err);
+    });
   });
 };
 
 // Single file alias.
 var readFile = function (filename, callback, done) {
-  readFiles([filename], function (obj) {
+  readFiles(function (obj) {
     callback(obj[filename]);
   }, done);
 };
@@ -581,7 +585,7 @@ describe("bin/builder-core", function () {
 
         expect(Task.prototype.run).to.have.callCount(1);
 
-        readFiles(["stdout-setup.log", "stdout.log"], function (obj) {
+        readFiles(function (obj) {
           expect(obj["stdout-setup.log"])
             .to.contain("SETUP");
           expect(obj["stdout.log"])
@@ -616,7 +620,7 @@ describe("bin/builder-core", function () {
 
         expect(Task.prototype.run).to.be.calledOnce;
 
-        readFiles(["stdout.log", "stdout-setup.log"], function (obj) {
+        readFiles(function (obj) {
           // Expands foo.
           // Note: Expect `/FOO.txt` suffix in win and mac cases.
           expect(obj["stdout.log"]).to.contain(
@@ -659,7 +663,7 @@ describe("bin/builder-core", function () {
 
         expect(Task.prototype.run).to.be.calledOnce;
 
-        readFiles(["stdout.log", "stdout-setup.log"], function (obj) {
+        readFiles(function (obj) {
           expect(obj["stdout.log"]).to.contain("string - HI");
           expect(obj["stdout-setup.log"]).to.contain("HI");
         }, done);
@@ -693,7 +697,7 @@ describe("bin/builder-core", function () {
 
         expect(Task.prototype.run).to.be.calledOnce;
 
-        readFiles(["stdout.log", "stdout-setup.log"], function (obj) {
+        readFiles(function (obj) {
           expect(obj["stdout.log"]).to.contain("ECHO EXTRA FLAGS - --foo");
           expect(obj["stdout-setup.log"]).to.not.contain("REPEAT EXTRA FLAGS");
         }, done);
@@ -1321,7 +1325,7 @@ describe("bin/builder-core", function () {
 
           expect(Task.prototype.run).to.be.calledOnce;
 
-          readFiles(["stdout-pre.log", "stdout.log", "stdout-post.log"], function (obj) {
+          readFiles(function (obj) {
             expect(obj["stdout-pre.log"]).to.contain("PRE_ARCH_TASK");
             expect(obj["stdout.log"]).to.contain("MAIN_ROOT_TASK");
             expect(obj["stdout-post.log"])
@@ -1376,7 +1380,7 @@ describe("bin/builder-core", function () {
 
         expect(Task.prototype.concurrent).to.be.calledOnce;
 
-        readFiles(["stdout-1.log", "stdout-2.log", "stdout-3.log"], function (obj) {
+        readFiles(function (obj) {
           expect(obj["stdout-1.log"]).to.contain("ONE_TASK");
           expect(obj["stdout-2.log"]).to.contain("TWO_TASK");
           expect(obj["stdout-3.log"]).to.contain("THREE_TASK");
@@ -1415,7 +1419,7 @@ describe("bin/builder-core", function () {
 
         expect(Task.prototype.concurrent).to.be.calledOnce;
 
-        readFiles(["stdout-1.log", "stdout-2.log", "stdout-3.log"], function (obj) {
+        readFiles(function (obj) {
           expect(obj["stdout-1.log"]).to.contain("ONE_TASK");
           expect(obj["stdout-2.log"]).to.contain("TWO_ROOT_TASK");
           expect(obj["stdout-3.log"]).to.contain("THREE_ROOT_TASK");
@@ -1462,9 +1466,7 @@ describe("bin/builder-core", function () {
         expect(setup.create).to.have.callCount(1);
         expect(setup.create.firstCall.args[1]).to.have.keys("env");
 
-        readFiles([
-          "stdout-setup.log", "stdout-1.log", "stdout-2.log", "stdout-3.log"
-        ], function (obj) {
+        readFiles(function (obj) {
           expect(obj["stdout-setup.log"]).to.contain("SETUP");
           expect(obj["stdout-1.log"]).to.contain("ONE_ROOT_TASK");
           expect(obj["stdout-2.log"]).to.contain("TWO_ROOT_TASK");
@@ -1506,7 +1508,7 @@ describe("bin/builder-core", function () {
 
         expect(Task.prototype.concurrent).to.have.callCount(1);
 
-        readFiles(["stdout-1.log", "stdout-2.log"], function (obj) {
+        readFiles(function (obj) {
           expect(obj["stdout-1.log"]).to.contain("string - from base");
           expect(obj["stdout-2.log"]).to.contain("string - from base");
         }, done);
@@ -1565,7 +1567,7 @@ describe("bin/builder-core", function () {
 
           expect(Task.prototype.run).to.be.calledOnce;
 
-          readFiles(["stdout-pre.log", "stdout.log", "stdout-post.log"], function (obj) {
+          readFiles(function (obj) {
             expect(obj["stdout-pre.log"]).to.contain("PRE_ARCH_TASK");
             expect(obj["stdout.log"]).to.contain("MAIN_ROOT_TASK");
             expect(obj["stdout-post.log"])
@@ -1606,7 +1608,7 @@ describe("bin/builder-core", function () {
 
         expect(Task.prototype.envs).to.be.calledOnce;
 
-        readFiles(["stdout-1.log", "stdout-2.log", "stdout-3.log"], function (obj) {
+        readFiles(function (obj) {
           expect(obj["stdout-1.log"]).to.contain("ROOT hi");
           expect(obj["stdout-2.log"]).to.contain("ROOT ho");
           expect(obj["stdout-3.log"]).to.contain("ROOT yo");
@@ -1638,7 +1640,7 @@ describe("bin/builder-core", function () {
 
         expect(Task.prototype.envs).to.be.calledOnce;
 
-        readFiles(["stdout-1.log", "stdout-2.log", "stdout-3.log"], function (obj) {
+        readFiles(function (obj) {
           expect(obj["stdout-1.log"]).to.contain("ROOT hi");
           expect(obj["stdout-2.log"]).to.contain("ROOT ho");
           expect(obj["stdout-3.log"]).to.contain("ROOT yo");
@@ -1675,7 +1677,7 @@ describe("bin/builder-core", function () {
 
         expect(Task.prototype.envs).to.be.calledOnce;
 
-        readFiles(["stdout-1.log", "stdout-2.log", "stdout-3.log"], function (obj) {
+        readFiles(function (obj) {
           expect(obj["stdout-1.log"]).to.contain("ARCH hi");
           expect(obj["stdout-2.log"]).to.contain("ARCH ho");
           expect(obj["stdout-3.log"]).to.contain("ARCH yo");
@@ -1716,7 +1718,7 @@ describe("bin/builder-core", function () {
 
         expect(Task.prototype.envs).to.be.calledOnce;
 
-        readFiles(["stdout-1.log", "stdout-2.log", "stdout-3.log"], function (obj) {
+        readFiles(function (obj) {
           expect(obj["stdout-1.log"]).to.contain("ROOT hi");
           expect(obj["stdout-2.log"]).to.contain("ROOT ho");
           expect(obj["stdout-3.log"]).to.contain("ROOT yo");
@@ -1856,7 +1858,7 @@ describe("bin/builder-core", function () {
 
         expect(Task.prototype.envs).to.have.callCount(1);
 
-        readFiles(["stdout-1.log", "stdout-2.log", "stdout-3.log"], function (obj) {
+        readFiles(function (obj) {
           expect(obj["stdout-1.log"]).to.contain("from base");
           expect(obj["stdout-2.log"]).to.contain("from array2");
           expect(obj["stdout-3.log"]).to.contain("from array3");
@@ -1912,7 +1914,7 @@ describe("bin/builder-core", function () {
 
         expect(Task.prototype.envs).to.have.callCount(1);
 
-        readFiles(["stdout-1.log", "stdout-2.log", "stdout-3.log"], function (obj) {
+        readFiles(function (obj) {
           expect(obj["stdout-1.log"]).to.contain("from real env");
           expect(obj["stdout-2.log"]).to.contain("from array2");
           expect(obj["stdout-3.log"]).to.contain("from array3");
@@ -1969,7 +1971,7 @@ describe("bin/builder-core", function () {
 
         expect(Task.prototype.envs).to.have.callCount(1);
 
-        readFiles(["stdout-1.log", "stdout-2.log", "stdout-3.log"], function (obj) {
+        readFiles(function (obj) {
           expect(obj["stdout-1.log"]).to.contain("from --env");
           expect(obj["stdout-2.log"]).to.contain("from array2");
           expect(obj["stdout-3.log"]).to.contain("from array3");
@@ -2024,7 +2026,7 @@ describe("bin/builder-core", function () {
 
         expect(Task.prototype.envs).to.have.callCount(1);
 
-        readFiles(["stdout-1.log", "stdout-2.log", "stdout-3.log"], function (obj) {
+        readFiles(function (obj) {
           expect(obj["stdout-1.log"]).to.contain("from --env-path");
           expect(obj["stdout-2.log"]).to.contain("from array2");
           expect(obj["stdout-3.log"]).to.contain("from array3");
