@@ -32,6 +32,7 @@ var ENV_PROC_NUM = /^win/.test(process.platform) ? "%PROC_NUM%" : "$PROC_NUM";
 var ECHO = "node test/fixtures/echo.js";
 var ECHO_FOREVER = "node test/fixtures/echo-forever.js";
 var REPEAT = "node test/fixtures/repeat.js";
+var FAIL = "node test/fixtures/fail.js";
 
 // Custom test runners.
 var itSkipWin = (/^win/.test(process.platform) ? it.skip : it).bind(it);
@@ -1564,16 +1565,63 @@ describe("bin/builder-core", function () {
               .to.contain("TWO_ROOT_TASK").and
               .to.not.contain("TWO_TASK");
 
-              expect(obj["stdout-3-post.log"])
-                .to.contain("POST_THREE_TASK").and
-                .to.not.contain("POST_POST_THREE_ROOT_TASK");
-              expect(obj["stdout-3.log"]).to.contain("THREE_ROOT_TASK");
+            expect(obj["stdout-3-post.log"])
+              .to.contain("POST_THREE_TASK").and
+              .to.not.contain("POST_POST_THREE_ROOT_TASK");
+            expect(obj["stdout-3.log"]).to.contain("THREE_ROOT_TASK");
           }, done);
         });
       });
 
-      it("runs multiple mixed pre+post tasks"); // TODO(PRE)
-      it("completes non-error tasks with --bail=false when pre task fails"); // TODO(PRE)
+      it("completes non-error tasks with --bail=false when pre task fails", function (done) {
+        base.mockFs({
+          ".builderrc": "---\narchetypes:\n  - mock-archetype",
+          "package.json": JSON.stringify({
+            "scripts": {
+              "preone": "echo PRE_ONE_ROOT_TASK >> stdout-1-pre.log",
+              "pretwo": "echo PRE_TWO_ROOT_TASK >> stdout-2-pre.log",
+              "two": FAIL + " >> stdout-2.log",
+              "three": "echo THREE_ROOT_TASK >> stdout-3.log",
+              "postpostthree": "echo POST_POST_THREE_ROOT_TASK >> stdout-3-post.log"
+            }
+          }, null, 2),
+          "node_modules": {
+            "mock-archetype": {
+              "package.json": JSON.stringify({
+                "scripts": {
+                  "preone": "echo PRE_ONE_TASK >> stdout-1-pre.log",
+                  "one": "echo ONE_TASK >> stdout-1.log",
+                  "posttwo": "echo POST_TWO_TASK >> stdout-2-post.log",
+                  "postthree": "echo POST_THREE_TASK >> stdout-3-post.log"
+                }
+              }, null, 2)
+            }
+          }
+        });
+
+        run({
+          argv: ["node", "builder", "concurrent", "one", "two", "three", "--bail=false"]
+        }, function (err) {
+          expect(err).to.have.property("message").that.contains("Command failed");
+
+          readFiles(function (obj) {
+            expect(obj["stdout-1-pre.log"])
+              .to.contain("PRE_ONE_ROOT_TASK").and
+              .to.not.contain("PRE_ONE_TASK");
+            expect(obj["stdout-1.log"]).to.contain("ONE_TASK");
+
+            expect(obj["stdout-2-pre.log"]).to.contain("PRE_TWO_ROOT_TASK");
+            // ... two main task **fails** here ...
+            expect(obj["stdout-2.log"]).to.contain("FAIL");
+            expect(obj["stdout-2-post.log"]).to.not.be.ok;
+
+            expect(obj["stdout-3-post.log"])
+              .to.contain("POST_THREE_TASK").and
+              .to.not.contain("POST_POST_THREE_ROOT_TASK");
+            expect(obj["stdout-3.log"]).to.contain("THREE_ROOT_TASK");
+          }, done);
+        });
+      });
 
     });
 
