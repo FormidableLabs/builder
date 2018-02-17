@@ -495,7 +495,10 @@ These flags have mixed application:
 
 * `--queue`: Applies for `concurrent`, but not `run` or `envs`. TODO_TEST
 * `--buffer`: Applies for `concurrent`, but not `run` or `envs`. TODO_TEST
-* `--bail`: Applies for `concurrent`, but not `run` or `envs`. TODO_TEST
+* `--bail`: Applies for `concurrent`, but not `run` or `envs`. A `pre<task>`,
+  `<task>`, and a `post<task>` are treated as a group, so a failure of any
+  short-circuits the rests and ends with failures. But with `--bail=false` a
+  failure doesn't stop execution of the _other_ groups. TODO_TEST
 
 The following flags do _not_ apply to pre/post tasks:
 

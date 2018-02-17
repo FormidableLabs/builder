@@ -1578,21 +1578,21 @@ describe("bin/builder-core", function () {
           ".builderrc": "---\narchetypes:\n  - mock-archetype",
           "package.json": JSON.stringify({
             "scripts": {
-              "preone": "echo PRE_ONE_ROOT_TASK >> stdout-1-pre.log",
-              "pretwo": "echo PRE_TWO_ROOT_TASK >> stdout-2-pre.log",
-              "two": FAIL + " >> stdout-2.log",
-              "three": "echo THREE_ROOT_TASK >> stdout-3.log",
-              "postpostthree": "echo POST_POST_THREE_ROOT_TASK >> stdout-3-post.log"
+              "preone": ECHO + " PRE_ONE_ROOT_TASK >> stdout-1-pre.log",
+              "pretwo": FAIL + " >> stdout-2-pre.log",
+              "two": ECHO + " TWO_ROOT_TASK >> stdout-2.log",
+              "three": ECHO + " THREE_ROOT_TASK >> stdout-3.log",
+              "postpostthree": ECHO + " POST_POST_THREE_ROOT_TASK >> stdout-3-post.log"
             }
           }, null, 2),
           "node_modules": {
             "mock-archetype": {
               "package.json": JSON.stringify({
                 "scripts": {
-                  "preone": "echo PRE_ONE_TASK >> stdout-1-pre.log",
-                  "one": "echo ONE_TASK >> stdout-1.log",
-                  "posttwo": "echo POST_TWO_TASK >> stdout-2-post.log",
-                  "postthree": "echo POST_THREE_TASK >> stdout-3-post.log"
+                  "preone": ECHO + " PRE_ONE_TASK >> stdout-1-pre.log",
+                  "one": ECHO + " ONE_TASK >> stdout-1.log",
+                  "posttwo": ECHO + " POST_TWO_TASK >> stdout-2-post.log",
+                  "postthree": ECHO + " POST_THREE_TASK >> stdout-3-post.log"
                 }
               }, null, 2)
             }
@@ -1610,9 +1610,9 @@ describe("bin/builder-core", function () {
               .to.not.contain("PRE_ONE_TASK");
             expect(obj["stdout-1.log"]).to.contain("ONE_TASK");
 
-            expect(obj["stdout-2-pre.log"]).to.contain("PRE_TWO_ROOT_TASK");
-            // ... two main task **fails** here ...
-            expect(obj["stdout-2.log"]).to.contain("FAIL");
+            // ... two pre task **fails** here ...
+            expect(obj["stdout-2-pre.log"]).to.contain("FAIL");
+            expect(obj["stdout-2.log"]).to.not.be.ok;
             expect(obj["stdout-2-post.log"]).to.not.be.ok;
 
             expect(obj["stdout-3-post.log"])
@@ -1623,6 +1623,7 @@ describe("bin/builder-core", function () {
         });
       });
 
+      it("completes non-error tasks with --bail=false when --setup task fails"); // TODO(PRE)
     });
 
   });
