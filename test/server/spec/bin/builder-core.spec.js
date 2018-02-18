@@ -1623,7 +1623,63 @@ describe("bin/builder-core", function () {
         });
       });
 
-      it("completes non-error tasks with --bail=false when --setup task fails"); // TODO(PRE)
+      it("early terminates all tasks with --bail=false when --setup task fails", function (done) {
+        base.mockFs({
+          ".builderrc": "---\narchetypes:\n  - mock-archetype",
+          "package.json": JSON.stringify({
+            "scripts": {
+              "setup": FAIL + " >> stdout-setup.log",
+              "preone": ECHO + " PRE_ONE_ROOT_TASK >> stdout-1-pre.log",
+              "pretwo": ECHO + " PRE_TWO_ROOT_TASK >> stdout-2-pre.log",
+              "two": ECHO + " TWO_ROOT_TASK >> stdout-2.log",
+              "three": ECHO + " THREE_ROOT_TASK >> stdout-3.log",
+              "postpostthree": ECHO + " POST_POST_THREE_ROOT_TASK >> stdout-3-post.log"
+            }
+          }, null, 2),
+          "node_modules": {
+            "mock-archetype": {
+              "package.json": JSON.stringify({
+                "scripts": {
+                  "preone": ECHO + " PRE_ONE_TASK >> stdout-1-pre.log",
+                  "one": ECHO + " ONE_TASK >> stdout-1.log",
+                  "posttwo": ECHO + " POST_TWO_TASK >> stdout-2-post.log",
+                  "postthree": ECHO + " POST_THREE_TASK >> stdout-3-post.log"
+                }
+              }, null, 2)
+            }
+          }
+        });
+
+        // **Note**: Use `--queue=1` to make deterministic.
+        run({
+          argv: ["node", "builder", "concurrent", "one", "two", "three",
+            "--bail=false", "--queue=1", "--setup=setup"]
+        }, function (err) {
+          expect(err).to.have.property("message").that.contains("Setup exited");
+
+          readFiles(function (obj) {
+            expect(obj["stdout-1-pre.log"])
+              .to.contain("PRE_ONE_ROOT_TASK").and
+              .to.not.contain("PRE_ONE_TASK");
+
+            // `--setup` should fail in `one` right here.
+            expect(obj["stdout-setup.log"]).to.contain("FAIL");
+            // Don't check stdout-1 because non-deterministic if it's killed.
+
+            // TODO: HERE -- WHY IS THIS PASSING?
+            // TODO: IMPL -- tracker kills any new process coming in once something dies.
+            // TODO: IMPL -- short-circuit concurrent if anything dies in `--setup` anywhere.
+            //            -- this can be done via a `[].map(wrapWithKilled)` or something
+
+            expect(obj["stdout-2-pre.log"]).to.not.be.ok;
+            expect(obj["stdout-2.log"]).to.not.be.ok;
+            expect(obj["stdout-2-post.log"]).to.not.be.ok;
+
+            expect(obj["stdout-3-post.log"]).to.not.be.ok;
+            expect(obj["stdout-3.log"]).to.not.be.ok;
+          }, done);
+        });
+      });
     });
 
   });
