@@ -1667,9 +1667,7 @@ describe("bin/builder-core", function () {
             // Don't check stdout-1 because non-deterministic if it's killed.
 
             // TODO: HERE -- WHY IS THIS PASSING?
-            // TODO: IMPL -- tracker kills any new process coming in once something dies.
-            // TODO: IMPL -- short-circuit concurrent if anything dies in `--setup` anywhere.
-            //            -- this can be done via a `[].map(wrapWithKilled)` or something
+            // TODO: IMPL -- Also add setup termination detection specifically
 
             expect(obj["stdout-2-pre.log"]).to.not.be.ok;
             expect(obj["stdout-2.log"]).to.not.be.ok;
