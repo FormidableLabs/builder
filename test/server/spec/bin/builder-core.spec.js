@@ -1666,9 +1666,6 @@ describe("bin/builder-core", function () {
             expect(obj["stdout-setup.log"]).to.contain("FAIL");
             // Don't check stdout-1 because non-deterministic if it's killed.
 
-            // TODO: HERE -- WHY IS THIS PASSING?
-            // TODO: IMPL -- Also add setup termination detection specifically
-
             expect(obj["stdout-2-pre.log"]).to.not.be.ok;
             expect(obj["stdout-2.log"]).to.not.be.ok;
             expect(obj["stdout-2-post.log"]).to.not.be.ok;
