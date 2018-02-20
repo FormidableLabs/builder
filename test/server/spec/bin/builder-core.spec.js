@@ -121,6 +121,21 @@ describe("bin/builder-core", function () {
       }
       throw new Error("Cannot require: " + mod);
     });
+
+
+    // Skip `require()`-ing at all so we avoid `require` mock-fs issues.
+    base.sandbox.stub(Task.prototype, "_lazyRequire", function (mod) {
+      var lookup = {
+        "./utils/setup": setup
+      };
+
+      if (lookup[mod]) {
+        return lookup[mod];
+      }
+
+      throw new Error("Cannot require: " + mod);
+    });
+
   });
 
   afterEach(function () {
