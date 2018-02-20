@@ -1929,11 +1929,63 @@ describe("bin/builder-core", function () {
       });
     });
 
-    // TODO: Finish outlined tests.
-    // https://github.com/FormidableLabs/builder/issues/9
-    it("runs with --setup");
-    it("runs with --tries=2");
-    it("runs with --queue=1, --bail=false");
+    it("runs with --setup", function (done) {
+      base.sandbox.spy(Task.prototype, "envs");
+
+      base.mockFs({
+        "package.json": JSON.stringify({
+          "scripts": {
+            "setup": ECHO_FOREVER + " SETUP >> stdout-setup.log",
+            "echo": ECHO + " ROOT_" + ENV_MY_VAR + " >> stdout-" + ENV_PROC_NUM + ".log"
+          }
+        }, null, 2)
+      });
+
+      run({
+        argv: ["node", "builder", "envs", "echo", JSON.stringify([
+          { MY_VAR: "hi", PROC_NUM: 1 },
+          { MY_VAR: "ho", PROC_NUM: 2 }
+        ]), "--setup=setup"]
+      }, function (err) {
+        if (err) { return done(err); }
+
+        expect(Task.prototype.envs).to.be.calledOnce;
+
+        readFiles(function (obj) {
+          expect(obj["stdout-setup.log"]).to.contain("SETUP");
+          expect(obj["stdout-1.log"]).to.contain("ROOT_hi");
+          expect(obj["stdout-2.log"]).to.contain("ROOT_ho");
+        }, done);
+      });
+    });
+
+    it("runs with --tries=2, --queue=1, --bail=false", function (done) {
+      base.sandbox.spy(Task.prototype, "envs");
+
+      base.mockFs({
+        "package.json": JSON.stringify({
+          "scripts": {
+            "echo": FAIL + " >> stdout-" + ENV_PROC_NUM + ".log"
+          }
+        }, null, 2)
+      });
+
+      run({
+        argv: ["node", "builder", "envs", "echo", JSON.stringify([
+          { MY_VAR: "hi", PROC_NUM: 1 },
+          { MY_VAR: "ho", PROC_NUM: 2 }
+        ]), "--tries=2", "--queue=1", "--bail=false"]
+      }, function (err) {
+        expect(err).to.have.property("message").that.contains("Command failed");
+
+        expect(Task.prototype.envs).to.be.calledOnce;
+
+        readFiles(function (obj) {
+          expect(obj["stdout-1.log"]).to.match(/(FAIL\s*){2}/g);
+          expect(obj["stdout-2.log"]).to.match(/(FAIL\s*){2}/g);
+        }, done);
+      });
+    });
 
     it("runs with envs overriding base config value", function (done) {
       base.sandbox.spy(Task.prototype, "envs");
@@ -2146,9 +2198,48 @@ describe("bin/builder-core", function () {
 
     describe("pre/post lifecycle", function () {
 
-      it("runs pre+post tasks"); // TODO(PRE)
-      it("runs pre+post tasks once for empty array"); // TODO(PRE)
-      it("runs pre+post tasks once for multiple env vars"); // TODO(PRE)
+      it("runs pre+post tasks", function (done) {
+        base.sandbox.spy(Task.prototype, "envs");
+
+        base.mockFs({
+          ".builderrc": "---\narchetypes:\n  - mock-archetype",
+          "package.json": JSON.stringify({
+            "scripts": {
+              "preecho": "echo PRE_ROOT_TASK >> stdout-pre.log",
+              "echo": "echo ROOT " + ENV_MY_VAR + " >> stdout-" + ENV_PROC_NUM + ".log"
+            }
+          }, null, 2),
+          "node_modules": {
+            "mock-archetype": {
+              "package.json": JSON.stringify({
+                "scripts": {
+                  "preecho": "echo PRE_ARCH_TASK >> stdout-pre.log",
+                  "postecho": "echo POST_ARCH_TASK >> stdout-post.log"
+                }
+              }, null, 2)
+            }
+          }
+        });
+
+        run({
+          argv: ["node", "builder", "envs", "echo", JSON.stringify([
+            { MY_VAR: "hi", PROC_NUM: 1 },
+            { MY_VAR: "ho", PROC_NUM: 2 }
+          ])]
+        }, function (err) {
+          if (err) { return done(err); }
+
+          expect(Task.prototype.envs).to.be.calledOnce;
+
+          readFiles(function (obj) {
+            expect(obj["stdout-pre.log"].trim()).to.equal("PRE_ROOT_TASK");
+            expect(obj["stdout-1.log"]).to.contain("ROOT hi");
+            expect(obj["stdout-2.log"]).to.contain("ROOT ho");
+            expect(obj["stdout-post.log"].trim()).to.equal("POST_ARCH_TASK");
+          }, done);
+        });
+
+      });
 
     });
 
