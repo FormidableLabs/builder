@@ -7,7 +7,7 @@ var spawn = require("../../../../../lib/utils/spawn");
 
 var base = require("../../base.spec");
 
-describe("lib/spawn", function () {
+describe("lib/utils/spawn", function () {
   beforeEach(function () {
     base.sandbox.stub(childProcess, "spawn", function () {
       var proc = new EventEmitter();
