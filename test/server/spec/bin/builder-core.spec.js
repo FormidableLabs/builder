@@ -1351,13 +1351,50 @@ describe("bin/builder-core", function () {
         });
       });
 
-      it("runs pre task only in root"); // TODO(PRE)
-      it("runs pre task that overrides archetype"); // TODO(PRE)
-      it("runs pre task before --setup task"); // TODO(PRE)
+      // Also, have `pre` task in root package.json
+      it("only passes custom flags to main task", function (done) {
+        base.sandbox.spy(Task.prototype, "run");
+        base.mockFs({
+          ".builderrc": "---\narchetypes:\n  - mock-archetype",
+          "package.json": JSON.stringify({
+            "scripts": {
+              "preecho": ECHO + " PRE_ROOT_TASK >> stdout-pre.log"
+            }
+          }, null, 2),
+          "node_modules": {
+            "mock-archetype": {
+              "package.json": JSON.stringify({
+                "scripts": {
+                  "echo": ECHO + " ARCH_TASK >> stdout.log",
+                  "postecho": ECHO + " POST_ARCH_TASK >> stdout-post.log"
+                }
+              }, null, 2)
+            }
+          }
+        });
 
-      it("runs post task"); // TODO(PRE)
-      it("runs pre+post tasks"); // TODO(PRE)
-      it("only passes custom flags to main task"); // TODO(PRE)
+        run({
+          argv: [
+            "node", "builder", "run", "echo", "--", "--foo"
+          ]
+        }, function (err) {
+          if (err) { return done(err); }
+
+          expect(Task.prototype.run).to.be.calledOnce;
+
+          readFiles(function (obj) {
+            expect(obj["stdout-pre.log"])
+              .to.contain("PRE_ROOT_TASK").and
+              .to.not.contain("ECHO EXTRA FLAGS");
+            expect(obj["stdout.log"])
+              .to.contain("ARCH_TASK").and
+              .to.contain("ECHO EXTRA FLAGS - --foo");
+            expect(obj["stdout-post.log"])
+              .to.contain("POST_ARCH_TASK").and
+              .to.not.contain("ECHO EXTRA FLAGS");
+          }, done);
+        });
+      });
 
       it("passes --env flags to pre+post tasks"); // TODO(PRE) (OPPOSITE???)
       it("passes --tries flags to pre+post tasks"); // TODO(PRE) (OPPOSITE???)

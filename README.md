@@ -502,7 +502,7 @@ These flags have mixed application:
 
 The following flags do _not_ apply to pre/post tasks:
 
-* `--` custom flags TODO_TEST
+* `--` custom flags
 * `--tries` TODO_TEST
 * `--expand-archetype` TODO_TEST/DECIDE ? (Might be better to **apply**)
 * `--setup`: A task specified in `--setup <task>` will not have `pre|post`
