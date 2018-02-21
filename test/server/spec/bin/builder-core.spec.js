@@ -27,15 +27,16 @@ var base = require("../base.spec");
 
 // Cross-platform shell command strings and environment variables.
 var CLI_SLEEP = "node -e \"setTimeout(function () {}, 10000);\"";
-var ENV_MY_VAR = /^win/.test(process.platform) ? "%MY_VAR%" : "$MY_VAR";
-var ENV_PROC_NUM = /^win/.test(process.platform) ? "%PROC_NUM%" : "$PROC_NUM";
+var IS_WIN = /^win/.test(process.platform);
+var ENV_MY_VAR = IS_WIN ? "%MY_VAR%" : "$MY_VAR";
+var ENV_PROC_NUM = IS_WIN ? "%PROC_NUM%" : "$PROC_NUM";
 var ECHO = "node test/fixtures/echo.js";
 var ECHO_FOREVER = "node test/fixtures/echo-forever.js";
 var REPEAT = "node test/fixtures/repeat.js";
 var FAIL = "node test/fixtures/fail.js";
 
 // Custom test runners.
-var itSkipWin = (/^win/.test(process.platform) ? it.skip : it).bind(it);
+var itSkipWin = (IS_WIN ? it.skip : it).bind(it);
 
 // Read files, do assert callbacks, and trap everything, calling `done` at the
 // end. A little limited in use as it's the *last* thing you can call in a
@@ -1235,7 +1236,7 @@ describe("bin/builder-core", function () {
 
           expect(Task.prototype.run).to.be.calledOnce;
 
-          var quotes = /^win/.test(process.platform) ? "\\\"" : "\"";
+          var quotes = IS_WIN ? "\\\"" : "\"";
           readFile("stdout.log", function (data) {
             expect(data).to.contain(
               "EXPANDED " + quotes +
@@ -1879,7 +1880,7 @@ describe("bin/builder-core", function () {
       base.mockFs({
         "package.json": JSON.stringify({
           "scripts": {
-            "echo": "echo ROOT " + /^win/.test(process.platform) ? "%MY_VAR%" : "$MY_VAR"
+            "echo": "echo ROOT " + IS_WIN ? "%MY_VAR%" : "$MY_VAR"
           }
         }, null, 2)
       });
@@ -1901,7 +1902,7 @@ describe("bin/builder-core", function () {
       base.mockFs({
         "package.json": JSON.stringify({
           "scripts": {
-            "echo": "echo ROOT " + /^win/.test(process.platform) ? "%MY_VAR%" : "$MY_VAR"
+            "echo": "echo ROOT " + IS_WIN ? "%MY_VAR%" : "$MY_VAR"
           }
         }, null, 2)
       });
@@ -1923,7 +1924,7 @@ describe("bin/builder-core", function () {
       base.mockFs({
         "package.json": JSON.stringify({
           "scripts": {
-            "echo": "echo ROOT " + /^win/.test(process.platform) ? "%MY_VAR%" : "$MY_VAR"
+            "echo": "echo ROOT " + IS_WIN ? "%MY_VAR%" : "$MY_VAR"
           }
         }, null, 2)
       });
@@ -1947,7 +1948,7 @@ describe("bin/builder-core", function () {
       base.mockFs({
         "package.json": JSON.stringify({
           "scripts": {
-            "echo": "echo ROOT " + /^win/.test(process.platform) ? "%MY_VAR%" : "$MY_VAR"
+            "echo": "echo ROOT " + IS_WIN ? "%MY_VAR%" : "$MY_VAR"
           }
         }, null, 2)
       });
