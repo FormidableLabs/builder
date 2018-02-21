@@ -490,6 +490,7 @@ following execution flags **do** apply to the `pre|post` tasks.
 * `--env-path` TODO_TEST
 * `--quiet` TODO_TEST
 * `--log-level` TODO_TEST
+* `--expand-archetype` TODO_TEST/DECIDE ? (Might be better to **apply**)
 
 These flags have mixed application:
 
@@ -504,7 +505,6 @@ The following flags do _not_ apply to pre/post tasks:
 
 * `--` custom flags
 * `--tries` TODO_TEST
-* `--expand-archetype` TODO_TEST/DECIDE ? (Might be better to **apply**)
 * `--setup`: A task specified in `--setup <task>` will not have `pre|post`
   tasks apply. TODO_TEST
 
