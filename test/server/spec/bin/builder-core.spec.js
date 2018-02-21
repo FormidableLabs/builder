@@ -1352,7 +1352,6 @@ describe("bin/builder-core", function () {
         });
       });
 
-      // Also, have `pre` task in root package.json
       it("only passes custom flags to main task", function (done) {
         base.sandbox.spy(Task.prototype, "run");
         base.mockFs({
@@ -1397,7 +1396,63 @@ describe("bin/builder-core", function () {
         });
       });
 
-      it("passes --env flags to pre+post tasks"); // TODO(PRE) (OPPOSITE???)
+      it("passes --env flags to pre+post tasks", function (done) {
+        base.sandbox.spy(Task.prototype, "run");
+        base.mockFs({
+          "package.json": JSON.stringify({
+            "scripts": {
+              "prebar": ECHO + " >> stdout-pre.log",
+              "bar": ECHO + " >> stdout.log",
+              "postbar": ECHO + " >> stdout-post.log"
+            }
+          }, null, 2)
+        });
+        run({
+          argv: ["node", "builder", "run", "bar", "--env", JSON.stringify({
+            "TEST_MESSAGE": "from --env"
+          })]
+        }, function (err) {
+          if (err) { return done(err); }
+
+          expect(Task.prototype.run).to.be.calledOnce;
+
+          readFiles(function (obj) {
+            expect(obj["stdout-pre.log"]).to.contain("ECHO - string - from --env");
+            expect(obj["stdout.log"]).to.contain("ECHO - string - from --env");
+            expect(obj["stdout-post.log"]).to.contain("ECHO - string - from --env");
+          }, done);
+        });
+      });
+
+      it("passes --env-path flags to pre+post tasks", function (done) {
+        base.sandbox.spy(Task.prototype, "run");
+        base.mockFs({
+          "env.json": JSON.stringify({
+            "TEST_MESSAGE": "from --env"
+          }, null, 2),
+          "package.json": JSON.stringify({
+            "scripts": {
+              "prebar": ECHO + " >> stdout-pre.log",
+              "bar": ECHO + " >> stdout.log",
+              "postbar": ECHO + " >> stdout-post.log"
+            }
+          }, null, 2)
+        });
+        run({
+          argv: ["node", "builder", "run", "bar", "--env-path=env.json"]
+        }, function (err) {
+          if (err) { return done(err); }
+
+          expect(Task.prototype.run).to.be.calledOnce;
+
+          readFiles(function (obj) {
+            expect(obj["stdout-pre.log"]).to.contain("ECHO - string - from --env");
+            expect(obj["stdout.log"]).to.contain("ECHO - string - from --env");
+            expect(obj["stdout-post.log"]).to.contain("ECHO - string - from --env");
+          }, done);
+        });
+      });
+
       it("passes --tries flags to pre+post tasks"); // TODO(PRE) (OPPOSITE???)
       it("passes --expand-archetype flags to pre+post tasks"); // TODO(PRE) (OPPOSITE???)
 

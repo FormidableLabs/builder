@@ -486,8 +486,8 @@ group. So if any of those fail, it's as if the main task failed.
 When executing a `<task>` that has `pre<task>` and/or `post<task>` entries, the
 following execution flags **do** apply to the `pre|post` tasks.
 
-* `--env` TODO_TEST
-* `--env-path` TODO_TEST
+* `--env`
+* `--env-path`
 * `--quiet` TODO_TEST
 * `--log-level` TODO_TEST
 * `--expand-archetype` TODO_TEST/DECIDE ? (Might be better to **apply**)
