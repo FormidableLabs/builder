@@ -1520,9 +1520,43 @@ describe("bin/builder-core", function () {
 
       });
 
-      it("passes --tries flags to pre+post tasks"); // TODO(PRE) (OPPOSITE???)
-      it("passes --expand-archetype flags to pre+post tasks"); // TODO(PRE) (OPPOSITE???)
+      it("passes --expand-archetype flags to pre+post tasks", function (done) {
+        base.sandbox.spy(Task.prototype, "run");
+        base.mockFs({
+          ".builderrc": "---\narchetypes:\n  - mock-archetype",
+          "package.json": JSON.stringify({}, null, 2),
+          "node_modules": {
+            "mock-archetype": {
+              "package.json": JSON.stringify({
+                "scripts": {
+                  "prefoo": ECHO + " node_modules/mock-archetype/PRE.txt >> stdout-pre.log",
+                  "foo": ECHO + " node_modules/mock-archetype/FOO.txt >> stdout.log",
+                  "postfoo": ECHO + " node_modules/mock-archetype/POST.txt >> stdout-post.log"
+                }
+              }, null, 2)
+            }
+          }
+        });
 
+        run({
+          argv: ["node", "builder", "run", "foo", "--expand-archetype"]
+        }, function (err) {
+          if (err) { return done(err); }
+
+          expect(Task.prototype.run).to.be.calledOnce;
+
+          readFiles(function (obj) {
+            var ARCH_PATH = path.resolve("node_modules/mock-archetype");
+
+            // Note: Expect `/{NAME}.txt` suffix in win and mac cases.
+            expect(obj["stdout-pre.log"]).to.contain(ARCH_PATH + "/PRE.txt");
+            expect(obj["stdout.log"]).to.contain(ARCH_PATH + "/FOO.txt");
+            expect(obj["stdout-post.log"]).to.contain(ARCH_PATH + "/POST.txt");
+          }, done);
+        });
+      });
+
+      it("skips --tries flags to pre+post tasks"); // TODO(PRE)
       it("skips pre tasks for a --setup task"); // TODO(PRE)
       it("skips post tasks for a --setup task"); // TODO(PRE)
 
