@@ -1453,6 +1453,73 @@ describe("bin/builder-core", function () {
         });
       });
 
+      it("passes --quiet flags to pre+post tasks", function (done) {
+        base.sandbox.spy(Task.prototype, "run");
+        base.mockFs({
+          "package.json": JSON.stringify({
+            "scripts": {
+              "prebar": "echo PRE_BAR_TASK >> stdout.log",
+              "bar": "echo MAIN_BAR_TASK >> stdout.log",
+              "postbar": "echo POST_BAR_TASK >> stdout.log"
+            }
+          }, null, 2)
+        });
+
+        run({
+          argv: ["node", "builder", "run", "bar", "--quiet"]
+        }, function (err) {
+          if (err) { return done(err); }
+
+          expect(Task.prototype.run).to.be.calledOnce;
+          expect(logStubs.info).not.be.called;
+          expect(logStubs.warn).not.be.called;
+          expect(logStubs.error).not.be.called;
+
+          readFile("stdout.log", function (data) {
+            expect(data)
+              .to.contain("PRE_BAR_TASK").and
+              .to.contain("MAIN_BAR_TASK").and
+              .to.contain("POST_BAR_TASK");
+          }, done);
+        });
+      });
+
+      it("passes --log-level to pre+post tasks", function (done) {
+        base.sandbox.spy(Task.prototype, "run");
+        base.mockFs({
+          "package.json": JSON.stringify({
+            "scripts": {
+              "prebar": "echo PRE_BAR_TASK >> stdout.log",
+              "bar": "echo MAIN_BAR_TASK >> stdout.log",
+              "postbar": "BAD_COMMAND 2>> stderr.log"
+            }
+          }, null, 2)
+        });
+
+        run({
+          argv: ["node", "builder", "run", "bar", "--log-level=error"]
+        }, function (err) {
+          expect(err).to.have.property("message")
+            .that.contains("Command failed").and
+            .that.contains("BAD_COMMAND");
+
+          expect(Task.prototype.run).to.be.calledOnce;
+          expect(logStubs.info).not.be.called;
+          expect(logStubs.warn).not.be.called;
+          expect(logStubs.error)
+            .to.be.calledWithMatch("Command failed").and
+            .to.be.calledWithMatch("BAD_COMMAND");
+
+          readFiles(function (obj) {
+            expect(obj["stdout.log"])
+              .to.contain("PRE_BAR_TASK").and
+              .to.contain("MAIN_BAR_TASK");
+            expect(obj["stderr.log"]).to.contain("BAD_COMMAND");
+          }, done);
+        });
+
+      });
+
       it("passes --tries flags to pre+post tasks"); // TODO(PRE) (OPPOSITE???)
       it("passes --expand-archetype flags to pre+post tasks"); // TODO(PRE) (OPPOSITE???)
 

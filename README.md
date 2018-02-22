@@ -488,8 +488,8 @@ following execution flags **do** apply to the `pre|post` tasks.
 
 * `--env`
 * `--env-path`
-* `--quiet` TODO_TEST
-* `--log-level` TODO_TEST
+* `--quiet`
+* `--log-level`
 * `--expand-archetype` TODO_TEST/DECIDE ? (Might be better to **apply**)
 
 These flags have mixed application:
