@@ -1556,9 +1556,9 @@ describe("bin/builder-core", function () {
         });
       });
 
-      it("skips --tries flags to pre+post tasks"); // TODO(PRE)
-      it("skips pre tasks for a --setup task"); // TODO(PRE)
-      it("skips post tasks for a --setup task"); // TODO(PRE)
+      it("skips --tries flag in pre+post tasks"); // TODO(PRE)
+      it("does not apply pre+post tasks for a --setup task"); // TODO(PRE)
+      it("skips --buffer flag in pre+post tasks"); // TODO(PRE) DECIDE (???)
 
       it("skips prepre tasks"); // TODO(PRE): DECIDE (NPM?)
       it("skips prepost tasks"); // TODO(PRE): DECIDE (NPM?)
@@ -1885,6 +1885,8 @@ describe("bin/builder-core", function () {
         });
       });
     });
+
+    it("applies --buffer flag in pre+post tasks"); // TODO(PRE)
 
   });
 
@@ -2436,6 +2438,8 @@ describe("bin/builder-core", function () {
       });
 
     });
+
+    it("skips --buffer flag in pre+post tasks"); // TODO(PRE) DECIDE (???)
 
   });
 
