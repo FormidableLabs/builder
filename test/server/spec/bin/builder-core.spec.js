@@ -2592,14 +2592,17 @@ describe("bin/builder-core", function () {
         "package.json": JSON.stringify({
           "scripts": {
             "preecho": ECHO + " PRE_TASK >> stdout-pre.log",
-            "echo": ECHO + " ROOT_TASK >> stdout.log",
+            "echo": ECHO + " ROOT_TASK >> stdout-" + ENV_PROC_NUM + ".log",
             "postecho": ECHO + " POST_TASK >> stdout-post.log"
           }
         }, null, 2)
       });
 
       run({
-        argv: ["node", "builder", "envs", "echo", "--buffer", JSON.stringify([{}, {}])]
+        argv: ["node", "builder", "envs", "echo", "--buffer", JSON.stringify([
+          { PROC_NUM: 1 },
+          { PROC_NUM: 2 }
+        ])]
       }, function (err) {
         if (err) { return done(err); }
 
@@ -2615,8 +2618,8 @@ describe("bin/builder-core", function () {
 
         readFiles(function (obj) {
           expect(obj["stdout-pre.log"]).to.contain("PRE_TASK");
-          expect(obj["stdout.log"]).to.contain("ROOT_TASK");
-
+          expect(obj["stdout-1.log"]).to.contain("ROOT_TASK");
+          expect(obj["stdout-2.log"]).to.contain("ROOT_TASK");
           expect(obj["stdout-post.log"]).to.contain("POST_TASK");
         }, done);
       });
