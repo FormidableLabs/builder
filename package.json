@@ -1,6 +1,6 @@
 {
   "name": "builder",
-  "version": "3.2.3",
+  "version": "4.0.0",
   "description": "An NPM-based task runner",
   "repository": {
     "type": "git",
@@ -12,7 +12,7 @@
     "url": "https://github.com/FormidableLabs/builder/issues"
   },
   "homepage": "https://github.com/FormidableLabs/builder",
-  "engines" : {
+  "engines": {
     "node": ">=4"
   },
   "scripts": {
