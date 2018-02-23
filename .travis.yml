@@ -23,9 +23,6 @@ script:
   - npm --version
   - npm run builder:check-ci
 
-  # Do some primitive bash functional tests.
-  - bash test/func/test.sh
-
   # Manually send coverage reports to coveralls.
   # - Aggregate client results
   # - Single server and func test results

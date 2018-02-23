@@ -5,7 +5,6 @@ var chalk = require("chalk");
 var Config = require("../lib/config");
 var Environment = require("../lib/environment");
 var Task = require("../lib/task");
-var runner = require("../lib/runner");
 var log = require("../lib/log");
 
 /**
@@ -50,8 +49,7 @@ module.exports = function (opts, callback) {
   var task = new Task({
     config: config,
     env: env,
-    argv: opts.argv,
-    runner: runner
+    argv: opts.argv
   });
 
   // Run the task

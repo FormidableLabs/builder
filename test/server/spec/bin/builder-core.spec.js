@@ -20,45 +20,59 @@ var pkg = require("../../../../package.json");
 var Config = require("../../../../lib/config");
 var Task = require("../../../../lib/task");
 var log = require("../../../../lib/log");
+var setup = require("../../../../lib/utils/setup");
+var runner = require("../../../../lib/utils/runner");
 var run = require("../../../../bin/builder-core");
 
 var base = require("../base.spec");
 
 // Cross-platform shell command strings and environment variables.
 var CLI_SLEEP = "node -e \"setTimeout(function () {}, 10000);\"";
-var ENV_MY_VAR = /^win/.test(process.platform) ? "%MY_VAR%" : "$MY_VAR";
-var ENV_PROC_NUM = /^win/.test(process.platform) ? "%PROC_NUM%" : "$PROC_NUM";
+var IS_WIN = /^win/.test(process.platform);
+var ENV_MY_VAR = IS_WIN ? "%MY_VAR%" : "$MY_VAR";
+var ENV_PROC_NUM = IS_WIN ? "%PROC_NUM%" : "$PROC_NUM";
+var ECHO = "node test/fixtures/echo.js";
+var ECHO_FOREVER = "node test/fixtures/echo-forever.js";
+var REPEAT = "node test/fixtures/repeat.js";
+var FAIL = "node test/fixtures/fail.js";
+
+// Custom test runners.
+var itSkipWin = (IS_WIN ? it.skip : it).bind(it);
 
 // Read files, do assert callbacks, and trap everything, calling `done` at the
 // end. A little limited in use as it's the *last* thing you can call in a
 // given test, but we can abstract more later if needed.
-var readFiles = function (files, callback, done) {
+var readFiles = function (callback, done) {
   base.mockFs.restore();
 
-  var obj = {};
+  fs.readdir(process.cwd(), function (readdirErr, files) {
+    if (readdirErr) { return done(readdirErr); }
 
-  async.map(files, function (filename, cb) {
-    fs.readFile(filename, { encoding: "utf8" }, function (err, data) {
-      if (err) { return cb(err); }
-      obj[filename] = data;
-      cb();
-    });
-  }, function (err) {
-    try {
-      if (!err) {
-        callback(obj); // eslint-disable-line callback-return
+    var obj = {};
+    var outs = files.filter(base.isTestOuts);
+    async.map(outs, function (file, cb) {
+      fs.readFile(file, { encoding: "utf8" }, function (err, data) {
+        if (err) { return cb(err); }
+        obj[file] = data.toString();
+        cb();
+      });
+    }, function (err) {
+      try {
+        if (!err) {
+          callback(obj); // eslint-disable-line callback-return
+        }
+      } catch (assertErr) {
+        err = assertErr;
       }
-    } catch (assertErr) {
-      err = assertErr;
-    }
 
-    done(err);
+      done(err);
+    });
   });
 };
 
 // Single file alias.
 var readFile = function (filename, callback, done) {
-  readFiles([filename], function (obj) {
+  readFiles(function (obj) {
     callback(obj[filename]);
   }, done);
 };
@@ -109,6 +123,21 @@ describe("bin/builder-core", function () {
       }
       throw new Error("Cannot require: " + mod);
     });
+
+
+    // Skip `require()`-ing at all so we avoid `require` mock-fs issues.
+    base.sandbox.stub(Task.prototype, "_lazyRequire", function (mod) {
+      var lookup = {
+        "./utils/setup": setup
+      };
+
+      if (lookup[mod]) {
+        return lookup[mod];
+      }
+
+      throw new Error("Cannot require: " + mod);
+    });
+
   });
 
   afterEach(function () {
@@ -397,7 +426,6 @@ describe("bin/builder-core", function () {
           expect(data).to.contain("BAR_TASK");
         }, done);
       });
-
     });
 
     it("runs with quiet log output", function (done) {
@@ -552,18 +580,14 @@ describe("bin/builder-core", function () {
 
     });
 
-    // TODO: This one is going to be... tough.
-    // https://github.com/FormidableLabs/builder/issues/9
-    it("overrides a <archetype> command with a <root> one in a composed <archetype> command");
-
     it("runs with --setup", function (done) {
       base.sandbox.spy(Task.prototype, "run");
       base.mockFs({
         "package.json": JSON.stringify({
           "scripts": {
             // *real* fs for script references. (`0` runs forever).
-            "setup": "node test/server/fixtures/repeat-script.js 0 SETUP >> stdout-setup.log",
-            "bar": "node test/server/fixtures/repeat-script.js 5 BAR_TASK >> stdout.log"
+            "setup": ECHO_FOREVER + " SETUP >> stdout-setup.log",
+            "bar": REPEAT + " 5 BAR_TASK >> stdout.log"
           }
         }, null, 2)
       });
@@ -573,17 +597,125 @@ describe("bin/builder-core", function () {
       }, function (err) {
         if (err) { return done(err); }
 
-        expect(Task.prototype.run).to.have.callCount(2);
+        expect(Task.prototype.run).to.have.callCount(1);
 
-        readFiles(["stdout-setup.log", "stdout.log"], function (obj) {
+        readFiles(function (obj) {
           expect(obj["stdout-setup.log"])
             .to.contain("SETUP");
           expect(obj["stdout.log"])
             .to.contain("BAR_TASK").and
-            .to.contain("EXIT - BAR_TASK - 0");
+            .to.contain("REPEAT DONE - BAR_TASK - 0");
         }, done);
       });
 
+    });
+
+    it("runs --setup without flags --expand-archetype", function (done) {
+      base.sandbox.spy(Task.prototype, "run");
+      base.mockFs({
+        ".builderrc": "---\narchetypes:\n  - mock-archetype",
+        "package.json": JSON.stringify({}, null, 2),
+        "node_modules": {
+          "mock-archetype": {
+            "package.json": JSON.stringify({
+              "scripts": {
+                "foo": REPEAT + " 1 node_modules/mock-archetype/FOO.txt >> stdout.log",
+                "setup": ECHO_FOREVER + " node_modules/mock-archetype/SETUP.txt >> stdout-setup.log"
+              }
+            }, null, 2)
+          }
+        }
+      });
+
+      run({
+        argv: ["node", "builder", "--expand-archetype", "--setup=setup", "run", "foo"]
+      }, function (err) {
+        if (err) { return done(err); }
+
+        expect(Task.prototype.run).to.be.calledOnce;
+
+        readFiles(function (obj) {
+          // Expands foo.
+          // Note: Expect `/FOO.txt` suffix in win and mac cases.
+          expect(obj["stdout.log"]).to.contain(
+            path.resolve("node_modules/mock-archetype") + "/FOO.txt"
+          );
+
+          // Doesn't expand setup
+          expect(obj["stdout-setup.log"])
+            .to.contain("node_modules/mock-archetype/SETUP.txt").and
+            .to.not.contain(process.cwd());
+
+        }, done);
+      });
+    });
+
+    it("runs --setup with flags --env", function (done) {
+      base.sandbox.spy(Task.prototype, "run");
+      base.mockFs({
+        ".builderrc": "---\narchetypes:\n  - mock-archetype",
+        "package.json": JSON.stringify({}, null, 2),
+        "node_modules": {
+          "mock-archetype": {
+            "package.json": JSON.stringify({
+              "scripts": {
+                "echo": ECHO + " >> stdout.log",
+                "setup": ECHO_FOREVER + " >> stdout-setup.log"
+              }
+            }, null, 2)
+          }
+        }
+      });
+
+      run({
+        argv: [
+          "node", "builder", "run", "echo",
+          "--env={\"TEST_MESSAGE\":\"HI\"}", "--setup=setup"
+        ]
+      }, function (err) {
+        if (err) { return done(err); }
+
+        expect(Task.prototype.run).to.be.calledOnce;
+
+        readFiles(function (obj) {
+          expect(obj["stdout.log"]).to.contain("string - HI");
+          expect(obj["stdout-setup.log"]).to.contain("HI");
+        }, done);
+      });
+    });
+
+    it("runs --setup without custom flags", function (done) {
+      base.sandbox.spy(Task.prototype, "run");
+      base.mockFs({
+        ".builderrc": "---\narchetypes:\n  - mock-archetype",
+        "package.json": JSON.stringify({}, null, 2),
+        "node_modules": {
+          "mock-archetype": {
+            "package.json": JSON.stringify({
+              "scripts": {
+                "echo": ECHO + " >> stdout.log",
+                "setup": ECHO_FOREVER + " >> stdout-setup.log"
+              }
+            }, null, 2)
+          }
+        }
+      });
+
+      run({
+        argv: [
+          "node", "builder", "run", "echo",
+          "--setup=setup", "--", "--foo"
+        ]
+      }, function (err) {
+        if (err) { return done(err); }
+
+        expect(Task.prototype.run).to.be.calledOnce;
+
+        readFiles(function (obj) {
+          expect(obj["stdout.log"]).to.contain("ECHO EXTRA FLAGS - --foo");
+          expect(obj["stdout-setup.log"]).to.not.contain("REPEAT EXTRA FLAGS");
+        }, done);
+      });
     });
 
     it("handles --setup early 0 exit", function (done) {
@@ -591,7 +723,7 @@ describe("bin/builder-core", function () {
       base.mockFs({
         "package.json": JSON.stringify({
           "scripts": {
-            "setup": "node test/server/fixtures/repeat-script.js 2 SETUP >> stdout-setup.log",
+            "setup": REPEAT + " 2 SETUP >> stdout-setup.log",
             "bar": CLI_SLEEP
           }
         }, null, 2)
@@ -603,7 +735,7 @@ describe("bin/builder-core", function () {
         expect(err).to.have.property("message")
           .that.contains("Setup exited with code: 0");
 
-        expect(Task.prototype.run).to.have.callCount(2);
+        expect(Task.prototype.run).to.have.callCount(1);
         expect(logStubs.error)
           .to.be.calledWithMatch("run bar").and
           .to.be.calledWithMatch("Setup exited with code: 0");
@@ -618,7 +750,7 @@ describe("bin/builder-core", function () {
       base.mockFs({
         "package.json": JSON.stringify({
           "scripts": {
-            "setup": "node test/server/fixtures/repeat-script.js 2 SETUP 1 >> stdout-setup.log",
+            "setup": REPEAT + " 2 SETUP 1 >> stdout-setup.log",
             "bar": CLI_SLEEP
           }
         }, null, 2)
@@ -630,7 +762,7 @@ describe("bin/builder-core", function () {
         expect(err).to.have.property("message")
           .that.contains("Setup exited with code: 1");
 
-        expect(Task.prototype.run).to.have.callCount(2);
+        expect(Task.prototype.run).to.have.callCount(1);
         expect(logStubs.error)
           .to.be.calledWithMatch("run bar").and
           .to.be.calledWithMatch("Setup exited with code: 1");
@@ -645,7 +777,7 @@ describe("bin/builder-core", function () {
       base.mockFs({
         "package.json": JSON.stringify({
           "scripts": {
-            "echo": "node test/server/fixtures/echo.js >> stdout.log"
+            "echo": ECHO + " >> stdout.log"
           }
         }, null, 2)
       });
@@ -668,7 +800,7 @@ describe("bin/builder-core", function () {
       base.mockFs({
         "package.json": JSON.stringify({
           "scripts": {
-            "echo": "node test/server/fixtures/echo.js >> stdout.log"
+            "echo": ECHO + " >> stdout.log"
           }
         }, null, 2),
         "env.json": JSON.stringify({
@@ -694,7 +826,7 @@ describe("bin/builder-core", function () {
       base.mockFs({
         "package.json": JSON.stringify({
           "scripts": {
-            "echo": "node test/server/fixtures/echo.js >> stdout.log"
+            "echo": ECHO + " >> stdout.log"
           }
         }, null, 2)
       });
@@ -718,7 +850,7 @@ describe("bin/builder-core", function () {
       base.mockFs({
         "package.json": JSON.stringify({
           "scripts": {
-            "echo": "node test/server/fixtures/echo.js >> stdout.log"
+            "echo": ECHO + " >> stdout.log"
           }
         }, null, 2),
         "env.json": JSON.stringify({
@@ -778,7 +910,7 @@ describe("bin/builder-core", function () {
             "_test_message": "from base config"
           },
           "scripts": {
-            "echo": "node test/server/fixtures/echo.js >> stdout.log"
+            "echo": ECHO + " >> stdout.log"
           }
         }, null, 2)
       });
@@ -808,7 +940,7 @@ describe("bin/builder-core", function () {
                 "_test_message": "from archetype"
               },
               "scripts": {
-                "echo": "node test/server/fixtures/echo.js >> stdout.log"
+                "echo": ECHO + " >> stdout.log"
               }
             }, null, 2)
           }
@@ -828,7 +960,9 @@ describe("bin/builder-core", function () {
       });
     });
 
-    it("runs with empty base + non-empty archetype config value", function (done) {
+    // TODO: Re-enable on Windows / CI
+    // https://github.com/FormidableLabs/builder/issues/159
+    itSkipWin("runs with empty base + non-empty archetype config value", function (done) {
       base.sandbox.spy(Task.prototype, "run");
       base.mockFs({
         ".builderrc": "---\narchetypes:\n  - mock-archetype",
@@ -844,7 +978,7 @@ describe("bin/builder-core", function () {
                 "_test_message": "from archetype"
               },
               "scripts": {
-                "echo": "node test/server/fixtures/echo.js >> stdout.log"
+                "echo": ECHO + " >> stdout.log"
               }
             }, null, 2)
           }
@@ -876,7 +1010,7 @@ describe("bin/builder-core", function () {
                 "_test_message": "from archetype"
               },
               "scripts": {
-                "echo": "node test/server/fixtures/echo.js >> stdout.log"
+                "echo": ECHO + " >> stdout.log"
               }
             }, null, 2)
           }
@@ -916,7 +1050,7 @@ describe("bin/builder-core", function () {
                 "_test_message": "from archetype"
               },
               "scripts": {
-                "echo": "node test/server/fixtures/echo.js >> stdout.log"
+                "echo": ECHO + " >> stdout.log"
               }
             }, null, 2)
           }
@@ -956,7 +1090,7 @@ describe("bin/builder-core", function () {
                 "_test_message": "from archetype"
               },
               "scripts": {
-                "echo": "node test/server/fixtures/echo.js >> stdout.log"
+                "echo": ECHO + " >> stdout.log"
               }
             }, null, 2)
           }
@@ -979,7 +1113,7 @@ describe("bin/builder-core", function () {
 
     describe("expands paths with --expand-archetype", function () {
 
-      it("Skips `../node_modules/<archetype>`", function (done) {
+      it("skips `../node_modules/<archetype>`", function (done) {
         base.sandbox.spy(Task.prototype, "run");
         base.mockFs({
           ".builderrc": "---\narchetypes:\n  - mock-archetype",
@@ -1010,7 +1144,7 @@ describe("bin/builder-core", function () {
         });
       });
 
-      it("Skips `other/node_modules/<archetype>`", function (done) {
+      it("skips `other/node_modules/<archetype>`", function (done) {
         base.sandbox.spy(Task.prototype, "run");
         base.mockFs({
           ".builderrc": "---\narchetypes:\n  - mock-archetype",
@@ -1042,7 +1176,7 @@ describe("bin/builder-core", function () {
         });
       });
 
-      it("Replaces `node_modules/<archetype>`", function (done) {
+      it("replaces `node_modules/<archetype>`", function (done) {
         base.sandbox.spy(Task.prototype, "run");
         base.mockFs({
           ".builderrc": "---\narchetypes:\n  - mock-archetype",
@@ -1066,14 +1200,14 @@ describe("bin/builder-core", function () {
           expect(Task.prototype.run).to.be.calledOnce;
 
           readFile("stdout.log", function (data) {
-            expect(path.resolve(data)).to.contain(
-              "EXPANDED " + path.resolve(process.cwd(), "node_modules/mock-archetype/A_FILE.txt")
+            expect(data).to.contain(
+              "EXPANDED " + path.resolve("node_modules/mock-archetype") + "/A_FILE.txt"
             );
           }, done);
         });
       });
 
-      it("Replaces `\"node_modules/<archetype>`", function (done) {
+      it("replaces `\"node_modules/<archetype>`", function (done) {
         base.sandbox.spy(Task.prototype, "run");
         base.mockFs({
           ".builderrc": "---\narchetypes:\n  - mock-archetype",
@@ -1099,17 +1233,17 @@ describe("bin/builder-core", function () {
 
           expect(Task.prototype.run).to.be.calledOnce;
 
-          var quotes = /^win/.test(process.platform) ? "\\\"" : "\"";
+          var quotes = IS_WIN ? "\\\"" : "\"";
           readFile("stdout.log", function (data) {
-            expect(path.resolve(data)).to.contain(
+            expect(data).to.contain(
               "EXPANDED " + quotes +
-              path.resolve(process.cwd(), "node_modules/mock-archetype/A_FILE.txt") + quotes
+              path.resolve("node_modules/mock-archetype") + "/A_FILE.txt" + quotes
             );
           }, done);
         });
       });
 
-      it("Propagates flag to sub-task", function (done) {
+      it("propagates flag to sub-task", function (done) {
         base.sandbox.spy(Task.prototype, "run");
         base.mockFs({
           ".builderrc": "---\narchetypes:\n  - mock-archetype",
@@ -1135,14 +1269,14 @@ describe("bin/builder-core", function () {
           expect(Task.prototype.run).to.be.calledOnce;
 
           readFile("stdout.log", function (data) {
-            expect(path.resolve(data)).to.contain(
-              "EXPANDED " + path.resolve(process.cwd(), "node_modules/mock-archetype/A_FILE.txt")
+            expect(data).to.contain(
+              "EXPANDED " + path.resolve("node_modules/mock-archetype") + "/A_FILE.txt"
             );
           }, done);
         });
       });
 
-      it("Skips replacing root project tasks", function (done) {
+      it("skips replacing root project tasks", function (done) {
         base.sandbox.spy(Task.prototype, "run");
         base.mockFs({
           ".builderrc": "---\narchetypes:\n  - mock-archetype",
@@ -1175,6 +1309,365 @@ describe("bin/builder-core", function () {
 
     });
 
+    describe("pre/post lifecycle", function () {
+
+      it("runs pre archetype task and post root task", function (done) {
+        base.sandbox.spy(Task.prototype, "run");
+        base.mockFs({
+          ".builderrc": "---\narchetypes:\n  - mock-archetype",
+          "package.json": JSON.stringify({
+            "scripts": {
+              "bar": "echo MAIN_ROOT_TASK >> stdout.log",
+              "postbar": "echo POST_ROOT_TASK >> stdout-post.log"
+            }
+          }, null, 2),
+          "node_modules": {
+            "mock-archetype": {
+              "package.json": JSON.stringify({
+                "scripts": {
+                  "prebar": "echo PRE_ARCH_TASK >> stdout-pre.log",
+                  "postbar": "echo POST_ARCH_TASK >> stdout-post.log"
+                }
+              }, null, 2)
+            }
+          }
+        });
+        run({
+          argv: ["node", "builder", "run", "bar"]
+        }, function (err) {
+          if (err) { return done(err); }
+
+          expect(Task.prototype.run).to.be.calledOnce;
+
+          readFiles(function (obj) {
+            expect(obj["stdout-pre.log"]).to.contain("PRE_ARCH_TASK");
+            expect(obj["stdout.log"]).to.contain("MAIN_ROOT_TASK");
+            expect(obj["stdout-post.log"])
+              .to.contain("POST_ROOT_TASK").and
+              .to.not.contain("POST_ARCH_TASK");
+          }, done);
+        });
+      });
+
+      it("only passes custom flags to main task", function (done) {
+        base.sandbox.spy(Task.prototype, "run");
+        base.mockFs({
+          ".builderrc": "---\narchetypes:\n  - mock-archetype",
+          "package.json": JSON.stringify({
+            "scripts": {
+              "preecho": ECHO + " PRE_ROOT_TASK >> stdout-pre.log"
+            }
+          }, null, 2),
+          "node_modules": {
+            "mock-archetype": {
+              "package.json": JSON.stringify({
+                "scripts": {
+                  "echo": ECHO + " ARCH_TASK >> stdout.log",
+                  "postecho": ECHO + " POST_ARCH_TASK >> stdout-post.log"
+                }
+              }, null, 2)
+            }
+          }
+        });
+
+        run({
+          argv: [
+            "node", "builder", "run", "echo", "--", "--foo"
+          ]
+        }, function (err) {
+          if (err) { return done(err); }
+
+          expect(Task.prototype.run).to.be.calledOnce;
+
+          readFiles(function (obj) {
+            expect(obj["stdout-pre.log"])
+              .to.contain("PRE_ROOT_TASK").and
+              .to.not.contain("ECHO EXTRA FLAGS");
+            expect(obj["stdout.log"])
+              .to.contain("ARCH_TASK").and
+              .to.contain("ECHO EXTRA FLAGS - --foo");
+            expect(obj["stdout-post.log"])
+              .to.contain("POST_ARCH_TASK").and
+              .to.not.contain("ECHO EXTRA FLAGS");
+          }, done);
+        });
+      });
+
+      it("passes --env flags to pre+post tasks", function (done) {
+        base.sandbox.spy(Task.prototype, "run");
+        base.mockFs({
+          "package.json": JSON.stringify({
+            "scripts": {
+              "prebar": ECHO + " >> stdout-pre.log",
+              "bar": ECHO + " >> stdout.log",
+              "postbar": ECHO + " >> stdout-post.log"
+            }
+          }, null, 2)
+        });
+        run({
+          argv: ["node", "builder", "run", "bar", "--env", JSON.stringify({
+            "TEST_MESSAGE": "from --env"
+          })]
+        }, function (err) {
+          if (err) { return done(err); }
+
+          expect(Task.prototype.run).to.be.calledOnce;
+
+          readFiles(function (obj) {
+            expect(obj["stdout-pre.log"]).to.contain("ECHO - string - from --env");
+            expect(obj["stdout.log"]).to.contain("ECHO - string - from --env");
+            expect(obj["stdout-post.log"]).to.contain("ECHO - string - from --env");
+          }, done);
+        });
+      });
+
+      it("passes --env-path flags to pre+post tasks", function (done) {
+        base.sandbox.spy(Task.prototype, "run");
+        base.mockFs({
+          "env.json": JSON.stringify({
+            "TEST_MESSAGE": "from --env"
+          }, null, 2),
+          "package.json": JSON.stringify({
+            "scripts": {
+              "prebar": ECHO + " >> stdout-pre.log",
+              "bar": ECHO + " >> stdout.log",
+              "postbar": ECHO + " >> stdout-post.log"
+            }
+          }, null, 2)
+        });
+        run({
+          argv: ["node", "builder", "run", "bar", "--env-path=env.json"]
+        }, function (err) {
+          if (err) { return done(err); }
+
+          expect(Task.prototype.run).to.be.calledOnce;
+
+          readFiles(function (obj) {
+            expect(obj["stdout-pre.log"]).to.contain("ECHO - string - from --env");
+            expect(obj["stdout.log"]).to.contain("ECHO - string - from --env");
+            expect(obj["stdout-post.log"]).to.contain("ECHO - string - from --env");
+          }, done);
+        });
+      });
+
+      it("passes --quiet flags to pre+post tasks", function (done) {
+        base.sandbox.spy(Task.prototype, "run");
+        base.mockFs({
+          "package.json": JSON.stringify({
+            "scripts": {
+              "prebar": "echo PRE_BAR_TASK >> stdout.log",
+              "bar": "echo MAIN_BAR_TASK >> stdout.log",
+              "postbar": "echo POST_BAR_TASK >> stdout.log"
+            }
+          }, null, 2)
+        });
+
+        run({
+          argv: ["node", "builder", "run", "bar", "--quiet"]
+        }, function (err) {
+          if (err) { return done(err); }
+
+          expect(Task.prototype.run).to.be.calledOnce;
+          expect(logStubs.info).not.be.called;
+          expect(logStubs.warn).not.be.called;
+          expect(logStubs.error).not.be.called;
+
+          readFile("stdout.log", function (data) {
+            expect(data)
+              .to.contain("PRE_BAR_TASK").and
+              .to.contain("MAIN_BAR_TASK").and
+              .to.contain("POST_BAR_TASK");
+          }, done);
+        });
+      });
+
+      it("passes --log-level to pre+post tasks", function (done) {
+        base.sandbox.spy(Task.prototype, "run");
+        base.mockFs({
+          "package.json": JSON.stringify({
+            "scripts": {
+              "prebar": "echo PRE_BAR_TASK >> stdout.log",
+              "bar": "echo MAIN_BAR_TASK >> stdout.log",
+              "postbar": "BAD_COMMAND 2>> stderr.log"
+            }
+          }, null, 2)
+        });
+
+        run({
+          argv: ["node", "builder", "run", "bar", "--log-level=error"]
+        }, function (err) {
+          expect(err).to.have.property("message")
+            .that.contains("Command failed").and
+            .that.contains("BAD_COMMAND");
+
+          expect(Task.prototype.run).to.be.calledOnce;
+          expect(logStubs.info).not.be.called;
+          expect(logStubs.warn).not.be.called;
+          expect(logStubs.error)
+            .to.be.calledWithMatch("Command failed").and
+            .to.be.calledWithMatch("BAD_COMMAND");
+
+          readFiles(function (obj) {
+            expect(obj["stdout.log"])
+              .to.contain("PRE_BAR_TASK").and
+              .to.contain("MAIN_BAR_TASK");
+            expect(obj["stderr.log"]).to.contain("BAD_COMMAND");
+          }, done);
+        });
+
+      });
+
+      it("passes --expand-archetype flags to pre+post tasks", function (done) {
+        base.sandbox.spy(Task.prototype, "run");
+        base.mockFs({
+          ".builderrc": "---\narchetypes:\n  - mock-archetype",
+          "package.json": JSON.stringify({}, null, 2),
+          "node_modules": {
+            "mock-archetype": {
+              "package.json": JSON.stringify({
+                "scripts": {
+                  "prefoo": ECHO + " node_modules/mock-archetype/PRE.txt >> stdout-pre.log",
+                  "foo": ECHO + " node_modules/mock-archetype/FOO.txt >> stdout.log",
+                  "postfoo": ECHO + " node_modules/mock-archetype/POST.txt >> stdout-post.log"
+                }
+              }, null, 2)
+            }
+          }
+        });
+
+        run({
+          argv: ["node", "builder", "run", "foo", "--expand-archetype"]
+        }, function (err) {
+          if (err) { return done(err); }
+
+          expect(Task.prototype.run).to.be.calledOnce;
+
+          readFiles(function (obj) {
+            var ARCH_PATH = path.resolve("node_modules/mock-archetype");
+
+            // Note: Expect `/{NAME}.txt` suffix in win and mac cases.
+            expect(obj["stdout-pre.log"]).to.contain(ARCH_PATH + "/PRE.txt");
+            expect(obj["stdout.log"]).to.contain(ARCH_PATH + "/FOO.txt");
+            expect(obj["stdout-post.log"]).to.contain(ARCH_PATH + "/POST.txt");
+          }, done);
+        });
+      });
+
+      it("skips --tries flag in pre+post tasks", function (done) {
+        base.sandbox.spy(Task.prototype, "run");
+        base.mockFs({
+          "package.json": JSON.stringify({
+            "scripts": {
+              "echo": ECHO + " ROOT_TASK >> stdout.log",
+              "postecho": FAIL + " >> stdout-post.log"
+            }
+          }, null, 2)
+        });
+
+        run({
+          argv: ["node", "builder", "run", "echo", "--tries=2"]
+        }, function (err) {
+          expect(err).to.have.property("message").that.contains("Command failed");
+
+          expect(Task.prototype.run).to.be.calledOnce;
+
+          readFiles(function (obj) {
+            expect(obj["stdout.log"]).to.contain("ROOT_TASK");
+            expect(obj["stdout-post.log"].match(/FAIL/g) || []).to.have.length(1);
+          }, done);
+        });
+      });
+
+      it("does not apply pre+post tasks for a --setup task", function (done) {
+        base.sandbox.spy(Task.prototype, "run");
+        base.mockFs({
+          "package.json": JSON.stringify({
+            "scripts": {
+              "presetup": ECHO + " PRE_SETUP >> stdout-setup-pre.log",
+              "setup": ECHO_FOREVER + " SETUP >> stdout-setup.log",
+              "postsetup": ECHO + " POST_SETUP >> stdout-setup-post.log",
+              "bar": ECHO + " BAR_TASK >> stdout.log"
+            }
+          }, null, 2)
+        });
+
+        run({
+          argv: ["node", "builder", "run", "bar", "--setup=setup"]
+        }, function (err) {
+          if (err) { return done(err); }
+
+          expect(Task.prototype.run).to.have.callCount(1);
+
+          readFiles(function (obj) {
+            expect(obj["stdout-setup-pre.log"]).to.not.be.ok;
+            expect(obj["stdout-setup.log"]).to.contain("SETUP");
+            expect(obj["stdout-setup-post.log"]).to.not.be.ok;
+
+            expect(obj["stdout.log"]).to.contain("BAR_TASK");
+          }, done);
+        });
+      });
+
+      it("skips prepost, postpost tasks", function (done) {
+        base.sandbox.spy(Task.prototype, "run");
+        base.mockFs({
+          "package.json": JSON.stringify({
+            "scripts": {
+              "prepostecho": ECHO + " PRE_POST_ROOT_TASK >> stdout-post.log",
+              "postecho": ECHO + " POST_ROOT_TASK >> stdout-post.log",
+              "postpostecho": ECHO + " POST_POST_ROOT_TASK >> stdout-post.log"
+            }
+          }, null, 2)
+        });
+
+        run({
+          argv: ["node", "builder", "run", "postecho"]
+        }, function (err) {
+          if (err) { return done(err); }
+
+          expect(Task.prototype.run).to.be.calledOnce;
+
+          readFiles(function (obj) {
+
+            expect(obj["stdout-post.log"])
+              .to.contain("POST_ROOT_TASK").and
+              .to.not.contain("PRE_POST_ROOT_TASK").and
+              .to.not.contain("POST_POST_ROOT_TASK");
+          }, done);
+        });
+      });
+
+      it("skips prepre, postpre tasks", function (done) {
+        base.sandbox.spy(Task.prototype, "run");
+        base.mockFs({
+          "package.json": JSON.stringify({
+            "scripts": {
+              "prepreecho": ECHO + " PRE_PRE_ROOT_TASK >> stdout-pre.log",
+              "preecho": ECHO + " PRE_ROOT_TASK >> stdout-pre.log",
+              "postpreecho": ECHO + " POST_PRE_ROOT_TASK >> stdout-pre.log"
+            }
+          }, null, 2)
+        });
+
+        run({
+          argv: ["node", "builder", "run", "preecho"]
+        }, function (err) {
+          if (err) { return done(err); }
+
+          expect(Task.prototype.run).to.be.calledOnce;
+
+          readFiles(function (obj) {
+
+            expect(obj["stdout-pre.log"])
+              .to.contain("PRE_ROOT_TASK").and
+              .to.not.contain("PRE_PRE_ROOT_TASK").and
+              .to.not.contain("POST_PRE_ROOT_TASK");
+          }, done);
+        });
+      });
+
+    });
+
   });
 
   describe("builder concurrent", function () {
@@ -1198,7 +1691,7 @@ describe("bin/builder-core", function () {
 
         expect(Task.prototype.concurrent).to.be.calledOnce;
 
-        readFiles(["stdout-1.log", "stdout-2.log", "stdout-3.log"], function (obj) {
+        readFiles(function (obj) {
           expect(obj["stdout-1.log"]).to.contain("ONE_TASK");
           expect(obj["stdout-2.log"]).to.contain("TWO_TASK");
           expect(obj["stdout-3.log"]).to.contain("THREE_TASK");
@@ -1237,7 +1730,7 @@ describe("bin/builder-core", function () {
 
         expect(Task.prototype.concurrent).to.be.calledOnce;
 
-        readFiles(["stdout-1.log", "stdout-2.log", "stdout-3.log"], function (obj) {
+        readFiles(function (obj) {
           expect(obj["stdout-1.log"]).to.contain("ONE_TASK");
           expect(obj["stdout-2.log"]).to.contain("TWO_ROOT_TASK");
           expect(obj["stdout-3.log"]).to.contain("THREE_ROOT_TASK");
@@ -1249,8 +1742,49 @@ describe("bin/builder-core", function () {
     // TODO: Finish outlined tests.
     // https://github.com/FormidableLabs/builder/issues/9
     it("runs with --tries=2");
-    it("runs with --setup");
     it("runs with --queue=1, --bail=false");
+
+    it("runs with --setup, --queue", function (done) {
+      base.sandbox.spy(setup, "create");
+      base.mockFs({
+        "package.json": JSON.stringify({
+          "scripts": {
+            "setup": ECHO_FOREVER + " SETUP >> stdout-setup.log",
+            "one": ECHO + " ONE_ROOT_TASK >> stdout-1.log",
+            "two": ECHO + " TWO_ROOT_TASK >> stdout-2.log",
+            "three": ECHO + " THREE_ROOT_TASK >> stdout-3.log"
+          }
+        }, null, 2)
+      });
+
+      run({
+        argv: [
+          "node", "builder", "concurrent",
+          "one", "two", "three",
+          "--setup=setup", "--queue=2", "--buffer"
+        ]
+      }, function (err) {
+        if (err) { return done(err); }
+
+        // Only one setup task runs.
+        // Verify through logs.
+        var setupTaskStarts = logStubs.info.args.filter(function (arg) {
+          return (arg[0] || "").indexOf("Starting setup task") > -1;
+        });
+        expect(setupTaskStarts).to.have.length(1);
+
+        // ... and setup calls.
+        expect(setup.create).to.have.callCount(1);
+        expect(setup.create.firstCall.args[1]).to.have.keys("env");
+
+        readFiles(function (obj) {
+          expect(obj["stdout-setup.log"]).to.contain("SETUP");
+          expect(obj["stdout-1.log"]).to.contain("ONE_ROOT_TASK");
+          expect(obj["stdout-2.log"]).to.contain("TWO_ROOT_TASK");
+          expect(obj["stdout-3.log"]).to.contain("THREE_ROOT_TASK");
+        }, done);
+      });
+    });
 
     it("runs with base overriding archetype config value", function (done) {
       base.sandbox.spy(Task.prototype, "concurrent");
@@ -1261,7 +1795,7 @@ describe("bin/builder-core", function () {
             "_test_message": "from base"
           },
           "scripts": {
-            "echo2": "node test/server/fixtures/echo.js TWO >> stdout-2.log"
+            "echo2": ECHO + " >> stdout-2.log"
           }
         }, null, 2),
         "node_modules": {
@@ -1271,7 +1805,7 @@ describe("bin/builder-core", function () {
                 "_test_message": "from archetype"
               },
               "scripts": {
-                "echo1": "node test/server/fixtures/echo.js ONE >> stdout-1.log"
+                "echo1": ECHO + " >> stdout-1.log"
               }
             }, null, 2)
           }
@@ -1285,9 +1819,217 @@ describe("bin/builder-core", function () {
 
         expect(Task.prototype.concurrent).to.have.callCount(1);
 
-        readFiles(["stdout-1.log", "stdout-2.log"], function (obj) {
-          expect(obj["stdout-1.log"]).to.contain("string - from base - ONE");
-          expect(obj["stdout-2.log"]).to.contain("string - from base - TWO");
+        readFiles(function (obj) {
+          expect(obj["stdout-1.log"]).to.contain("string - from base");
+          expect(obj["stdout-2.log"]).to.contain("string - from base");
+        }, done);
+      });
+    });
+
+    describe("pre/post lifecycle", function () {
+
+      it("runs mixed pre and post tasks", function (done) {
+        base.mockFs({
+          ".builderrc": "---\narchetypes:\n  - mock-archetype",
+          "package.json": JSON.stringify({
+            "scripts": {
+              "preone": "echo PRE_ONE_ROOT_TASK >> stdout-1-pre.log",
+              "two": "echo TWO_ROOT_TASK >> stdout-2.log",
+              "three": "echo THREE_ROOT_TASK >> stdout-3.log",
+              "postpostthree": "echo POST_POST_THREE_ROOT_TASK >> stdout-3-post.log"
+            }
+          }, null, 2),
+          "node_modules": {
+            "mock-archetype": {
+              "package.json": JSON.stringify({
+                "scripts": {
+                  "preone": "echo PRE_ONE_TASK >> stdout-1-pre.log",
+                  "one": "echo ONE_TASK >> stdout-1.log",
+                  "two": "echo TWO_TASK >> stdout-2.log",
+                  "posttwo": "echo POST_TWO_TASK >> stdout-2-post.log",
+                  "postthree": "echo POST_THREE_TASK >> stdout-3-post.log"
+                }
+              }, null, 2)
+            }
+          }
+        });
+
+        run({
+          argv: ["node", "builder", "concurrent", "one", "two", "three"]
+        }, function (err) {
+          if (err) { return done(err); }
+
+          readFiles(function (obj) {
+            expect(obj["stdout-1-pre.log"])
+              .to.contain("PRE_ONE_ROOT_TASK").and
+              .to.not.contain("PRE_ONE_TASK");
+            expect(obj["stdout-1.log"]).to.contain("ONE_TASK");
+
+            expect(obj["stdout-2-post.log"]).to.contain("POST_TWO_TASK");
+            expect(obj["stdout-2.log"])
+              .to.contain("TWO_ROOT_TASK").and
+              .to.not.contain("TWO_TASK");
+
+            expect(obj["stdout-2-post.log"]).to.contain("POST_TWO_TASK");
+            expect(obj["stdout-2.log"])
+              .to.contain("TWO_ROOT_TASK").and
+              .to.not.contain("TWO_TASK");
+
+            expect(obj["stdout-3-post.log"])
+              .to.contain("POST_THREE_TASK").and
+              .to.not.contain("POST_POST_THREE_ROOT_TASK");
+            expect(obj["stdout-3.log"]).to.contain("THREE_ROOT_TASK");
+          }, done);
+        });
+      });
+
+      it("completes non-error tasks with --bail=false when pre task fails", function (done) {
+        base.mockFs({
+          ".builderrc": "---\narchetypes:\n  - mock-archetype",
+          "package.json": JSON.stringify({
+            "scripts": {
+              "preone": ECHO + " PRE_ONE_ROOT_TASK >> stdout-1-pre.log",
+              "pretwo": FAIL + " >> stdout-2-pre.log",
+              "two": ECHO + " TWO_ROOT_TASK >> stdout-2.log",
+              "three": ECHO + " THREE_ROOT_TASK >> stdout-3.log",
+              "postpostthree": ECHO + " POST_POST_THREE_ROOT_TASK >> stdout-3-post.log"
+            }
+          }, null, 2),
+          "node_modules": {
+            "mock-archetype": {
+              "package.json": JSON.stringify({
+                "scripts": {
+                  "preone": ECHO + " PRE_ONE_TASK >> stdout-1-pre.log",
+                  "one": ECHO + " ONE_TASK >> stdout-1.log",
+                  "posttwo": ECHO + " POST_TWO_TASK >> stdout-2-post.log",
+                  "postthree": ECHO + " POST_THREE_TASK >> stdout-3-post.log"
+                }
+              }, null, 2)
+            }
+          }
+        });
+
+        run({
+          argv: ["node", "builder", "concurrent", "one", "two", "three", "--bail=false"]
+        }, function (err) {
+          expect(err).to.have.property("message").that.contains("Command failed");
+
+          readFiles(function (obj) {
+            expect(obj["stdout-1-pre.log"])
+              .to.contain("PRE_ONE_ROOT_TASK").and
+              .to.not.contain("PRE_ONE_TASK");
+            expect(obj["stdout-1.log"]).to.contain("ONE_TASK");
+
+            // ... two pre task **fails** here ...
+            expect(obj["stdout-2-pre.log"]).to.contain("FAIL");
+            expect(obj["stdout-2.log"]).to.not.be.ok;
+            expect(obj["stdout-2-post.log"]).to.not.be.ok;
+
+            expect(obj["stdout-3-post.log"])
+              .to.contain("POST_THREE_TASK").and
+              .to.not.contain("POST_POST_THREE_ROOT_TASK");
+            expect(obj["stdout-3.log"]).to.contain("THREE_ROOT_TASK");
+          }, done);
+        });
+      });
+
+      it("early terminates all tasks with --bail=false when --setup task fails", function (done) {
+        base.mockFs({
+          ".builderrc": "---\narchetypes:\n  - mock-archetype",
+          "package.json": JSON.stringify({
+            "scripts": {
+              "presetup": ECHO + " PRE_SETUP_TASK >> stdout-setup-pre.log",
+              "setup": FAIL + " >> stdout-setup.log",
+              "preone": ECHO + " PRE_ONE_ROOT_TASK >> stdout-1-pre.log",
+              "pretwo": ECHO + " PRE_TWO_ROOT_TASK >> stdout-2-pre.log",
+              "two": ECHO + " TWO_ROOT_TASK >> stdout-2.log",
+              "three": ECHO + " THREE_ROOT_TASK >> stdout-3.log",
+              "postpostthree": ECHO + " POST_POST_THREE_ROOT_TASK >> stdout-3-post.log"
+            }
+          }, null, 2),
+          "node_modules": {
+            "mock-archetype": {
+              "package.json": JSON.stringify({
+                "scripts": {
+                  "preone": ECHO + " PRE_ONE_TASK >> stdout-1-pre.log",
+                  "one": ECHO + " ONE_TASK >> stdout-1.log",
+                  "posttwo": ECHO + " POST_TWO_TASK >> stdout-2-post.log",
+                  "postthree": ECHO + " POST_THREE_TASK >> stdout-3-post.log"
+                }
+              }, null, 2)
+            }
+          }
+        });
+
+        // **Note**: Use `--queue=1` to make deterministic.
+        run({
+          argv: ["node", "builder", "concurrent", "one", "two", "three",
+            "--bail=false", "--queue=1", "--setup=setup"]
+        }, function (err) {
+          expect(err).to.have.property("message").that.contains("Setup exited");
+
+          readFiles(function (obj) {
+            expect(obj["stdout-1-pre.log"])
+              .to.contain("PRE_ONE_ROOT_TASK").and
+              .to.not.contain("PRE_ONE_TASK");
+
+            // Separately check that `presetup` isn't run.
+            expect(obj["stdout-setup-pre.log"]).to.not.be.ok;
+
+            // `--setup` should fail in `one` right here.
+            expect(obj["stdout-setup.log"]).to.contain("FAIL");
+            // Don't check stdout-1 because non-deterministic if it's killed.
+
+            expect(obj["stdout-2-pre.log"]).to.not.be.ok;
+            expect(obj["stdout-2.log"]).to.not.be.ok;
+            expect(obj["stdout-2-post.log"]).to.not.be.ok;
+
+            expect(obj["stdout-3-post.log"]).to.not.be.ok;
+            expect(obj["stdout-3.log"]).to.not.be.ok;
+          }, done);
+        });
+      });
+    });
+
+    it("applies --buffer flag in pre+post tasks", function (done) {
+      base.sandbox.spy(runner, "run");
+      base.sandbox.spy(Task.prototype, "concurrent");
+      base.mockFs({
+        "package.json": JSON.stringify({
+          "scripts": {
+            "preecho": ECHO + " PRE_TASK >> stdout-pre.log",
+            "echo": ECHO + " ROOT_TASK >> stdout.log",
+            "two": ECHO + " TWO_TASK >> stdout-two.log",
+            "posttwo": ECHO + " POST_TASK >> stdout-post.log"
+          }
+        }, null, 2)
+      });
+
+      run({
+        argv: ["node", "builder", "concurrent", "echo", "two", "--buffer"]
+      }, function (err) {
+        if (err) { return done(err); }
+
+        expect(runner.run).to.have.callCount(4);
+
+        // Manually find the arguments because of out-of-order execution.
+        var args = runner.run.args;
+        var preEcho = args.filter(function (arg) { return /PRE_TASK/.test(arg[0]); })[0];
+        expect(preEcho).to.have.deep.property("[2].buffer", true);
+        var echo = args.filter(function (arg) { return /ROOT_TASK/.test(arg[0]); })[0];
+        expect(echo).to.have.deep.property("[2].buffer", true);
+        var two = args.filter(function (arg) { return /TWO_TASK/.test(arg[0]); })[0];
+        expect(two).to.have.deep.property("[2].buffer", true);
+        var postTwo = args.filter(function (arg) { return /POST_TASK/.test(arg[0]); })[0];
+        expect(postTwo).to.have.deep.property("[2].buffer", true);
+
+        expect(Task.prototype.concurrent).to.be.calledOnce;
+
+        readFiles(function (obj) {
+          expect(obj["stdout-pre.log"]).to.contain("PRE_TASK");
+          expect(obj["stdout.log"]).to.contain("ROOT_TASK");
+          expect(obj["stdout-two.log"]).to.contain("TWO_TASK");
+          expect(obj["stdout-post.log"]).to.contain("POST_TASK");
         }, done);
       });
     });
@@ -1318,7 +2060,7 @@ describe("bin/builder-core", function () {
 
         expect(Task.prototype.envs).to.be.calledOnce;
 
-        readFiles(["stdout-1.log", "stdout-2.log", "stdout-3.log"], function (obj) {
+        readFiles(function (obj) {
           expect(obj["stdout-1.log"]).to.contain("ROOT hi");
           expect(obj["stdout-2.log"]).to.contain("ROOT ho");
           expect(obj["stdout-3.log"]).to.contain("ROOT yo");
@@ -1350,7 +2092,7 @@ describe("bin/builder-core", function () {
 
         expect(Task.prototype.envs).to.be.calledOnce;
 
-        readFiles(["stdout-1.log", "stdout-2.log", "stdout-3.log"], function (obj) {
+        readFiles(function (obj) {
           expect(obj["stdout-1.log"]).to.contain("ROOT hi");
           expect(obj["stdout-2.log"]).to.contain("ROOT ho");
           expect(obj["stdout-3.log"]).to.contain("ROOT yo");
@@ -1387,7 +2129,7 @@ describe("bin/builder-core", function () {
 
         expect(Task.prototype.envs).to.be.calledOnce;
 
-        readFiles(["stdout-1.log", "stdout-2.log", "stdout-3.log"], function (obj) {
+        readFiles(function (obj) {
           expect(obj["stdout-1.log"]).to.contain("ARCH hi");
           expect(obj["stdout-2.log"]).to.contain("ARCH ho");
           expect(obj["stdout-3.log"]).to.contain("ARCH yo");
@@ -1428,7 +2170,7 @@ describe("bin/builder-core", function () {
 
         expect(Task.prototype.envs).to.be.calledOnce;
 
-        readFiles(["stdout-1.log", "stdout-2.log", "stdout-3.log"], function (obj) {
+        readFiles(function (obj) {
           expect(obj["stdout-1.log"]).to.contain("ROOT hi");
           expect(obj["stdout-2.log"]).to.contain("ROOT ho");
           expect(obj["stdout-3.log"]).to.contain("ROOT yo");
@@ -1442,7 +2184,7 @@ describe("bin/builder-core", function () {
       base.mockFs({
         "package.json": JSON.stringify({
           "scripts": {
-            "echo": "echo ROOT " + /^win/.test(process.platform) ? "%MY_VAR%" : "$MY_VAR"
+            "echo": "echo ROOT " + IS_WIN ? "%MY_VAR%" : "$MY_VAR"
           }
         }, null, 2)
       });
@@ -1464,7 +2206,7 @@ describe("bin/builder-core", function () {
       base.mockFs({
         "package.json": JSON.stringify({
           "scripts": {
-            "echo": "echo ROOT " + /^win/.test(process.platform) ? "%MY_VAR%" : "$MY_VAR"
+            "echo": "echo ROOT " + IS_WIN ? "%MY_VAR%" : "$MY_VAR"
           }
         }, null, 2)
       });
@@ -1486,7 +2228,7 @@ describe("bin/builder-core", function () {
       base.mockFs({
         "package.json": JSON.stringify({
           "scripts": {
-            "echo": "echo ROOT " + /^win/.test(process.platform) ? "%MY_VAR%" : "$MY_VAR"
+            "echo": "echo ROOT " + IS_WIN ? "%MY_VAR%" : "$MY_VAR"
           }
         }, null, 2)
       });
@@ -1510,7 +2252,7 @@ describe("bin/builder-core", function () {
       base.mockFs({
         "package.json": JSON.stringify({
           "scripts": {
-            "echo": "echo ROOT " + /^win/.test(process.platform) ? "%MY_VAR%" : "$MY_VAR"
+            "echo": "echo ROOT " + IS_WIN ? "%MY_VAR%" : "$MY_VAR"
           }
         }, null, 2)
       });
@@ -1529,11 +2271,63 @@ describe("bin/builder-core", function () {
       });
     });
 
-    // TODO: Finish outlined tests.
-    // https://github.com/FormidableLabs/builder/issues/9
-    it("runs with --setup");
-    it("runs with --tries=2");
-    it("runs with --queue=1, --bail=false");
+    it("runs with --setup", function (done) {
+      base.sandbox.spy(Task.prototype, "envs");
+
+      base.mockFs({
+        "package.json": JSON.stringify({
+          "scripts": {
+            "setup": ECHO_FOREVER + " SETUP >> stdout-setup.log",
+            "echo": ECHO + " ROOT_" + ENV_MY_VAR + " >> stdout-" + ENV_PROC_NUM + ".log"
+          }
+        }, null, 2)
+      });
+
+      run({
+        argv: ["node", "builder", "envs", "echo", JSON.stringify([
+          { MY_VAR: "hi", PROC_NUM: 1 },
+          { MY_VAR: "ho", PROC_NUM: 2 }
+        ]), "--setup=setup"]
+      }, function (err) {
+        if (err) { return done(err); }
+
+        expect(Task.prototype.envs).to.be.calledOnce;
+
+        readFiles(function (obj) {
+          expect(obj["stdout-setup.log"]).to.contain("SETUP");
+          expect(obj["stdout-1.log"]).to.contain("ROOT_hi");
+          expect(obj["stdout-2.log"]).to.contain("ROOT_ho");
+        }, done);
+      });
+    });
+
+    it("runs with --tries=2, --queue=1, --bail=false", function (done) {
+      base.sandbox.spy(Task.prototype, "envs");
+
+      base.mockFs({
+        "package.json": JSON.stringify({
+          "scripts": {
+            "echo": FAIL + " >> stdout-" + ENV_PROC_NUM + ".log"
+          }
+        }, null, 2)
+      });
+
+      run({
+        argv: ["node", "builder", "envs", "echo", JSON.stringify([
+          { MY_VAR: "hi", PROC_NUM: 1 },
+          { MY_VAR: "ho", PROC_NUM: 2 }
+        ]), "--tries=2", "--queue=1", "--bail=false"]
+      }, function (err) {
+        expect(err).to.have.property("message").that.contains("Command failed");
+
+        expect(Task.prototype.envs).to.be.calledOnce;
+
+        readFiles(function (obj) {
+          expect(obj["stdout-1.log"].match(/FAIL/g) || []).to.have.length(2);
+          expect(obj["stdout-2.log"].match(/FAIL/g) || []).to.have.length(2);
+        }, done);
+      });
+    });
 
     it("runs with envs overriding base config value", function (done) {
       base.sandbox.spy(Task.prototype, "envs");
@@ -1544,7 +2338,7 @@ describe("bin/builder-core", function () {
             "_test_message": "from base"
           },
           "scripts": {
-            "echo": "node test/server/fixtures/echo.js >> stdout-" + ENV_PROC_NUM + ".log"
+            "echo": ECHO + " >> stdout-" + ENV_PROC_NUM + ".log"
           }
         }, null, 2)
       });
@@ -1568,7 +2362,7 @@ describe("bin/builder-core", function () {
 
         expect(Task.prototype.envs).to.have.callCount(1);
 
-        readFiles(["stdout-1.log", "stdout-2.log", "stdout-3.log"], function (obj) {
+        readFiles(function (obj) {
           expect(obj["stdout-1.log"]).to.contain("from base");
           expect(obj["stdout-2.log"]).to.contain("from array2");
           expect(obj["stdout-3.log"]).to.contain("from array3");
@@ -1593,7 +2387,7 @@ describe("bin/builder-core", function () {
                 "_test_message": "from archetype"
               },
               "scripts": {
-                "echo": "node test/server/fixtures/echo.js >> stdout-" + ENV_PROC_NUM + ".log"
+                "echo": ECHO + " >> stdout-" + ENV_PROC_NUM + ".log"
               }
             }, null, 2)
           }
@@ -1624,7 +2418,7 @@ describe("bin/builder-core", function () {
 
         expect(Task.prototype.envs).to.have.callCount(1);
 
-        readFiles(["stdout-1.log", "stdout-2.log", "stdout-3.log"], function (obj) {
+        readFiles(function (obj) {
           expect(obj["stdout-1.log"]).to.contain("from real env");
           expect(obj["stdout-2.log"]).to.contain("from array2");
           expect(obj["stdout-3.log"]).to.contain("from array3");
@@ -1649,7 +2443,7 @@ describe("bin/builder-core", function () {
                 "_test_message": "from archetype"
               },
               "scripts": {
-                "echo": "node test/server/fixtures/echo.js >> stdout-" + ENV_PROC_NUM + ".log"
+                "echo": ECHO + " >> stdout-" + ENV_PROC_NUM + ".log"
               }
             }, null, 2)
           }
@@ -1681,7 +2475,7 @@ describe("bin/builder-core", function () {
 
         expect(Task.prototype.envs).to.have.callCount(1);
 
-        readFiles(["stdout-1.log", "stdout-2.log", "stdout-3.log"], function (obj) {
+        readFiles(function (obj) {
           expect(obj["stdout-1.log"]).to.contain("from --env");
           expect(obj["stdout-2.log"]).to.contain("from array2");
           expect(obj["stdout-3.log"]).to.contain("from array3");
@@ -1709,7 +2503,7 @@ describe("bin/builder-core", function () {
                 "_test_message": "from archetype"
               },
               "scripts": {
-                "echo": "node test/server/fixtures/echo.js >> stdout-" + ENV_PROC_NUM + ".log"
+                "echo": ECHO + " >> stdout-" + ENV_PROC_NUM + ".log"
               }
             }, null, 2)
           }
@@ -1736,10 +2530,97 @@ describe("bin/builder-core", function () {
 
         expect(Task.prototype.envs).to.have.callCount(1);
 
-        readFiles(["stdout-1.log", "stdout-2.log", "stdout-3.log"], function (obj) {
+        readFiles(function (obj) {
           expect(obj["stdout-1.log"]).to.contain("from --env-path");
           expect(obj["stdout-2.log"]).to.contain("from array2");
           expect(obj["stdout-3.log"]).to.contain("from array3");
+        }, done);
+      });
+    });
+
+    describe("pre/post lifecycle", function () {
+
+      it("runs pre+post tasks", function (done) {
+        base.sandbox.spy(Task.prototype, "envs");
+
+        base.mockFs({
+          ".builderrc": "---\narchetypes:\n  - mock-archetype",
+          "package.json": JSON.stringify({
+            "scripts": {
+              "preecho": "echo PRE_ROOT_TASK >> stdout-pre.log",
+              "echo": "echo ROOT " + ENV_MY_VAR + " >> stdout-" + ENV_PROC_NUM + ".log"
+            }
+          }, null, 2),
+          "node_modules": {
+            "mock-archetype": {
+              "package.json": JSON.stringify({
+                "scripts": {
+                  "preecho": "echo PRE_ARCH_TASK >> stdout-pre.log",
+                  "postecho": "echo POST_ARCH_TASK >> stdout-post.log"
+                }
+              }, null, 2)
+            }
+          }
+        });
+
+        run({
+          argv: ["node", "builder", "envs", "echo", JSON.stringify([
+            { MY_VAR: "hi", PROC_NUM: 1 },
+            { MY_VAR: "ho", PROC_NUM: 2 }
+          ])]
+        }, function (err) {
+          if (err) { return done(err); }
+
+          expect(Task.prototype.envs).to.be.calledOnce;
+
+          readFiles(function (obj) {
+            expect(obj["stdout-pre.log"].trim()).to.equal("PRE_ROOT_TASK");
+            expect(obj["stdout-1.log"]).to.contain("ROOT hi");
+            expect(obj["stdout-2.log"]).to.contain("ROOT ho");
+            expect(obj["stdout-post.log"].trim()).to.equal("POST_ARCH_TASK");
+          }, done);
+        });
+
+      });
+
+    });
+
+    it("skips --buffer flag in pre+post tasks", function (done) {
+      base.sandbox.spy(runner, "run");
+      base.sandbox.spy(Task.prototype, "envs");
+      base.mockFs({
+        "package.json": JSON.stringify({
+          "scripts": {
+            "preecho": ECHO + " PRE_TASK >> stdout-pre.log",
+            "echo": ECHO + " ROOT_TASK >> stdout-" + ENV_PROC_NUM + ".log",
+            "postecho": ECHO + " POST_TASK >> stdout-post.log"
+          }
+        }, null, 2)
+      });
+
+      run({
+        argv: ["node", "builder", "envs", "echo", "--buffer", JSON.stringify([
+          { PROC_NUM: 1 },
+          { PROC_NUM: 2 }
+        ])]
+      }, function (err) {
+        if (err) { return done(err); }
+
+        expect(runner.run).to.have.callCount(4);
+
+        var args = runner.run.args;
+        expect(args).to.have.deep.property("[0][2].buffer", false); // pre
+        expect(args).to.have.deep.property("[1][2].buffer", true);  // echo
+        expect(args).to.have.deep.property("[2][2].buffer", true);  // echo
+        expect(args).to.have.deep.property("[3][2].buffer", false); // post
+
+        expect(Task.prototype.envs).to.be.calledOnce;
+
+        readFiles(function (obj) {
+          expect(obj["stdout-pre.log"]).to.contain("PRE_TASK");
+          expect(obj["stdout-1.log"]).to.contain("ROOT_TASK");
+          expect(obj["stdout-2.log"]).to.contain("ROOT_TASK");
+          expect(obj["stdout-post.log"]).to.contain("POST_TASK");
         }, done);
       });
     });

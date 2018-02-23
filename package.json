@@ -20,8 +20,9 @@
     "builder:lint": "npm run builder:lint-server && npm run builder:lint-server-test",
     "builder:test": "mocha --opts test/server/mocha.opts test/server/spec",
     "builder:test-cov": "istanbul cover --config .istanbul.server.yml _mocha -- --opts test/server/mocha.opts test/server/spec",
-    "builder:check": "npm run builder:lint && npm run builder:test",
-    "builder:check-ci": "npm run builder:lint && npm run builder:test-cov"
+    "builder:test-func": "mocha --opts test/func/mocha.opts test/func/spec",
+    "builder:check": "npm run builder:lint && npm run builder:test && npm run builder:test-func",
+    "builder:check-ci": "npm run builder:lint && npm run builder:test-cov && npm run builder:test-func"
   },
   "bin": {
     "builder": "bin/builder.js"
@@ -31,7 +32,7 @@
     "chalk": "^1.1.1",
     "js-yaml": "^3.4.3",
     "lodash": "^3.10.1",
-    "nopt": "^3.0.6",
+    "nopt": "^4.0.1",
     "tree-kill": "^1.0.0"
   },
   "devDependencies": {

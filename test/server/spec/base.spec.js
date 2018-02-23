@@ -13,6 +13,12 @@ var mockFs = require("mock-fs");
 var fs = require("fs");
 var sinon = require("sinon");
 var log = require("../../../lib/log");
+var clone = require("../../../lib/utils/clone");
+
+// Is a test output file?
+var isTestOuts = function (name) {
+  return /^std(out|err).*/.test(name);
+};
 
 var base = module.exports = {
   // Generic test helpers.
@@ -26,12 +32,18 @@ var base = module.exports = {
   },
   fileExists: function (filePath) {
     return fs.existsSync(filePath);
-  }
+  },
+  isTestOuts: isTestOuts
 };
+
+var origEnv;
 
 before(function () {
   // Set test environment
   process.env.NODE_ENV = process.env.NODE_ENV || "test";
+
+  // Stash the pristine environment.
+  origEnv = clone(process.env);
 });
 
 beforeEach(function () {
@@ -40,6 +52,8 @@ beforeEach(function () {
   base.sandbox = sinon.sandbox.create({
     useFakeTimers: true
   });
+
+  process.env = clone(origEnv);
 });
 
 afterEach(function (done) {
@@ -48,12 +62,12 @@ afterEach(function (done) {
   log._unsetLevel();
 
   // Remove logs, ignoring errors.
-  async.parallel([
-    function (cb) { fs.unlink("stdout.log", function () { cb(); }); },
-    function (cb) { fs.unlink("stdout-setup.log", function () { cb(); }); },
-    function (cb) { fs.unlink("stdout-1.log", function () { cb(); }); },
-    function (cb) { fs.unlink("stdout-2.log", function () { cb(); }); },
-    function (cb) { fs.unlink("stdout-3.log", function () { cb(); }); },
-    function (cb) { fs.unlink("stderr.log", function () { cb(); }); }
-  ], done);
+  fs.readdir(process.cwd(), function (err, files) {
+    if (err) { return done(err); }
+
+    var outs = files.filter(isTestOuts);
+    async.map(outs, function (file, cb) {
+      fs.unlink(file, function () { cb(); });
+    }, done);
+  });
 });

@@ -1,6 +1,14 @@
 History
 =======
 
+## Unreleased MAJOR
+
+* **Breaking**: Add `pre|post` lifecycle commands.
+  [#68](https://github.com/FormidableLabs/builder/issues/68)
+* **Breaking**: Error out on invalid or conflicting command line flags passed
+  to `builder`.
+* Add more explicit behavior and tests for `--setup` flag.
+
 ## 3.2.3
 
 * Account for `PATH` vs. `Path` env var differences in MinGW vs. cmd on

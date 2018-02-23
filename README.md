@@ -59,6 +59,12 @@ the rough goals and motivations behind the project.
       - [builder run](#builder-run)
       - [builder concurrent](#builder-concurrent)
       - [builder envs](#builder-envs)
+    - [Setup Task](#setup-task)
+    - [Task Lifecycle](#task-lifecycle)
+      - [The Basics](#the-basics)
+      - [Other Builder Actions](#other-builder-actions)
+      - [Builder Flags During Pre and Post](#builder-flags-during-pre-and-post)
+      - [Task Prefix Complexities](#task-prefix-complexities)
     - [Custom Flags](#custom-flags)
     - [Expanding the Archetype Path](#expanding-the-archetype-path)
 - [Tasks](#tasks)
@@ -297,7 +303,10 @@ $ builder concurrent <task1> <task2> <task3>
 Flags:
 
 * `--tries`: Number of times to attempt a task (default: `1`)
-* `--setup`: Single task to run for the entirety of `<action>`
+* `--setup`: Single task to run for the entirety of `<action>`.
+    * **Note**: The `--setup` task is run at the start of the first main task
+      to actually run. This may _not_ be the first specified task however,
+      as `pre` tasks could end up with main tasks starting out of order.
 * `--queue`: Number of concurrent processes to run (default: unlimited - `0|null`)
 * `--[no-]buffer`: Buffer output until process end (default: `false`)
 * `--[no-]bail`: End all processes after the first failure (default: `true`)
@@ -350,6 +359,10 @@ Flags:
 
 * `--tries`: Number of times to attempt a task (default: `1`)
 * `--setup`: Single task to run for the entirety of `<action>`
+    * **Note**: The `--setup` task is run at the start of the first main task
+      to actually run. This may _not_ be the first specified task however,
+      as `pre` tasks could end up with main tasks per environment object
+      starting out of order.
 * `--queue`: Number of concurrent processes to run (default: unlimited - `0|null`)
 * `--[no-]buffer`: Buffer output until process end (default: `false`)
 * `--[no-]bail`: End all processes after the first failure (default: `true`)
@@ -374,6 +387,188 @@ $ builder envs <task> '[{"FOO": "ENVS"}]' --env='{"FOO": "FLAG"}'
 The environment variable `FOO` will have a value of `"ENVS"` with the single
 environment object array item given to `builder envs` overriding the `--env`
 flag value.
+
+#### Setup Task
+
+A task specified in `--setup <task>` will have the following flags apply to
+the setup task as apply to the main task:
+
+* `--env`
+* `--env-path`
+* `--quiet`
+* `--log-level`
+
+The following flags do _not_ apply to a setup task:
+
+* `--` custom flags
+* `--tries`
+* `--expand-archetype`
+* `--queue`
+* `--buffer`
+
+That said, if you need things like `--tries`, etc., these can be always coded
+into a wrapped task like:
+
+```js
+"scripts": {
+  "setup-alone": "while sleep 1; do echo SETUP; done",
+  "setup": "builder run --tries=5 setup-alone",
+  "test": "mocha",
+  "test-full": "builder run --setup=setup test"
+}
+```
+
+#### Task Lifecycle
+
+Builder executes `pre<task>` and `post<task>` tasks the same as `npm` does,
+with some perhaps not completely obvious corner cases.
+
+##### The Basics
+
+If you have:
+
+```js
+"scripts": {
+  "prefoo": "echo PRE",
+  "foo": "echo TEMP",
+  "postfoo": "echo POST"
+}
+```
+
+And run `builder run foo`, then just like `npm`, builder will run in order:
+
+1. `prefoo`
+2. `foo`
+3. `postfoo`
+
+assuming each task succeeds, otherwise execution is terminated.
+
+`pre` and `post` tasks can be provided in an archetype and overridden in a root
+`package.json` in the exact same manner as normal Builder tasks.
+
+##### Other Builder Actions
+
+`builder run` works essentially the same as `npm run`. Things get a little
+messy with Builder's other execution options:
+
+`builder envs` runs `pre|post` tasks exactly **once** regardless of how many
+concurrent executions of the underlying task (with different environment
+variables) occur.
+
+`builder concurrent` runs appropriate `pre|post` tasks for each independent
+task. So, for something like:
+
+```js
+"scripts": {
+  "prefoo": "echo PRE FOO",
+  "foo": "echo TEMP FOO",
+  "postfoo": "echo POST FOO",
+  "prebar": "echo PRE BAR",
+  "bar": "echo TEMP BAR",
+  "postbar": "echo POST BAR"
+}
+```
+
+running `builder concurrent foo bar` would run **all** of the above tasks at
+the appropriate lifecycle moment.
+
+Note that things like a `--queue=NUM` limit on a concurrent task will have
+*all* of the `pre`, main, and `post` task need to finish serial execution before
+the next spot is freed up.
+
+The `--bail` flag applies to all of a single tasks `pre`, main, and `post`
+group. So if any of those fail, it's as if the main task failed.
+
+##### Builder Flags During Pre and Post
+
+*Applicable Flags*
+
+When executing a `<task>` that has `pre<task>` and/or `post<task>` entries, the
+following execution flags **do** apply to the `pre|post` tasks.
+
+* `--env`
+* `--env-path`
+* `--quiet`
+* `--log-level`
+* `--expand-archetype`
+
+These flags have mixed application:
+
+* `--queue`: Applies for `concurrent`, but not `envs`. The flag is invalid for
+  `run`.
+* `--buffer`: Applies for `concurrent`, but not `envs`. The flag is invalid for
+  `run`.
+* `--bail`: Applies for `concurrent`, but not `envs`. The flag is invalid for
+  `run`. A `pre<task>`, `<task>`, and a `post<task>` are treated as a group, so
+  a failure of any short-circuits the rests and ends with failures. But with
+  `--bail=false` a failure doesn't stop execution of the _other_ groups.
+
+The following flags do _not_ apply to pre/post tasks:
+
+* `--` custom flags
+* `--tries`
+* `--setup`: A task specified in `--setup <task>` will not have `pre|post`
+  tasks apply.
+
+We will explain a few of these situations in a bit more depth:
+
+*Custom Flags*
+
+The special `--` flag with any subsequent custom flags to the underlying task
+are only passed to the the main `<task>` and not `pre<task>` or `post<task>`.
+The rationale here is that custom command line flags most likely just apply to
+a single shell command (the main one).
+
+So, for example
+
+```js
+"scripts": {
+  "prefoo": "echo PRE",
+  "foo": "echo TEMP",
+  "postfoo": "echo POST"
+}
+```
+
+running `builder run foo -- --hi` would produce:
+
+```
+PRE
+TEMP --hi
+POST
+```
+
+*Other Flags*
+
+By contrast, the various other Builder-specific flags that can be applied to a
+task like `--env`, etc., **will** apply to `pre|post` tasks, under the
+assumption that control flags + environment variables will most likely want to
+be used for the execution of all commands in the workflow.
+
+So, for example:
+
+```js
+"scripts": {
+  "prefoo": "echo PRE $VAR",
+  "foo": "echo TEMP $VAR",
+  "postfoo": "echo POST $VAR"
+}
+```
+
+running `builder run foo --env '{"VAR":"HI"}'` would produce:
+
+```
+PRE HI
+TEMP HI
+POST HI
+```
+
+##### Task Prefix Complexities
+
+For the above example, if you have a task named `preprefoo`, then running
+`foo` **or** even `prefoo` directly will **not** run `preprefoo`. Builder
+follows `npm`'s current implementation which is roughly "add `pre|post` tasks
+to current execution as long as the task itself is not prefixed with
+`pre|post`". (_Note_ that `yarn` does not follow this logic in task execution).
 
 #### Custom Flags
 
