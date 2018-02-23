@@ -21,6 +21,7 @@ var Config = require("../../../../lib/config");
 var Task = require("../../../../lib/task");
 var log = require("../../../../lib/log");
 var setup = require("../../../../lib/utils/setup");
+var runner = require("../../../../lib/utils/runner");
 var run = require("../../../../bin/builder-core");
 
 var base = require("../base.spec");
@@ -578,10 +579,6 @@ describe("bin/builder-core", function () {
       });
 
     });
-
-    // TODO: This one is going to be... tough.
-    // https://github.com/FormidableLabs/builder/issues/9
-    it("overrides a <archetype> command with a <root> one in a composed <archetype> command");
 
     it("runs with --setup", function (done) {
       base.sandbox.spy(Task.prototype, "run");
@@ -1611,12 +1608,63 @@ describe("bin/builder-core", function () {
         });
       });
 
-      it("skips --buffer flag in pre+post tasks"); // TODO(PRE) DECIDE (???)
+      it("skips prepost, postpost tasks", function (done) {
+        base.sandbox.spy(Task.prototype, "run");
+        base.mockFs({
+          "package.json": JSON.stringify({
+            "scripts": {
+              "prepostecho": ECHO + " PRE_POST_ROOT_TASK >> stdout-post.log",
+              "postecho": ECHO + " POST_ROOT_TASK >> stdout-post.log",
+              "postpostecho": ECHO + " POST_POST_ROOT_TASK >> stdout-post.log"
+            }
+          }, null, 2)
+        });
 
-      it("skips prepre tasks"); // TODO(PRE): DECIDE (NPM?)
-      it("skips prepost tasks"); // TODO(PRE): DECIDE (NPM?)
-      it("skips postpre tasks"); // TODO(PRE): DECIDE (NPM?)
-      it("skips postpost tasks"); // TODO(PRE): DECIDE (NPM?)
+        run({
+          argv: ["node", "builder", "run", "postecho"]
+        }, function (err) {
+          if (err) { return done(err); }
+
+          expect(Task.prototype.run).to.be.calledOnce;
+
+          readFiles(function (obj) {
+
+            expect(obj["stdout-post.log"])
+              .to.contain("POST_ROOT_TASK").and
+              .to.not.contain("PRE_POST_ROOT_TASK").and
+              .to.not.contain("POST_POST_ROOT_TASK");
+          }, done);
+        });
+      });
+
+      it("skips prepre, postpre tasks", function (done) {
+        base.sandbox.spy(Task.prototype, "run");
+        base.mockFs({
+          "package.json": JSON.stringify({
+            "scripts": {
+              "prepreecho": ECHO + " PRE_PRE_ROOT_TASK >> stdout-pre.log",
+              "preecho": ECHO + " PRE_ROOT_TASK >> stdout-pre.log",
+              "postpreecho": ECHO + " POST_PRE_ROOT_TASK >> stdout-pre.log"
+            }
+          }, null, 2)
+        });
+
+        run({
+          argv: ["node", "builder", "run", "preecho"]
+        }, function (err) {
+          if (err) { return done(err); }
+
+          expect(Task.prototype.run).to.be.calledOnce;
+
+          readFiles(function (obj) {
+
+            expect(obj["stdout-pre.log"])
+              .to.contain("PRE_ROOT_TASK").and
+              .to.not.contain("PRE_PRE_ROOT_TASK").and
+              .to.not.contain("POST_PRE_ROOT_TASK");
+          }, done);
+        });
+      });
 
     });
 
@@ -1943,7 +1991,48 @@ describe("bin/builder-core", function () {
       });
     });
 
-    it("applies --buffer flag in pre+post tasks"); // TODO(PRE)
+    it("applies --buffer flag in pre+post tasks", function (done) {
+      base.sandbox.spy(runner, "run");
+      base.sandbox.spy(Task.prototype, "concurrent");
+      base.mockFs({
+        "package.json": JSON.stringify({
+          "scripts": {
+            "preecho": ECHO + " PRE_TASK >> stdout-pre.log",
+            "echo": ECHO + " ROOT_TASK >> stdout.log",
+            "two": ECHO + " TWO_TASK >> stdout-two.log",
+            "posttwo": ECHO + " POST_TASK >> stdout-post.log"
+          }
+        }, null, 2)
+      });
+
+      run({
+        argv: ["node", "builder", "concurrent", "echo", "two", "--buffer"]
+      }, function (err) {
+        if (err) { return done(err); }
+
+        expect(runner.run).to.have.callCount(4);
+
+        // Manually find the arguments because of out-of-order execution.
+        var args = runner.run.args;
+        var preEcho = args.filter(function (arg) { return /PRE_TASK/.test(arg[0]); })[0];
+        expect(preEcho).to.have.deep.property("[2].buffer", true);
+        var echo = args.filter(function (arg) { return /ROOT_TASK/.test(arg[0]); })[0];
+        expect(echo).to.have.deep.property("[2].buffer", true);
+        var two = args.filter(function (arg) { return /TWO_TASK/.test(arg[0]); })[0];
+        expect(two).to.have.deep.property("[2].buffer", true);
+        var postTwo = args.filter(function (arg) { return /POST_TASK/.test(arg[0]); })[0];
+        expect(postTwo).to.have.deep.property("[2].buffer", true);
+
+        expect(Task.prototype.concurrent).to.be.calledOnce;
+
+        readFiles(function (obj) {
+          expect(obj["stdout-pre.log"]).to.contain("PRE_TASK");
+          expect(obj["stdout.log"]).to.contain("ROOT_TASK");
+          expect(obj["stdout-two.log"]).to.contain("TWO_TASK");
+          expect(obj["stdout-post.log"]).to.contain("POST_TASK");
+        }, done);
+      });
+    });
 
   });
 
@@ -2496,7 +2585,42 @@ describe("bin/builder-core", function () {
 
     });
 
-    it("skips --buffer flag in pre+post tasks"); // TODO(PRE) DECIDE (???)
+    it("skips --buffer flag in pre+post tasks", function (done) {
+      base.sandbox.spy(runner, "run");
+      base.sandbox.spy(Task.prototype, "envs");
+      base.mockFs({
+        "package.json": JSON.stringify({
+          "scripts": {
+            "preecho": ECHO + " PRE_TASK >> stdout-pre.log",
+            "echo": ECHO + " ROOT_TASK >> stdout.log",
+            "postecho": ECHO + " POST_TASK >> stdout-post.log"
+          }
+        }, null, 2)
+      });
+
+      run({
+        argv: ["node", "builder", "envs", "echo", "--buffer", JSON.stringify([{}, {}])]
+      }, function (err) {
+        if (err) { return done(err); }
+
+        expect(runner.run).to.have.callCount(4);
+
+        var args = runner.run.args;
+        expect(args).to.have.deep.property("[0][2].buffer", false); // pre
+        expect(args).to.have.deep.property("[1][2].buffer", true);  // echo
+        expect(args).to.have.deep.property("[2][2].buffer", true);  // echo
+        expect(args).to.have.deep.property("[3][2].buffer", false); // post
+
+        expect(Task.prototype.envs).to.be.calledOnce;
+
+        readFiles(function (obj) {
+          expect(obj["stdout-pre.log"]).to.contain("PRE_TASK");
+          expect(obj["stdout.log"]).to.contain("ROOT_TASK");
+
+          expect(obj["stdout-post.log"]).to.contain("POST_TASK");
+        }, done);
+      });
+    });
 
   });
 

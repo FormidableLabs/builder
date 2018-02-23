@@ -153,11 +153,10 @@ describe("functional", function () {
         });
     });
 
-  });
+    // TODO: This one is going to be... tough.
+    // https://github.com/FormidableLabs/builder/issues/9
+    it("overrides a <archetype> command with a <root> one in a composed <archetype> command");
 
-
-  describe("pre/post lifecycle", function () {
-    it("runs all of pre/post lifecycle"); // TODO(PRE): skip stuff too!
   });
 
 });

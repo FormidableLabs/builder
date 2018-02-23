@@ -494,12 +494,14 @@ following execution flags **do** apply to the `pre|post` tasks.
 
 These flags have mixed application:
 
-* `--queue`: Applies for `concurrent`, but not `run` or `envs`.
-* `--buffer`: Applies for `concurrent`, but not `run` or `envs`.
-* `--bail`: Applies for `concurrent`, but not `run` or `envs`. A `pre<task>`,
-  `<task>`, and a `post<task>` are treated as a group, so a failure of any
-  short-circuits the rests and ends with failures. But with `--bail=false` a
-  failure doesn't stop execution of the _other_ groups.
+* `--queue`: Applies for `concurrent`, but not `envs`. The flag is invalid for
+  `run`.
+* `--buffer`: Applies for `concurrent`, but not `envs`. The flag is invalid for
+  `run`.
+* `--bail`: Applies for `concurrent`, but not `envs`. The flag is invalid for
+  `run`. A `pre<task>`, `<task>`, and a `post<task>` are treated as a group, so
+  a failure of any short-circuits the rests and ends with failures. But with
+  `--bail=false` a failure doesn't stop execution of the _other_ groups.
 
 The following flags do _not_ apply to pre/post tasks:
 
