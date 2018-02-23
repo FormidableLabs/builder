@@ -100,8 +100,10 @@ describe("bin/builder-core", function () {
   var logStubs;
 
   beforeEach(function () {
+    var debugSpy = base.sandbox.spy();
     logStubs = {
-      debug: base.sandbox.spy(),
+      log: debugSpy,    // used for debug
+      debug: debugSpy,
       info: base.sandbox.spy(),
       warn: base.sandbox.spy(),
       error: base.sandbox.spy()
@@ -1766,14 +1768,14 @@ describe("bin/builder-core", function () {
         argv: [
           "node", "builder", "concurrent",
           "one", "two", "three",
-          "--setup=setup", "--queue=2", "--buffer", "--log-level=info"
+          "--setup=setup", "--queue=2", "--buffer", "--log-level=debug"
         ]
       }, function (err) {
         if (err) { return done(err); }
 
         // Only one setup task runs.
         // Verify through logs.
-        var setupTaskStarts = logStubs.info.args.filter(function (arg) {
+        var setupTaskStarts = logStubs.debug.args.filter(function (arg) {
           return (arg[0] || "").indexOf("Starting setup task") > -1;
         });
         expect(setupTaskStarts).to.have.length(1);

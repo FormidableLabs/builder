@@ -33,7 +33,7 @@ describe("functional", function () {
   describe("environment variables", function () {
 
     it("get environment from package.json:config", function (done) {
-      exec("node \"" + builder + "\" run echo", function (err, stdout, stderr) {
+      exec("node \"" + builder + "\" run echo --log=debug", function (err, stdout, stderr) {
         if (err) { return done(err); }
 
         expect(stdout)
@@ -103,9 +103,9 @@ describe("functional", function () {
         });
     });
 
-    it("runs setup with --log-level=info flag applied", function (done) {
+    it("runs setup with --log-level=debug flag applied", function (done) {
       return exec(
-        "node \"" + builder + "\" run sleep --log-level=info --setup=echo-forever:builder",
+        "node \"" + builder + "\" run sleep --log-level=debug --setup=echo-forever:builder",
         function (err, stdout, stderr) {
           if (err) { return done(err); }
 
