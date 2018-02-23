@@ -283,7 +283,7 @@ Flags:
 * `--tries`: Number of times to attempt a task (default: `1`)
 * `--setup`: Single task to run for the entirety of `<action>`
 * `--quiet`: Silence logging
-* `--log-level`: Level to log at (`info`, `warn`, `error`, `none`)
+* `--log-level`: Level to log at (`debug`, `info`, `warn`, `error`, `none`) (default: `error`)
 * `--env`: JSON object of keys to add to environment.
 * `--env-path`: JSON file path of keys to add to environment.
 * `--expand-archetype`: Expand `node_modules/<archetype>` with full path (default: `false`)
@@ -311,7 +311,7 @@ Flags:
 * `--[no-]buffer`: Buffer output until process end (default: `false`)
 * `--[no-]bail`: End all processes after the first failure (default: `true`)
 * `--quiet`: Silence logging
-* `--log-level`: Level to log at (`info`, `warn`, `error`, `none`)
+* `--log-level`: Level to log at (`debug`, `info`, `warn`, `error`, `none`) (default: `error`)
 * `--env`: JSON object of keys to add to environment.
 * `--env-path`: JSON file path of keys to add to environment.
 * `--expand-archetype`: Expand `node_modules/<archetype>` with full path (default: `false`)
@@ -368,7 +368,7 @@ Flags:
 * `--[no-]bail`: End all processes after the first failure (default: `true`)
 * `--envs-path`: Path to JSON env variable array file (default: `null`)
 * `--quiet`: Silence logging
-* `--log-level`: Level to log at (`info`, `warn`, `error`, `none`)
+* `--log-level`: Level to log at (`debug`, `info`, `warn`, `error`, `none`) (default: `error`)
 * `--env`: JSON object of keys to add to environment.
 * `--env-path`: JSON file path of keys to add to environment.
 * `--expand-archetype`: Expand `node_modules/<archetype>` with full path (default: `false`)

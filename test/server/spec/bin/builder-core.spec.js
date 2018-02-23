@@ -101,6 +101,7 @@ describe("bin/builder-core", function () {
 
   beforeEach(function () {
     logStubs = {
+      debug: base.sandbox.spy(),
       info: base.sandbox.spy(),
       warn: base.sandbox.spy(),
       error: base.sandbox.spy()
@@ -444,6 +445,7 @@ describe("bin/builder-core", function () {
         if (err) { return done(err); }
 
         expect(Task.prototype.run).to.be.calledOnce;
+        expect(logStubs.debug).not.be.called;
         expect(logStubs.info).not.be.called;
         expect(logStubs.warn).not.be.called;
         expect(logStubs.error).not.be.called;
@@ -472,6 +474,7 @@ describe("bin/builder-core", function () {
           .that.contains("BAD_COMMAND");
 
         expect(Task.prototype.run).to.be.calledOnce;
+        expect(logStubs.debug).not.be.called;
         expect(logStubs.info).not.be.called;
         expect(logStubs.warn).not.be.called;
         expect(logStubs.error)
@@ -883,7 +886,7 @@ describe("bin/builder-core", function () {
       });
 
       run({
-        argv: ["node", "builder", "run", "foo", "--tries=2"]
+        argv: ["node", "builder", "run", "foo", "--tries=2", "--log-level=warn"]
       }, function (err) {
         expect(err).to.have.property("message")
           .that.contains("Command failed").and
@@ -1468,6 +1471,7 @@ describe("bin/builder-core", function () {
           if (err) { return done(err); }
 
           expect(Task.prototype.run).to.be.calledOnce;
+          expect(logStubs.debug).not.be.called;
           expect(logStubs.info).not.be.called;
           expect(logStubs.warn).not.be.called;
           expect(logStubs.error).not.be.called;
@@ -1501,6 +1505,7 @@ describe("bin/builder-core", function () {
             .that.contains("BAD_COMMAND");
 
           expect(Task.prototype.run).to.be.calledOnce;
+          expect(logStubs.debug).not.be.called;
           expect(logStubs.info).not.be.called;
           expect(logStubs.warn).not.be.called;
           expect(logStubs.error)
@@ -1761,7 +1766,7 @@ describe("bin/builder-core", function () {
         argv: [
           "node", "builder", "concurrent",
           "one", "two", "three",
-          "--setup=setup", "--queue=2", "--buffer"
+          "--setup=setup", "--queue=2", "--buffer", "--log-level=info"
         ]
       }, function (err) {
         if (err) { return done(err); }
