@@ -1581,7 +1581,36 @@ describe("bin/builder-core", function () {
         });
       });
 
-      it("does not apply pre+post tasks for a --setup task"); // TODO(PRE)
+      it("does not apply pre+post tasks for a --setup task", function (done) {
+        base.sandbox.spy(Task.prototype, "run");
+        base.mockFs({
+          "package.json": JSON.stringify({
+            "scripts": {
+              "presetup": ECHO + " PRE_SETUP >> stdout-setup-pre.log",
+              "setup": ECHO_FOREVER + " SETUP >> stdout-setup.log",
+              "postsetup": ECHO + " POST_SETUP >> stdout-setup-post.log",
+              "bar": ECHO + " BAR_TASK >> stdout.log"
+            }
+          }, null, 2)
+        });
+
+        run({
+          argv: ["node", "builder", "run", "bar", "--setup=setup"]
+        }, function (err) {
+          if (err) { return done(err); }
+
+          expect(Task.prototype.run).to.have.callCount(1);
+
+          readFiles(function (obj) {
+            expect(obj["stdout-setup-pre.log"]).to.not.be.ok;
+            expect(obj["stdout-setup.log"]).to.contain("SETUP");
+            expect(obj["stdout-setup-post.log"]).to.not.be.ok;
+
+            expect(obj["stdout.log"]).to.contain("BAR_TASK");
+          }, done);
+        });
+      });
+
       it("skips --buffer flag in pre+post tasks"); // TODO(PRE) DECIDE (???)
 
       it("skips prepre tasks"); // TODO(PRE): DECIDE (NPM?)
@@ -1861,6 +1890,7 @@ describe("bin/builder-core", function () {
           ".builderrc": "---\narchetypes:\n  - mock-archetype",
           "package.json": JSON.stringify({
             "scripts": {
+              "presetup": ECHO + " PRE_SETUP_TASK >> stdout-setup-pre.log",
               "setup": FAIL + " >> stdout-setup.log",
               "preone": ECHO + " PRE_ONE_ROOT_TASK >> stdout-1-pre.log",
               "pretwo": ECHO + " PRE_TWO_ROOT_TASK >> stdout-2-pre.log",
@@ -1894,6 +1924,9 @@ describe("bin/builder-core", function () {
             expect(obj["stdout-1-pre.log"])
               .to.contain("PRE_ONE_ROOT_TASK").and
               .to.not.contain("PRE_ONE_TASK");
+
+            // Separately check that `presetup` isn't run.
+            expect(obj["stdout-setup-pre.log"]).to.not.be.ok;
 
             // `--setup` should fail in `one` right here.
             expect(obj["stdout-setup.log"]).to.contain("FAIL");
