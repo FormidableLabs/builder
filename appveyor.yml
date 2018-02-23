@@ -1,12 +1,6 @@
 # Versions
 environment:
   matrix:
-    - nodejs_version: 0.10
-      TEST_NPM_VERSION: 3
-
-    - nodejs_version: 0.12
-      TEST_NPM_VERSION: 3
-
     - nodejs_version: 4
       TEST_NPM_VERSION: latest
 

@@ -12,6 +12,9 @@
     "url": "https://github.com/FormidableLabs/builder/issues"
   },
   "homepage": "https://github.com/FormidableLabs/builder",
+  "engines" : {
+    "node": ">=4"
+  },
   "scripts": {
     "builder:build-md-toc": "doctoc --notitle README.md",
     "builder:build": "npm run builder:build-md-toc",

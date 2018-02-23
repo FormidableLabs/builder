@@ -3,12 +3,18 @@ History
 
 ## Unreleased MAJOR
 
-* **Breaking**: Default to `--log-leve=error` intead of `info`.
-* **Breaking**: Add `pre|post` lifecycle commands.
+**BREAKING**:
+
+* Restrict to `node` version `4+`.
+* Default to `--log-level=error` intead of `info`.
+* Add `pre|post` lifecycle commands.
   [#68](https://github.com/FormidableLabs/builder/issues/68)
-* **Breaking**: Error out on invalid or conflicting command line flags passed
+* Error out on invalid or conflicting command line flags passed
   to `builder`.
-* Add `--log-leve=debug`. Switch some existing logs over.
+
+Other enhancements:
+
+* Add `--log-level=debug`. Switch some existing logs over.
 * Add more explicit behavior and tests for `--setup` flag.
 
 ## 3.2.3
