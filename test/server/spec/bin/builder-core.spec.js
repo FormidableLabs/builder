@@ -1556,7 +1556,31 @@ describe("bin/builder-core", function () {
         });
       });
 
-      it("skips --tries flag in pre+post tasks"); // TODO(PRE)
+      it("skips --tries flag in pre+post tasks", function (done) {
+        base.sandbox.spy(Task.prototype, "run");
+        base.mockFs({
+          "package.json": JSON.stringify({
+            "scripts": {
+              "echo": ECHO + " ROOT_TASK >> stdout.log",
+              "postecho": FAIL + " >> stdout-post.log"
+            }
+          }, null, 2)
+        });
+
+        run({
+          argv: ["node", "builder", "run", "echo", "--tries=2"]
+        }, function (err) {
+          expect(err).to.have.property("message").that.contains("Command failed");
+
+          expect(Task.prototype.run).to.be.calledOnce;
+
+          readFiles(function (obj) {
+            expect(obj["stdout.log"]).to.contain("ROOT_TASK");
+            expect(obj["stdout-post.log"].match(/FAIL/g) || []).to.have.length(1);
+          }, done);
+        });
+      });
+
       it("does not apply pre+post tasks for a --setup task"); // TODO(PRE)
       it("skips --buffer flag in pre+post tasks"); // TODO(PRE) DECIDE (???)
 
@@ -2177,8 +2201,8 @@ describe("bin/builder-core", function () {
         expect(Task.prototype.envs).to.be.calledOnce;
 
         readFiles(function (obj) {
-          expect(obj["stdout-1.log"]).to.match(/(FAIL\s*){2}/g);
-          expect(obj["stdout-2.log"]).to.match(/(FAIL\s*){2}/g);
+          expect(obj["stdout-1.log"].match(/FAIL/g) || []).to.have.length(2);
+          expect(obj["stdout-2.log"].match(/FAIL/g) || []).to.have.length(2);
         }, done);
       });
     });
