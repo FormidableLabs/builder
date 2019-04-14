@@ -1,6 +1,8 @@
 [![Travis Status][trav_img]][trav_site]
 [![Appveyor Status][av_img]][av_site]
 [![Coverage Status][cov_img]][cov_site]
+[![Maintenance Status][maintenance-image]](#maintenance-status)
+
 
 Builder
 =======
