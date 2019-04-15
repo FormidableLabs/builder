@@ -1,6 +1,8 @@
 [![Travis Status][trav_img]][trav_site]
 [![Appveyor Status][av_img]][av_site]
 [![Coverage Status][cov_img]][cov_site]
+[![Maintenance Status][maintenance-image]](#maintenance-status)
+
 
 Builder
 =======
@@ -1660,6 +1662,10 @@ the archetype into your project and remove all Builder dependencies:
 ... and (with assuredly a few minor hiccups) that's about it! You are
 Builder-free and back to a normal `npm`-controlled project.
 
+### Maintenance Status:
+
+**Stable:** Formidable is not planning to develop any new features for this project. We are still responding to bug reports and security concerns. We are still welcoming PRs for this project, but PRs that include new features should be small and easy to integrate and should not include breaking changes.
+
 [babel-plugin-replace-require]: https://github.com/FormidableLabs/babel-plugin-replace-require
 [builder-react-component]: https://github.com/FormidableLabs/builder-react-component
 [webpack-alternate-require-loader]: https://github.com/FormidableLabs/webpack-alternate-require-loader
@@ -1670,3 +1676,4 @@ Builder-free and back to a normal `npm`-controlled project.
 [cov]: https://coveralls.io
 [cov_img]: https://img.shields.io/coveralls/FormidableLabs/builder.svg
 [cov_site]: https://coveralls.io/r/FormidableLabs/builder
+[maintenance-image]: https://img.shields.io/badge/maintenance-stable-blue.svg
