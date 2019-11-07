@@ -1994,13 +1994,13 @@ describe("bin/builder-core", () => {
         // Manually find the arguments because of out-of-order execution.
         const args = runner.run.args;
         const preEcho = args.filter((arg) => (/PRE_TASK/).test(arg[0]))[0];
-        expect(preEcho).to.have.deep.property("[2].buffer", true);
+        expect(preEcho).to.have.nested.property("[2].buffer", true);
         const echo = args.filter((arg) => (/ROOT_TASK/).test(arg[0]))[0];
-        expect(echo).to.have.deep.property("[2].buffer", true);
+        expect(echo).to.have.nested.property("[2].buffer", true);
         const two = args.filter((arg) => (/TWO_TASK/).test(arg[0]))[0];
-        expect(two).to.have.deep.property("[2].buffer", true);
+        expect(two).to.have.nested.property("[2].buffer", true);
         const postTwo = args.filter((arg) => (/POST_TASK/).test(arg[0]))[0];
-        expect(postTwo).to.have.deep.property("[2].buffer", true);
+        expect(postTwo).to.have.nested.property("[2].buffer", true);
 
         expect(Task.prototype.concurrent).to.be.calledOnce;
 
@@ -2595,10 +2595,10 @@ describe("bin/builder-core", () => {
         expect(runner.run).to.have.callCount(4);
 
         const args = runner.run.args;
-        expect(args).to.have.deep.property("[0][2].buffer", false); // pre
-        expect(args).to.have.deep.property("[1][2].buffer", true); // echo
-        expect(args).to.have.deep.property("[2][2].buffer", true); // echo
-        expect(args).to.have.deep.property("[3][2].buffer", false); // post
+        expect(args).to.have.nested.property("[0][2].buffer", false); // pre
+        expect(args).to.have.nested.property("[1][2].buffer", true); // echo
+        expect(args).to.have.nested.property("[2][2].buffer", true); // echo
+        expect(args).to.have.nested.property("[3][2].buffer", false); // post
 
         expect(Task.prototype.envs).to.be.calledOnce;
 
