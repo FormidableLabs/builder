@@ -1,7 +1,8 @@
 #!/usr/bin/env node
+
 "use strict";
 
-var path = require("path");
+const path = require("path");
 
 // Buffer up log messages to pass on.
 //
@@ -12,39 +13,42 @@ var path = require("path");
 // events here. So, instead of using the internal log queue, we manually create
 // an array of messages in the same format and drain in `builder-core`
 // explicitly.
-var msgs = [];
+const msgs = [];
 
 // Infer if we are global and there is a local version available.
-var builderPath = require.resolve("./builder-core");
-var localPath = path.resolve("node_modules/builder/bin/builder-core.js");
+let builderPath = require.resolve("./builder-core");
+const localPath = path.resolve("node_modules/builder/bin/builder-core.js");
 
 // Swap to local path if different.
 if (builderPath !== localPath) {
   try {
     builderPath = require.resolve(localPath);
     msgs.push({
-      level: "info", type: "local-detect",
-      msg: "Switched to local builder at: " + localPath
+      level: "info",
+      type: "local-detect",
+      msg: `Switched to local builder at: ${localPath}`
     });
   } catch (err) {
     msgs.push({
-      level: "info", type: "local-detect",
-      msg: "Error importing local builder: " + err.message
+      level: "info",
+      type: "local-detect",
+      msg: `Error importing local builder: ${err.message}`
     });
     msgs.push({
-      level: "info", type: "local-detect",
-      msg: "Using global builder at: " + builderPath
+      level: "info",
+      type: "local-detect",
+      msg: `Using global builder at: ${builderPath}`
     });
   }
 }
 
 // Import and run.
-var builder = require(builderPath);
+const builder = require(builderPath);
 builder({
-  msgs: msgs
-}, function (err) {
-  process.on("exit", function () {
-    /*eslint-disable no-process-exit*/
+  msgs
+}, (err) => {
+  process.on("exit", () => {
+    /* eslint-disable no-process-exit*/
     process.exit(err ? err.code || 1 : 0);
   });
 });

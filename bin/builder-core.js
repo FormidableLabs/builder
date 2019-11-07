@@ -1,11 +1,11 @@
 "use strict";
 
-var chalk = require("chalk");
+const chalk = require("chalk");
 
-var Config = require("../lib/config");
-var Environment = require("../lib/environment");
-var Task = require("../lib/task");
-var log = require("../lib/log");
+const Config = require("../lib/config");
+const Environment = require("../lib/environment");
+const Task = require("../lib/task");
+const log = require("../lib/log");
 
 /**
  * Builder runner.
@@ -18,48 +18,48 @@ var log = require("../lib/log");
  * @returns {void}
  */
 module.exports = function (opts, callback) {
-  callback = arguments.length === 2 ? callback : opts;
-  opts = (arguments.length === 2 ? opts : {}) || {};
+  callback = arguments.length === 2 ? callback : opts; // eslint-disable-line no-magic-numbers
+  opts = (arguments.length === 2 ? opts : {}) || {}; // eslint-disable-line no-magic-numbers
 
   // Configuration
-  var config = new Config({
+  const config = new Config({
     env: opts.env,
     argv: opts.argv
   });
 
   // Set up environment
-  var env = new Environment({
-    config: config,
+  const env = new Environment({
+    config,
     env: opts.env,
     argv: opts.argv
   });
 
   // Set up logger state.
   log.setLevel({
-    env: env,
+    env,
     argv: opts.argv
   });
 
   // Drain outer `builder` messages manually (may be global or locally-sourced).
-  (opts.msgs || []).forEach(function (obj) {
+  (opts.msgs || []).forEach((obj) => {
     log[obj.level](obj.type, obj.msg);
   });
 
   // Infer task to run
-  var task = new Task({
-    config: config,
-    env: env,
+  const task = new Task({
+    config,
+    env,
     argv: opts.argv
   });
 
   // Run the task
-  log.info("builder-core:start:" + process.pid, "Started: " + chalk.gray(task));
-  task.execute(function (err) {
+  log.info(`builder-core:start:${process.pid}`, `Started: ${chalk.gray(task)}`);
+  task.execute((err) => {
     if (err) {
-      log.error("builder-core:end:" + process.pid,
-        "Task: " + chalk.gray(task) + ", Error: " + chalk.red(err.message));
+      log.error(`builder-core:end:${process.pid}`,
+        `Task: ${chalk.gray(task)}, Error: ${chalk.red(err.message)}`);
     } else {
-      log.info("builder-core:end:" + process.pid, "Task: " + chalk.gray(task) + " ended normally");
+      log.info(`builder-core:end:${process.pid}`, `Task: ${chalk.gray(task)} ended normally`);
     }
 
     callback(err);

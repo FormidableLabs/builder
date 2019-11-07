@@ -1,6 +1,6 @@
 ---
 extends:
-  - "defaults/configurations/walmart/es5-node"
+  - formidable/configurations/es6-node
 
 env:
   mocha: true
@@ -9,6 +9,10 @@ globals:
   expect: false
 
 rules:
-  no-unused-expressions: 0  # Disable for Chai expression assertions.
-  max-nested-callbacks: 0   # Disable for nested describes.
-  max-statements: [2, 20]   # More statements allowed in tests.
+  no-unused-expressions: off  # Disable for Chai expression assertions.
+  max-nested-callbacks: off   # Disable for nested describes.
+  max-statements: ["error", 20]   # More statements allowed in tests.
+  no-magic-numbers: off
+  # TODO: Update callbacks to promises.
+  consistent-return: ["warn", { treatUndefinedAsUnspecified: true }]
+  camelcase: ["error", { properties: "never" }]

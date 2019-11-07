@@ -24,11 +24,11 @@
  * is not set.
  */
 // Separate `--*` flags
-var argv = process.argv.filter(function (a) { return a.indexOf("--") === -1; });
-var extra = process.argv.filter(function (a) { return a.indexOf("--") > -1; });
+const argv = process.argv.filter((a) => a.indexOf("--") === -1);
+const extra = process.argv.filter((a) => a.indexOf("--") > -1);
 
 // Get message.
-var msg = argv[2];
+let msg = argv[2];
 if (typeof msg === "undefined") {
   msg = process.env.TEST_MESSAGE;
 }
@@ -36,25 +36,25 @@ if (typeof msg === "undefined") {
   msg = process.env.npm_package_config__test_message;
 }
 
-var out = typeof msg + " - " + (msg || "EMPTY");
+const out = `${typeof msg} - ${msg || "EMPTY"}`;
 
-var create = module.exports = function (prefix) {
+const create = module.exports = function (prefix) {
   return {
-    extra: function () {
+    extra() {
       if (!extra.length) { return; }
-      process.stdout.write(prefix + " EXTRA FLAGS - " + extra.join(",") + "\n");
+      process.stdout.write(`${prefix} EXTRA FLAGS - ${extra.join(",")}\n`);
     },
-    log: function () {
-      process.stdout.write(prefix + " - " + out + "\n");
+    log() {
+      process.stdout.write(`${prefix} - ${out}\n`);
     }
   };
 };
 
 if (require.main === module) {
   // Add slight delay so things like setup can get started, etc.
-  var DELAY = 10;
-  setTimeout(function () {
-    var echo = create("ECHO");
+  const DELAY = 10;
+  setTimeout(() => {
+    const echo = create("ECHO");
     echo.extra();
     echo.log();
   }, DELAY);

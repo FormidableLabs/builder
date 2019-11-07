@@ -9,8 +9,8 @@ Object.assign = Object.assign || require("object-assign"); // eslint-disable-lin
 // Start the mock import _first_ to inject mocks into everything.
 require("mock-fs");
 
-var chai = require("chai");
-var sinonChai = require("sinon-chai");
+const chai = require("chai");
+const sinonChai = require("sinon-chai");
 
 // Add chai plugins.
 chai.use(sinonChai);

@@ -1,87 +1,82 @@
 "use strict";
 
-var path = require("path");
-var _ = require("lodash");
-var args = require("../../../../lib/args");
+const path = require("path");
+const _ = require("lodash");
+const args = require("../../../../lib/args");
 
 require("../base.spec");
 
 // Helper: Remove `argv` from nopts parsed object.
-var _flags = function (parsed) {
+const _flags = function (parsed) {
   return _.omit(parsed, "argv");
 };
 
 // Dynamically create defaults
-var _DEFAULTS = _(args.FLAGS)
+const _DEFAULTS = _(args.FLAGS)
   // Infer defaults and camel case fields.
-  .mapValues(function (val) {
-    return _(val)
-      .mapValues(function (field) {
-        var valOrFn = field.default;
-        return _.isFunction(valOrFn) ? valOrFn() : valOrFn;
-      })
-      .mapKeys(function (field, fieldKey) { return _.camelCase(fieldKey); })
-      .value();
-  })
+  .mapValues((val) => _(val)
+    .mapValues((field) => {
+      const valOrFn = field.default;
+      return _.isFunction(valOrFn) ? valOrFn() : valOrFn;
+    })
+    .mapKeys((field, fieldKey) => _.camelCase(fieldKey))
+    .value())
   // Merge in general flags
-  .mapValues(function (val, key, all) {
-    return key === "general" ? val : _.extend(val, all.general);
-  })
+  .mapValues((val, key, all) => key === "general" ? val : _.extend(val, all.general))
   .value();
 
 // Common case: overrides for "help" / "no choice" sceanrio.
-var _HELP = {
+const _HELP = {
   help: true,
   logLevel: "none"
 };
 
-describe("lib/args", function () {
-  var origArgv;
-  var argv;
+describe("lib/args", () => {
+  let origArgv;
+  let argv;
 
-  beforeEach(function () {
+  beforeEach(() => {
     origArgv = ["node", "builder"];
     argv = origArgv;
   });
 
-  describe("general", function () {
-
-    it("handles defaults for general flags", function () {
+  describe("general", () => {
+    it("handles defaults for general flags", () => {
       expect(_flags(args.general(argv))).to.deep.equal(_.extend({}, _DEFAULTS.general, _HELP));
     });
 
-    it("handles custom paths for --builderrc", function () {
+    it("handles custom paths for --builderrc", () => {
       // Set to a nonexistent path (note args _doesn't_ check valid path).
-      var dummyPath = path.join(__dirname, "DUMMYRC");
-      argv = argv.concat(["--builderrc=" + dummyPath]);
+      const dummyPath = path.join(__dirname, "DUMMYRC");
+      argv = argv.concat([`--builderrc=${dummyPath}`]);
 
       expect(_flags(args.general(argv))).to.deep.equal(_.extend({}, _DEFAULTS.general, _HELP, {
         builderrc: dummyPath
       }));
     });
 
-    it("errors on invalid flags", function () {
+    it("errors on invalid flags", () => {
       argv = argv.concat(["--bad"]);
-      expect(function () {
+      expect(() => {
         _flags(args.general(argv));
       }).to.throw("invalid/conflicting keys: bad");
     });
 
-    it("errors on conflicting shorthand arguments", function () {
+    it("errors on conflicting shorthand arguments", () => {
       // Conflicts: queue vs quiet in concurrent
       argv = origArgv.concat(["-q"]);
-      expect(function () {
+      expect(() => {
         _flags(args.concurrent(argv));
       }).to.throw("invalid/conflicting keys: q");
 
       // Conflicts: buffer vs bail in concurrent
       argv = origArgv.concat(["--b"]);
-      expect(function () {
+      expect(() => {
         _flags(args.concurrent(argv));
       }).to.throw("invalid/conflicting keys: b");
     });
 
-    it("normalizes shorthand arguments", function () {
+    it("normalizes shorthand arguments", () => {
       argv = argv.concat(["--qui"]);
       expect(_flags(args.general(argv))).to.deep.equal(_.extend({}, _DEFAULTS.general, _HELP, {
         quiet: true
@@ -93,20 +88,19 @@ describe("lib/args", function () {
     it("validates paths for --builderrc");
   });
 
-  describe("run", function () {
-
-    it("handles defaults for run flags", function () {
+  describe("run", () => {
+    it("handles defaults for run flags", () => {
       expect(_flags(args.run(argv))).to.deep.equal(_.extend({}, _DEFAULTS.run, _HELP));
     });
 
-    it("handles valid --tries", function () {
+    it("handles valid --tries", () => {
       argv = argv.concat(["--tries=2"]);
       expect(_flags(args.run(argv))).to.deep.equal(_.extend({}, _DEFAULTS.run, _HELP, {
         tries: 2
       }));
     });
 
-    it("handles invalid --tries", function () {
+    it("handles invalid --tries", () => {
       // Invalid tries default to `1`.
       argv = origArgv.concat(["--tries=-1"]);
       expect(_flags(args.run(argv))).to.deep.equal(_.extend({}, _DEFAULTS.run, _HELP));
@@ -118,28 +112,26 @@ describe("lib/args", function () {
       expect(_flags(args.run(argv))).to.deep.equal(_.extend({}, _DEFAULTS.run, _HELP));
     });
 
-    it("handles valid --setup", function () {
+    it("handles valid --setup", () => {
       argv = argv.concat(["--setup=foo"]);
       expect(_flags(args.run(argv))).to.deep.equal(_.extend({}, _DEFAULTS.run, _HELP, {
         setup: "foo"
       }));
     });
 
-    it("handles invalid --setup", function () {
+    it("handles invalid --setup", () => {
       argv = argv.concat(["--setup="]);
       expect(_flags(args.run(argv))).to.deep.equal(_.extend({}, _DEFAULTS.run, _HELP));
     });
-
   });
 
-  describe("concurrent", function () {
-
-    it("handles defaults for concurrent flags", function () {
+  describe("concurrent", () => {
+    it("handles defaults for concurrent flags", () => {
       expect(_flags(args.concurrent(argv)))
         .to.deep.equal(_.extend({}, _DEFAULTS.concurrent, _HELP));
     });
 
-    it("handles valid --tries, --queue, --buffer, --no-bail", function () {
+    it("handles valid --tries, --queue, --buffer, --no-bail", () => {
       argv = argv.concat(["--tries=2", "--queue=2", "--buffer", "--no-bail"]);
       expect(_flags(args.concurrent(argv)))
         .to.deep.equal(_.extend({}, _DEFAULTS.concurrent, _HELP, {
@@ -150,7 +142,7 @@ describe("lib/args", function () {
         }));
     });
 
-    it("handles valid --buffer", function () {
+    it("handles valid --buffer", () => {
       argv = origArgv.concat(["--buffer"]);
       expect(_flags(args.concurrent(argv)))
         .to.deep.equal(_.extend({}, _DEFAULTS.concurrent, _HELP, {
@@ -182,7 +174,7 @@ describe("lib/args", function () {
         }));
     });
 
-    it("handles valid --bail", function () {
+    it("handles valid --bail", () => {
       argv = origArgv.concat(["--bail"]);
       expect(_flags(args.concurrent(argv)))
         .to.deep.equal(_.extend({}, _DEFAULTS.concurrent, _HELP, {
@@ -214,7 +206,7 @@ describe("lib/args", function () {
         }));
     });
 
-    it("handles invalid --tries", function () {
+    it("handles invalid --tries", () => {
       // Invalid tries default to `1`.
       argv = origArgv.concat(["--tries=-1"]);
       expect(_flags(args.concurrent(argv)))
@@ -231,7 +223,7 @@ describe("lib/args", function () {
         }));
     });
 
-    it("handles invalid --queue", function () {
+    it("handles invalid --queue", () => {
       // Invalid queue defaults to `null`.
       argv = origArgv.concat(["--queue=-1"]);
       expect(_flags(args.concurrent(argv)))
@@ -248,7 +240,7 @@ describe("lib/args", function () {
         }));
     });
 
-    it("handles multiple flags", function () {
+    it("handles multiple flags", () => {
       argv = argv.concat(["--queue=-1", "--tries=BAD", "--no-buffer", "--no-bail"]);
       expect(_flags(args.concurrent(argv)))
         .to.deep.equal(_.extend({}, _DEFAULTS.concurrent, _HELP, {
@@ -257,14 +249,14 @@ describe("lib/args", function () {
     });
   });
 
-  describe("envs", function () {
+  describe("envs", () => {
     // envs handles all `concurrent` flags, so just testing some additional
     // permutations
 
-    it("handles valid --tries, --queue, --buffer, --envs-path", function () {
+    it("handles valid --tries, --queue, --buffer, --envs-path", () => {
       // Set to a nonexistent path (note args _doesn't_ check valid path).
-      var dummyPath = path.join(__dirname, "DUMMY_ENVS.json");
-      argv = argv.concat(["--tries=2", "--queue=2", "--buffer", "--envs-path=" + dummyPath]);
+      const dummyPath = path.join(__dirname, "DUMMY_ENVS.json");
+      argv = argv.concat(["--tries=2", "--queue=2", "--buffer", `--envs-path=${dummyPath}`]);
       expect(_flags(args.envs(argv))).to.deep.equal(_.extend({}, _DEFAULTS.envs, _HELP, {
         queue: 2,
         envsPath: dummyPath,
@@ -273,10 +265,9 @@ describe("lib/args", function () {
       }));
     });
 
-    it("handles multiple flags", function () {
+    it("handles multiple flags", () => {
       argv = argv.concat(["--queue=-1", "--tries=BAD", "--no-buffer"]);
       expect(_flags(args.envs(argv))).to.deep.equal(_.extend({}, _DEFAULTS.envs, _HELP));
     });
   });
-
 });
