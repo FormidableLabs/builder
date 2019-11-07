@@ -1,7 +1,7 @@
 History
 =======
 
-## UNRELEASED
+## 5.0.0
 
 **BREAKING**:
 
