@@ -1,31 +1,26 @@
 # Versions
 environment:
   matrix:
-    - nodejs_version: 4
-      TEST_NPM_VERSION: latest
-
-    - nodejs_version: 6
-      TEST_NPM_VERSION: latest
-
     - nodejs_version: 8
-      TEST_NPM_VERSION: latest
+    - nodejs_version: 10
+    - nodejs_version: 12
 
 # Install scripts. (runs after repo cloning)
 install:
   # Get the latest stable version of Node.js or io.js
   - ps: Install-Product node $env:nodejs_version
-  # Install and use local, modern NPM
-  - ps: npm install -g "npm@$env:TEST_NPM_VERSION"
+  # Install modern yarn.
+  - npm install -g yarn
   # install modules
-  - npm install
+  - yarn install
 
 # Post-install test scripts.
 test_script:
   # Output useful info for debugging.
   - node --version
-  - npm --version
+  - yarn --version
   # run tests
-  - npm run builder:check
+  - yarn run builder:check
 
 # Don't actually build.
 build: off

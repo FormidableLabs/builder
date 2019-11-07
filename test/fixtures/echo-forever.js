@@ -23,10 +23,10 @@
  * Secondarily falls back on real environment variable `TEST_MESSAGE` if above
  * is not set.
  */
-var create = require("./echo");
-var INTERVAL = 50;
+const create = require("./echo");
+const INTERVAL = 50;
 
-var echo = create("ECHO FOREVER");
+const echo = create("ECHO FOREVER");
 echo.extra();
 echo.log();
 setInterval(echo.log, INTERVAL);

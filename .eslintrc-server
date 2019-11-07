@@ -1,3 +1,7 @@
 ---
 extends:
-  - "defaults/configurations/walmart/es5-node"
+  - formidable/configurations/es6-node
+
+rules:
+  # TODO: Update callbacks to promises.
+  consistent-return: ["warn", { treatUndefinedAsUnspecified: true }]

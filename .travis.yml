@@ -1,9 +1,9 @@
 language: node_js
 
 node_js:
-  - "4"
-  - "6"
   - "8"
+  - "10"
+  - "12"
 
 # Use container-based Travis infrastructure.
 sudo: false
@@ -12,14 +12,9 @@ branches:
   only:
     - master
 
-before_install:
-  # GUI for real browsers.
-  - export DISPLAY=:99.0
-  - sh -e /etc/init.d/xvfb start
-
 script:
-  - npm --version
-  - npm run builder:check-ci
+  - yarn --version
+  - yarn run builder:check-ci
 
   # Manually send coverage reports to coveralls.
   # - Aggregate client results
