@@ -1,6 +1,13 @@
 History
 =======
 
+## UNRELEASED
+
+**BREAKING**:
+
+* Restrict to `node` version `8+`.
+* Some modest ESnext refactoring.
+
 ## 4.0.0
 
 **BREAKING**:
