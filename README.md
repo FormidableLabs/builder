@@ -1669,8 +1669,8 @@ Builder-free and back to a normal `npm`-controlled project.
 [babel-plugin-replace-require]: https://github.com/FormidableLabs/babel-plugin-replace-require
 [builder-react-component]: https://github.com/FormidableLabs/builder-react-component
 [webpack-alternate-require-loader]: https://github.com/FormidableLabs/webpack-alternate-require-loader
-[trav_img]: https://api.travis-ci.org/FormidableLabs/builder.svg
-[trav_site]: https://travis-ci.org/FormidableLabs/builder
+[trav_img]: https://api.travis-ci.com/FormidableLabs/builder.svg
+[trav_site]: https://travis-ci.com/FormidableLabs/builder
 [av_img]: https://ci.appveyor.com/api/projects/status/oq3m2hay1tl82tsj?svg=true
 [av_site]: https://ci.appveyor.com/project/FormidableLabs/builder
 [cov]: https://coveralls.io
