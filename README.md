@@ -1664,16 +1664,4 @@ Builder-free and back to a normal `npm`-controlled project.
 
 ### Maintenance Status:
 
-**Stable:** Formidable is not planning to develop any new features for this project. We are still responding to bug reports and security concerns. We are still welcoming PRs for this project, but PRs that include new features should be small and easy to integrate and should not include breaking changes.
-
-[babel-plugin-replace-require]: https://github.com/FormidableLabs/babel-plugin-replace-require
-[builder-react-component]: https://github.com/FormidableLabs/builder-react-component
-[webpack-alternate-require-loader]: https://github.com/FormidableLabs/webpack-alternate-require-loader
-[trav_img]: https://api.travis-ci.com/FormidableLabs/builder.svg
-[trav_site]: https://travis-ci.com/FormidableLabs/builder
-[av_img]: https://ci.appveyor.com/api/projects/status/oq3m2hay1tl82tsj?svg=true
-[av_site]: https://ci.appveyor.com/project/FormidableLabs/builder
-[cov]: https://coveralls.io
-[cov_img]: https://img.shields.io/coveralls/FormidableLabs/builder.svg
-[cov_site]: https://coveralls.io/r/FormidableLabs/builder
-[maintenance-image]: https://img.shields.io/badge/maintenance-stable-blue.svg
+**Archived:** This project is no longer maintained by Formidable. We are no longer responding to issues or pull requests unless they relate to security concerns. We encourage interested developers to fork this project and make it their own!
