@@ -8,7 +8,7 @@ Builder
 =======
 
 Builder takes your `npm` tasks and makes them composable, controllable from
-a single point, and flexible.
+a single point, and flexible. This is great for "monorepos".
 
 `npm` is fantastic for controlling tasks (via `scripts`) and general project
 workflows. But a project-specific `package.json` simply doesn't scale when
